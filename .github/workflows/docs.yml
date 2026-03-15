@@ -46,7 +46,7 @@ jobs:
           --properties Configuration=Release \
           --parameters fsdocs-authors "Mafinar K" \
           fsdocs-repository-link "https://github.com/code-shoily/yog-fsharp" \
-          root "/yog-fsharp"
+          root "/yog-fsharp/"
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3

@@ -19,8 +19,11 @@
 
 [![NuGet Version](https://img.shields.io/nuget/v/Yog.FSharp)](https://www.nuget.org/packages/Yog.FSharp/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Yog.FSharp)](https://www.nuget.org/packages/Yog.FSharp/)
+[![Documentation](https://img.shields.io/badge/docs-online-blue)](https://code-shoily.github.io/yog-fsharp)
 
 A graph algorithm library for F#, providing implementations of classic graph algorithms with a functional API.
+
+📖 **[Full Documentation & API Reference](https://code-shoily.github.io/yog-fsharp)** | 🌟 **[Original Gleam Version](https://github.com/code-shoily/yog)**
 
 ## Why Yog?
 
