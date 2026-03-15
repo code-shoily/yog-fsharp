@@ -9,17 +9,21 @@ docs/
 ├── index.md                          # Main landing page (uses README content)
 ├── examples.md                       # Examples index page
 ├── tutorials.md                      # Tutorials index page
-├── examples/                         # Example documentation
-│   ├── gps-navigation.md
-│   ├── bridges-of-konigsberg.md
-│   └── job-matching.md
+├── _template.html                    # Custom HTML template
+├── examples/                         # Example F# scripts (37 files)
+│   ├── gps-navigation.fsx
+│   ├── bridges-of-konigsberg.fsx
+│   ├── dijkstra-shortest-path.fsx
+│   ├── social-network-analysis.fsx
+│   ├── centrality-analysis.fsx
+│   ├── network-bandwidth.fsx
+│   ├── dag-algorithms.fsx
+│   ├── render-dot.fsx
+│   ├── render-graphml.fsx
+│   ├── render-json.fsx
+│   └── ... (27 more examples)
 └── tutorials/                        # Tutorial documentation
     └── getting-started.md
-
-examples/                             # Runnable F# scripts
-├── gps-navigation.fsx
-├── bridges-of-konigsberg.fsx
-└── job-matching.fsx
 ```
 
 ## 🔧 Building Documentation Locally
@@ -45,7 +49,8 @@ dotnet fsdocs watch
 dotnet fsdocs build --clean \
   --properties Configuration=Release \
   --parameters fsdocs-authors "Mafinar K" \
-               fsdocs-repository-link "https://github.com/code-shoily/yog-fsharp"
+  fsdocs-repository-link "https://github.com/code-shoily/yog-fsharp" \
+  root "/yog-fsharp/"
 ```
 
 ### Preview Locally
@@ -89,28 +94,25 @@ dotnet fsdocs build --clean --properties Configuration=Release
 
 ### Adding Examples
 
-1. **Create F# script** (optional, for users to download):
-   ```bash
-   # Create in examples/ folder
-   vi examples/my-example.fsx
-   ```
-
-2. **Create documentation page**:
+1. **Create F# script**:
    ```bash
    # Create in docs/examples/ folder
-   vi docs/examples/my-example.md
+   vi docs/examples/my-example.fsx
    ```
 
-3. **Update index page**:
+2. **Update examples index**:
    ```bash
    # Add link in docs/examples.md
    vi docs/examples.md
    ```
 
-4. **Build and preview**:
+3. **Build and preview**:
    ```bash
    dotnet fsdocs watch
+   # Opens browser at http://localhost:8901
    ```
+
+**Note:** FSDocs automatically generates HTML from `.fsx` files with syntax highlighting and execution support. The script files serve both as documentation and downloadable examples.
 
 ### Adding Tutorials
 
@@ -241,6 +243,61 @@ output/
     ├── fsdocs-search.js
     └── img/
 ```
+
+## 📋 Current Examples (37 total)
+
+### Pathfinding & Algorithms
+- `dijkstra-shortest-path.fsx` - Shortest path using Dijkstra
+- `bellman-ford.fsx` - Bellman-Ford algorithm
+- `gps-navigation.fsx` - GPS navigation example
+- `city-distance-matrix.fsx` - Distance matrix calculations
+- `centrality-analysis.fsx` - Network centrality measures
+
+### Graph Generators
+- `complete-graphs.fsx` - Complete graph generation
+- `cycle-graphs.fsx` - Cycle graph generation
+- `path-graphs.fsx` - Path graph generation
+- `star-graphs.fsx` - Star graph generation
+- `wheel-graphs.fsx` - Wheel graph generation
+- `grid-graphs.fsx` - Grid graph generation
+- `petersen-graph.fsx` - Petersen graph
+- `binary-trees.fsx` - Binary tree generation
+- `empty-graphs.fsx` - Empty graph creation
+- `bipartite-graphs.fsx` - Bipartite graph generation
+- `random-trees.fsx` - Random tree generation
+
+### Random Graph Models
+- `erdos-renyi-graphs.fsx` - Erdős-Rényi G(n,p) model
+- `erdos-renyi-gnm-graphs.fsx` - Erdős-Rényi G(n,m) model
+- `barabasi-albert-networks.fsx` - Barabási-Albert scale-free networks
+- `watts-strogatz-networks.fsx` - Watts-Strogatz small-world networks
+
+### Flow & Optimization
+- `network-bandwidth.fsx` - Maximum flow/bandwidth
+- `network-cable-layout.fsx` - Minimum spanning tree
+- `global-min-cut.fsx` - Global minimum cut
+
+### Graph Properties
+- `bridges-of-konigsberg.fsx` - Eulerian paths/circuits
+- `bridges-and-articulation.fsx` - Bridge and articulation point detection
+- `clique-finding.fsx` - Maximum clique detection
+- `social-network-analysis.fsx` - Social network properties
+
+### DAG & Scheduling
+- `dag-algorithms.fsx` - Topological sorting and DAG algorithms
+- `task-ordering.fsx` - Task dependency ordering
+- `task-scheduling.fsx` - Task scheduling with constraints
+- `cave-path-counting.fsx` - Path counting in DAGs
+
+### Matching & Assignment
+- `job-matching.fsx` - Bipartite matching
+- `job-assignment.fsx` - Assignment problem
+- `medical-residency.fsx` - Stable marriage (Gale-Shapley)
+
+### Visualization & I/O
+- `render-dot.fsx` - DOT format export
+- `render-graphml.fsx` - GraphML format export
+- `render-json.fsx` - JSON format export
 
 ## 🌐 External Resources
 
