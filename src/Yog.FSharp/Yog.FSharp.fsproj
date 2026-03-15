@@ -8,7 +8,7 @@
 
         <!-- NuGet metadata -->
         <PackageId>Yog.FSharp</PackageId>
-        <Version>0.5.0-alpha.1</Version>
+        <Version>0.5.0</Version>
         <Authors>Mafinar K</Authors>
         <Description>Functional graph library for F#</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
