@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="PropertyTests.fs"/>
+        <Compile Include="AggressivePropertyTests.fs"/>
+        <Compile Include="AlgorithmPropertyTests.fs"/>
+        <Compile Include="ModelTests.fs"/>
+        <Compile Include="TransformTests.fs"/>
+        <Compile Include="DisjointSetTests.fs"/>
+        <Compile Include="GeneratorsTests.fs"/>
+        <Compile Include="IOTests.fs"/>
+        <Compile Include="GraphMLTests.fs"/>
+        <Compile Include="FlowTests.fs"/>
+        <Compile Include="PathfindingTests.fs"/>
+        <Compile Include="TraversalTests.fs"/>
+        <Compile Include="ConnectivityTests.fs"/>
+        <Compile Include="CentralityTests.fs"/>
+        <Compile Include="MSTTests.fs"/>
+        <Compile Include="MultiGraphTests.fs"/>
+        <Compile Include="BipartiteTests.fs"/>
+        <Compile Include="CliqueTests.fs"/>
+        <Compile Include="EulerianTests.fs"/>
+        <Compile Include="DagTests.fs"/>
+        <Compile Include="BuilderTests.fs"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="6.0.4"/>
+        <PackageReference Include="FsCheck.Xunit" Version="3.3.2"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1"/>
+        <PackageReference Include="xunit" Version="2.9.3"/>
+        <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Yog.FSharp\Yog.FSharp.fsproj"/>
+    </ItemGroup>
+
+</Project>

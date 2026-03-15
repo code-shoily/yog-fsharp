@@ -1,0 +1,8 @@
+<Solution>
+    <Folder Name="/src/">
+        <Project Path="src/Yog.FSharp/Yog.FSharp.fsproj"/>
+    </Folder>
+    <Folder Name="/tests/">
+        <Project Path="tests/Yog.FSharp.Tests/Yog.FSharp.Tests.fsproj"/>
+    </Folder>
+</Solution>

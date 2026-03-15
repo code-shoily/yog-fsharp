@@ -1,0 +1,14 @@
+<Project>
+    <PropertyGroup>
+        <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+        <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+        <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+        <Tailcalls>true</Tailcalls>
+    </PropertyGroup>
+
+    <ItemDefinitionGroup>
+        <Fsc>
+            <OtherFlags>$(OtherFlags) --parallel-reference-resolution</OtherFlags>
+        </Fsc>
+    </ItemDefinitionGroup>
+</Project>

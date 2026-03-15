@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <OtherFlags>--warnon:3390</OtherFlags>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+        <!-- NuGet metadata -->
+        <PackageId>Yog.FSharp</PackageId>
+        <Version>0.5.0-alpha.1</Version>
+        <Authors>Mafinar K</Authors>
+        <Description>Functional graph library for F#</Description>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/code-shoily/yog-fsharp</RepositoryUrl>
+        <PackageTags>fsharp;graph;graph-theory;algorithms</PackageTags>
+        <UsesMarkdownComments>true</UsesMarkdownComments>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="/" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="Model.fs" />
+        <Compile Include="Transform.fs" />
+        <Compile Include="DisjointSet.fs" />
+        <Compile Include="Traversal.fs" />
+        <Compile Include="Mst.fs" />
+        <Compile Include="Connectivity.fs" />
+        <Compile Include="Pathfinding\Utils.fs" />
+        <Compile Include="Pathfinding\Dijkstra.fs" />
+        <Compile Include="Pathfinding\AStar.fs" />
+        <Compile Include="Pathfinding\BellmanFord.fs" />
+        <Compile Include="Pathfinding\FloydWarshall.fs" />
+        <Compile Include="Pathfinding\DistanceMatrix.fs" />
+        <Compile Include="Flow\MaxFlow.fs" />
+        <Compile Include="Flow\MinCut.fs" />
+        <Compile Include="Flow\NetworkSimplex.fs" />
+        <Compile Include="Centrality.fs" />
+        <Compile Include="Properties\Bipartite.fs" />
+        <Compile Include="Properties\Clique.fs" />
+        <Compile Include="Properties\Cyclicity.fs" />
+        <Compile Include="Properties\Eulerian.fs" />
+        <Compile Include="IO\Dot.fs" />
+        <Compile Include="IO\Mermaid.fs" />
+        <Compile Include="IO\Json.fs" />
+        <Compile Include="IO\GraphML.fs" />
+        <Compile Include="Generators.fs" />
+        <Compile Include="Builder\Labeled.fs" />
+        <Compile Include="Builder\Live.fs" />
+        <Compile Include="Builder\Grid.fs" />
+        <Compile Include="Dag\Model.fs" />
+        <Compile Include="Dag\Algorithms.fs" />
+        <Compile Include="MultiGraph.fs" />
+    </ItemGroup>
+
+</Project>
