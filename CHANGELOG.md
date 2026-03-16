@@ -14,14 +14,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation for Graph Generators (Classic and Random)
 - Documentation for Graph Builders (Labeled, Live, Grid)
 - Documentation for Visualization & Export formats
+- Comprehensive test suite for Network Simplex algorithm verification
 
 ### Changed
 - Improved README structure with usage examples and real-world use cases
 - Updated documentation to accurately reflect all implemented features
 - Enhanced DOCS.md with complete example listing
+- **Network Simplex algorithm marked as EXPERIMENTAL** due to incomplete pivot implementation
 
 ### Fixed
 - Fixed documentation deployment URLs with proper trailing slash handling
+
+### Known Issues
+- **Network Simplex**: Pivot loop implementation is incomplete, causing false `Infeasible` results
+  for valid minimum cost flow problems. The algorithm skeleton is present but core pivot logic
+  is missing. See `NETWORK_SIMPLEX_ISSUES.md` for details. Alternative: Use successive shortest
+  paths or wait for complete implementation in future release.
 
 ## [0.5.0] - 2025-03-15
 

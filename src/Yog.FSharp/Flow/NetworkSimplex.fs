@@ -1,5 +1,10 @@
 /// Network Simplex algorithm for minimum cost flow problems.
 ///
+/// ⚠️ **EXPERIMENTAL** - This implementation is incomplete. The pivot logic
+/// is not fully implemented, causing the algorithm to return `Infeasible`
+/// for most feasible problems. Use with caution or consider alternative
+/// minimum cost flow algorithms.
+///
 /// Solves the minimum cost flow problem: find the cheapest way to send flow
 /// through a network satisfying supply/demand constraints at nodes.
 ///
@@ -243,6 +248,10 @@ let rec private updateSubtree state q delta =
 // Due to complexity, we use a simplified version of the pivot loop:
 
 /// Solves the minimum cost flow problem using the Network Simplex algorithm.
+///
+/// ⚠️ **WARNING**: This implementation is incomplete and experimental.
+/// The pivot loop logic is not fully implemented, which may cause false
+/// `Infeasible` results for valid minimum cost flow problems.
 ///
 /// ## Type Parameters
 /// - `'n`: Node data type

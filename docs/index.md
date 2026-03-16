@@ -73,7 +73,7 @@ match shortestPathInt 1 3 graph with
 ### Flow & Optimization
 - **Edmonds-Karp**: Maximum flow algorithm
 - **Stoer-Wagner**: Global minimum cut
-- **Network Simplex**: Minimum cost flow optimization
+- **Network Simplex**: Minimum cost flow optimization ⚠️ **EXPERIMENTAL** - Incomplete implementation
 - **Kruskal's MST**: Minimum spanning tree with Union-Find
 
 ### Graph Traversal
@@ -131,7 +131,7 @@ match shortestPathInt 1 3 graph with
 | **Bellman-Ford** | Negative weights OR cycle detection needed | O(VE) |
 | **Floyd-Warshall** | All-pairs shortest paths, distance matrices | O(V³) |
 | **Edmonds-Karp** | Maximum flow, bipartite matching | O(VE²) |
-| **Network Simplex** | Global minimum cost flow optimization | O(E) pivots |
+| **Network Simplex** ⚠️ **EXPERIMENTAL** | Global minimum cost flow optimization | O(E) pivots |
 | **BFS/DFS** | Unweighted graphs, exploring reachability | O(V+E) |
 | **Kruskal's MST** | Finding minimum spanning tree | O(E log E) |
 | **Stoer-Wagner** | Global minimum cut, graph partitioning | O(V³) |
