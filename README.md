@@ -113,6 +113,7 @@ match shortestPathInt 1 3 graph with
 ### Visualization & Export
 - **DOT (Graphviz)**: Export for visualization with Graphviz tools
 - **GraphML**: XML format for Gephi, yEd, Cytoscape, NetworkX
+- **GDF**: Lightweight text format for Gephi and data interchange
 - **JSON**: Data interchange and web applications
 - **Mermaid**: Embed diagrams in markdown documents
 
@@ -199,6 +200,10 @@ File.WriteAllText("graph.dot", dotOutput)
 // Export to GraphML for Gephi/yEd
 let graphml = GraphML.serialize graph
 File.WriteAllText("graph.graphml", graphml)
+
+// Export to GDF for Gephi (lightweight text format)
+let gdf = Gdf.serialize graph
+File.WriteAllText("graph.gdf", gdf)
 
 // Export to Mermaid for markdown
 let mermaid = Mermaid.render Mermaid.defaultOptions graph

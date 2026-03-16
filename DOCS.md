@@ -297,6 +297,7 @@ output/
 ### Visualization & I/O
 - `render-dot.fsx` - DOT format export
 - `render-graphml.fsx` - GraphML format export
+- `render-gdf.fsx` - GDF format export
 - `render-json.fsx` - JSON format export
 
 ## 🌐 External Resources

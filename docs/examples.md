@@ -86,5 +86,6 @@ The examples use literate programming - documentation is embedded in the `.fsx` 
 | [DOT Graph Rendering](examples/render-dot.html) | Export graphs to Graphviz DOT format for professional visualization. | Yog.IO.Dot, visual customization, Graphviz |
 | [JSON Data Export](examples/render-json.html) | Export graph data to JSON for web APIs and frontend visualization. | Yog.IO.Json, indented serialization, data interchange |
 | [GraphML Serialization](examples/render-graphml.html) | Export and import graphs in GraphML format for Gephi, yEd, and Cytoscape. | Yog.IO.GraphML, round-trip, custom attributes |
+| [GDF Format Export](examples/render-gdf.html) | Export graphs to GDF format for Gephi and lightweight text-based interchange. | Yog.IO.Gdf, column-based format, custom attributes |
 
 Check the [GitHub repository](https://github.com/code-shoily/yog-fsharp) for the latest examples!

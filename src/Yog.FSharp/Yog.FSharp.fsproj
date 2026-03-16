@@ -58,6 +58,7 @@
         <Compile Include="IO\Mermaid.fs" />
         <Compile Include="IO\Json.fs" />
         <Compile Include="IO\GraphML.fs" />
+        <Compile Include="IO\Gdf.fs" />
         <Compile Include="Generators.fs" />
         <Compile Include="Builder\Labeled.fs" />
         <Compile Include="Builder\Live.fs" />
