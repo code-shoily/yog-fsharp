@@ -23,7 +23,7 @@
 
 A comprehensive graph algorithm library for F#, providing functional APIs for graph construction, analysis, and visualization.
 
-📖 **[Full Documentation & API Reference](https://code-shoily.github.io/yog-fsharp)** | 🌟 **[Original Gleam Version](https://github.com/code-shoily/yog)**
+📖 **[Full Documentation & API Reference](https://code-shoily.github.io/yog-fsharp)** | 🌟 **[Original Gleam Version](https://github.com/code-shoily/yog)** | 📊 **[Gleam vs F# Comparison](https://code-shoily.github.io/yog-fsharp/GLEAM_FSHARP_COMPARISON.html)**
 
 ## Installation
 
@@ -225,6 +225,8 @@ printfn "```mermaid\n%s\n```" mermaid
 **Version:** 0.5.0 (Pre-release) - [Changelog](CHANGELOG.md)
 
 This is an F# port of the [Gleam Yog](https://github.com/code-shoily/yog) library. While not a 1:1 port, it captures the spirit and functional API of the original while adding F#-specific enhancements.
+
+📊 **[Gleam vs F# Feature Comparison](https://code-shoily.github.io/yog-fsharp/GLEAM_FSHARP_COMPARISON.html)** - Detailed side-by-side comparison
 
 **Stability:** The library is actively developed and APIs may change before 1.0. Feedback and contributions are welcome!
 
