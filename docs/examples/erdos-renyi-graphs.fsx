@@ -4,6 +4,9 @@ In the Erdős-Rényi model, each possible edge exists independently with probabi
 
 *)
 
+#I "../../src/Yog.FSharp/bin/Debug/net10.0"
+#r "Yog.FSharp.dll"
+
 open Yog.Model
 open Yog.Generators
 

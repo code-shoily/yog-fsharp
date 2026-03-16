@@ -5,6 +5,9 @@ In a complete graph with $n$ nodes, there are $n(n-1)/2$ edges.
 
 *)
 
+#I "../../src/Yog.FSharp/bin/Debug/net10.0"
+#r "Yog.FSharp.dll"
+
 open Yog.Model
 open Yog.Generators
 

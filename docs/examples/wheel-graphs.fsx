@@ -5,6 +5,9 @@ A wheel graph is a graph formed by connecting a single vertex to all vertices of
 ## Implementation
 *)
 
+#I "../../src/Yog.FSharp/bin/Debug/net10.0"
+#r "Yog.FSharp.dll"
+
 open Yog.Model
 open Yog.Generators
 

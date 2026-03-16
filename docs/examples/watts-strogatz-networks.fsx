@@ -4,6 +4,9 @@ The Watts-Strogatz model generates small-world networks with high clustering and
 
 *)
 
+#I "../../src/Yog.FSharp/bin/Debug/net10.0"
+#r "Yog.FSharp.dll"
+
 open Yog.Model
 open Yog.Generators
 

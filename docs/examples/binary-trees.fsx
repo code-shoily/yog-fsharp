@@ -4,6 +4,9 @@ A binary tree is a tree data structure in which each node has at most two childr
 
 *)
 
+#I "../../src/Yog.FSharp/bin/Debug/net10.0"
+#r "Yog.FSharp.dll"
+
 open Yog.Model
 open Yog.Generators
 

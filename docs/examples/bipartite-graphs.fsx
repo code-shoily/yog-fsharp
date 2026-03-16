@@ -5,6 +5,9 @@ A complete bipartite graph is a bipartite graph such that every pair of vertices
 ## Implementation
 *)
 
+#I "../../src/Yog.FSharp/bin/Debug/net10.0"
+#r "Yog.FSharp.dll"
+
 open Yog.Model
 open Yog.Generators
 

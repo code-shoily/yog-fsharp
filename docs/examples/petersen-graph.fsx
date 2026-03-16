@@ -4,6 +4,9 @@ The Petersen graph is an undirected graph with 10 vertices and 15 edges. It is a
 
 *)
 
+#I "../../src/Yog.FSharp/bin/Debug/net10.0"
+#r "Yog.FSharp.dll"
+
 open Yog.Model
 open Yog.Generators
 

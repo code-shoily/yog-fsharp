@@ -4,6 +4,9 @@ A random spanning tree is a tree selected uniformly at random from all possible 
 
 *)
 
+#I "../../src/Yog.FSharp/bin/Debug/net10.0"
+#r "Yog.FSharp.dll"
+
 open Yog.Model
 open Yog.Generators
 

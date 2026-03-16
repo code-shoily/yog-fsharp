@@ -4,6 +4,9 @@ A star graph is a complete bipartite graph $K_{1,n-1}$. It consists of a central
 
 *)
 
+#I "../../src/Yog.FSharp/bin/Debug/net10.0"
+#r "Yog.FSharp.dll"
+
 open Yog.Model
 open Yog.Generators
 

@@ -4,6 +4,9 @@ A 2D grid graph, also known as a lattice graph, is a graph whose vertices corres
 
 *)
 
+#I "../../src/Yog.FSharp/bin/Debug/net10.0"
+#r "Yog.FSharp.dll"
+
 open Yog.Model
 open Yog.Generators
 

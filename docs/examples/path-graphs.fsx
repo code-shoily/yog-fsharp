@@ -5,6 +5,9 @@ A path graph is a graph whose vertices can be listed in the order $v_1, v_2, \do
 ## Implementation
 *)
 
+#I "../../src/Yog.FSharp/bin/Debug/net10.0"
+#r "Yog.FSharp.dll"
+
 open Yog.Model
 open Yog.Generators
 

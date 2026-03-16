@@ -5,6 +5,9 @@ In the $G(n,m)$ model, a graph is chosen uniformly at random from the collection
 ## Implementation
 *)
 
+#I "../../src/Yog.FSharp/bin/Debug/net10.0"
+#r "Yog.FSharp.dll"
+
 open Yog.Model
 open Yog.Generators
 

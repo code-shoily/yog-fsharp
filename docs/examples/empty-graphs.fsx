@@ -5,6 +5,9 @@ An empty graph is a graph with $n$ vertices and no edges. It is often used as a 
 ## Implementation
 *)
 
+#I "../../src/Yog.FSharp/bin/Debug/net10.0"
+#r "Yog.FSharp.dll"
+
 open Yog.Model
 open Yog.Generators
 

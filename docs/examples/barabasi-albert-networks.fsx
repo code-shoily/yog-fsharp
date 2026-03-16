@@ -4,6 +4,9 @@ The Barabási-Albert model generates scale-free networks using preferential atta
 
 *)
 
+#I "../../src/Yog.FSharp/bin/Debug/net10.0"
+#r "Yog.FSharp.dll"
+
 open Yog.Model
 open Yog.Generators
 

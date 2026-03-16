@@ -4,6 +4,9 @@ A cycle graph consists of a single cycle, or in other words, some number of vert
 
 *)
 
+#I "../../src/Yog.FSharp/bin/Debug/net10.0"
+#r "Yog.FSharp.dll"
+
 open Yog.Model
 open Yog.Generators
 
