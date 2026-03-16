@@ -300,6 +300,13 @@ output/
 - `render-gdf.fsx` - GDF format export
 - `render-json.fsx` - JSON format export
 
+## 📋 Project Files
+
+- **CHANGELOG.md** - Version history and release notes
+- **README.md** - Project overview (synced to docs/index.md)
+- **DOCS.md** - This documentation guide
+- **LICENSE** - MIT License
+
 ## 🌐 External Resources
 
 - [FSDocs Documentation](https://fsprojects.github.io/FSharp.Formatting/)
