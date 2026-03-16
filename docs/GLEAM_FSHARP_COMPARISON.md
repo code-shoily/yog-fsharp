@@ -318,5 +318,5 @@ Both implementations are **high-quality, feature-rich graph libraries** with exc
 ---
 
 **Last Updated**: March 2025
-**Gleam Version**: 0.6.0
+**Gleam Version**: 4.0.0
 **F# Version**: 0.5.0
