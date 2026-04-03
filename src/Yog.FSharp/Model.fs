@@ -33,6 +33,7 @@ type Graph<'nodeData, 'edgeData> =
 /// ```fsharp
 /// let graph = Model.empty Directed
 /// ```
+///
 let empty graphType : Graph<'n, 'e> =
     { Kind = graphType
       Nodes = Map.empty
