@@ -110,6 +110,11 @@ let private doAddDirectedEdge src dst weight (graph: Graph<'n, 'e>) =
 /// </code>
 /// </example>
 let addEdge (src: NodeId) (dst: NodeId) (weight: 'e) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
+    if not (graph.Nodes |> Map.containsKey src) then
+        invalidArg "src" (sprintf "Source node %d does not exist in the graph." src)
+    if not (graph.Nodes |> Map.containsKey dst) then
+        invalidArg "dst" (sprintf "Destination node %d does not exist in the graph." dst)
+
     let g = doAddDirectedEdge src dst weight graph
 
     match g.Kind with
@@ -129,33 +134,56 @@ let private ensureNode id data (graph: Graph<'n, 'e>) =
 /// Like <c>addEdge</c>, but ensures both endpoint nodes exist first.
 ///
 /// If <c>src</c> or <c>dst</c> is not already in the graph, it is created with
-/// the supplied <c>defaultData</c> before the edge is added. Nodes
+/// the supplied default data before the edge is added. Nodes
 /// that already exist are left unchanged.
 /// </summary>
 /// <param name="src">The source node ID.</param>
 /// <param name="dst">The destination node ID.</param>
 /// <param name="weight">The weight of the edge.</param>
-/// <param name="defaultData">The default data for newly created nodes.</param>
+/// <param name="srcDefault">The default data for the source node if it doesn't exist.</param>
+/// <param name="dstDefault">The default data for the destination node if it doesn't exist.</param>
 /// <param name="graph">The graph to add the edge to.</param>
 /// <returns>A new graph with the edge added and endpoints ensured.</returns>
 /// <example>
 /// <code>
 /// // Nodes 1 and 2 are created automatically with data "unknown"
 /// empty Directed
-/// |> addEdgeEnsured 1 2 10 "unknown"
+/// |> addEdgeEnsured 1 2 10 "unknown" "unknown"
 /// </code>
 /// <code>
 /// // Existing nodes keep their data; only missing ones get the default
 /// empty Directed
 /// |> addNode 1 "Alice"
-/// |> addEdgeEnsured 1 2 5 "anon"
+/// |> addEdgeEnsured 1 2 5 "anon" "anon"
 /// // Node 1 is still "Alice", node 2 is "anon"
 /// </code>
 /// </example>
-let addEdgeEnsured (src: NodeId) (dst: NodeId) (weight: 'e) (defaultData: 'n) (graph: Graph<'n, 'e>) =
+let addEdgeEnsured (src: NodeId) (dst: NodeId) (weight: 'e) (srcDefault: 'n) (dstDefault: 'n) (graph: Graph<'n, 'e>) =
     graph
-    |> ensureNode src defaultData
-    |> ensureNode dst defaultData
+    |> ensureNode src srcDefault
+    |> ensureNode dst dstDefault
+    |> addEdge src dst weight
+
+/// <summary>
+/// Like <c>addEdge</c>, but ensures both endpoint nodes exist first by generating
+/// default data via a callback.
+/// </summary>
+/// <param name="src">The source node ID.</param>
+/// <param name="dst">The destination node ID.</param>
+/// <param name="weight">The weight of the edge.</param>
+/// <param name="createDefault">A callback that takes a NodeId and returns the default data for that node.</param>
+/// <param name="graph">The graph to add the edge to.</param>
+/// <returns>A new graph with the edge added and endpoints ensured.</returns>
+let addEdgeEnsuredWith (src: NodeId) (dst: NodeId) (weight: 'e) (createDefault: NodeId -> 'n) (graph: Graph<'n, 'e>) =
+    let ensureNodeWith id (g: Graph<'n, 'e>) =
+        if g.Nodes |> Map.containsKey id then
+            g
+        else
+            addNode id (createDefault id) g
+
+    graph
+    |> ensureNodeWith src
+    |> ensureNodeWith dst
     |> addEdge src dst weight
 
 /// <summary>
@@ -441,6 +469,11 @@ let private doAddDirectedCombine src dst weight combine (graph: Graph<'n, 'e>) =
 /// </code>
 /// </example>
 let addEdgeWithCombine (src: NodeId) (dst: NodeId) (weight: 'e) (combine: 'e -> 'e -> 'e) (graph: Graph<'n, 'e>) =
+    if not (graph.Nodes |> Map.containsKey src) then
+        invalidArg "src" (sprintf "Source node %d does not exist in the graph." src)
+    if not (graph.Nodes |> Map.containsKey dst) then
+        invalidArg "dst" (sprintf "Destination node %d does not exist in the graph." dst)
+
     let g = doAddDirectedCombine src dst weight combine graph
 
     match g.Kind with

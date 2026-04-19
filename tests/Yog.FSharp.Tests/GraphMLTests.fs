@@ -444,6 +444,7 @@ let ``serialize handles isolated nodes`` () =
         empty Directed
         |> addNode 1 "Isolated"
         |> addNode 2 "Connected"
+        |> addNode 3 "Missing"
         |> addEdge 2 3 "to nowhere"
 
     let xml = serialize graph

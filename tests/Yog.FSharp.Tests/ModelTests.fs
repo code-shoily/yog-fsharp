@@ -141,6 +141,18 @@ let ``addEdge adds directed edge`` () =
     Assert.Equal<(NodeId * int) list>([ 1, 10 ], predecessors 2 graph)
 
 [<Fact>]
+let ``addEdge throws ArgumentException if src or dst are missing`` () =
+    let graph = empty Directed |> addNode 1 "A"
+    
+    // Missing dst
+    let ex1 = Assert.Throws<System.ArgumentException>(fun () -> addEdge 1 2 10 graph |> ignore)
+    Assert.Contains("Destination node 2 does not exist", ex1.Message)
+
+    // Missing src
+    let ex2 = Assert.Throws<System.ArgumentException>(fun () -> addEdge 2 1 10 graph |> ignore)
+    Assert.Contains("Source node 2 does not exist", ex2.Message)
+
+[<Fact>]
 let ``addEdge updates existing edge weight`` () =
     let graph =
         empty Directed
@@ -320,7 +332,7 @@ let ``addEdgeEnsured creates missing nodes`` () =
     let graph =
         empty Directed
         |> addNode 1 "Existing"
-        |> addEdgeEnsured 1 2 10 "Default"
+        |> addEdgeEnsured 1 2 10 "Default" "Default"
 
     Assert.Equal(2, order graph)
     Assert.Equal("Existing", graph.Nodes.[1])
@@ -333,10 +345,22 @@ let ``addEdgeEnsured preserves existing node data`` () =
         empty Directed
         |> addNode 1 "Alice"
         |> addNode 2 "Bob"
-        |> addEdgeEnsured 1 2 10 "Unknown"
+        |> addEdgeEnsured 1 2 10 "Unknown" "Unknown"
 
     Assert.Equal("Alice", graph.Nodes.[1])
     Assert.Equal("Bob", graph.Nodes.[2])
+
+[<Fact>]
+let ``addEdgeEnsuredWith uses callback for missing nodes`` () =
+    let graph =
+        empty Directed
+        |> addNode 1 "Existing"
+        |> addEdgeEnsuredWith 1 2 10 (fun id -> sprintf "Generated_%d" id)
+
+    Assert.Equal(2, order graph)
+    Assert.Equal("Existing", graph.Nodes.[1])
+    Assert.Equal("Generated_2", graph.Nodes.[2])
+    Assert.Equal(1, edgeCount graph)
 
 // ============================================================================
 // SUCCESSORS / PREDECESSORS / NEIGHBORS

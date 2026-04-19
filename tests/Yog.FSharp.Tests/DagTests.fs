@@ -91,7 +91,7 @@ module DagModelTests =
 
     [<Fact>]
     let ``addNode - adds node to dag`` () =
-        let graph = empty Directed |> addNode 0 "A" |> addEdge 0 1 10
+        let graph = empty Directed |> addNode 0 "A" |> addNode 1 "B" |> addEdge 0 1 10
 
         let dag = Model.fromGraph graph |> unwrapDag
         let dag2 = Model.addNode 2 "C" dag
