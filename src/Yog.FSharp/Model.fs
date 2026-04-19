@@ -1,59 +1,79 @@
+/// <summary>
 /// Core graph data structures and basic operations for the yog library.
 ///
-/// This module defines the fundamental `Graph` type and provides all basic operations
+/// This module defines the fundamental <c>Graph</c> type and provides all basic operations
 /// for creating and manipulating graphs. The graph uses an adjacency list representation
 /// with dual indexing (both outgoing and incoming edges) for efficient traversal in both
 /// directions.
+/// </summary>
 module Yog.Model
 
+/// <summary>
 /// Unique identifier for a node in the graph.
+/// </summary>
 type NodeId = int
 
+/// <summary>
 /// The type of graph: directed or undirected.
+/// </summary>
 type GraphType =
+    /// <summary>
     /// A directed graph where edges have a direction from source to destination.
+    /// </summary>
     | Directed
+    /// <summary>
     /// An undirected graph where edges are bidirectional.
+    /// </summary>
     | Undirected
 
+/// <summary>
 /// A simple graph data structure that can be directed or undirected.
-///
-/// - 'nodeData: The type of data stored at each node
-/// - 'edgeData: The type of data (usually weight) stored on each edge
+/// </summary>
+/// <typeparam name="'nodeData">The type of data stored at each node</typeparam>
+/// <typeparam name="'edgeData">The type of data (usually weight) stored on each edge</typeparam>
 type Graph<'nodeData, 'edgeData> =
     { Kind: GraphType
       Nodes: Map<NodeId, 'nodeData>
       OutEdges: Map<NodeId, Map<NodeId, 'edgeData>>
       InEdges: Map<NodeId, Map<NodeId, 'edgeData>> }
 
+/// <summary>
 /// Creates a new empty graph of the specified type.
-///
-/// ## Example
-///
-/// ```fsharp
+/// </summary>
+/// <param name="graphType">The type of the graph.</param>
+/// <returns>A new empty graph.</returns>
+/// <example>
+/// <code>
 /// let graph = Model.empty Directed
-/// ```
-///
+/// </code>
+/// </example>
 let empty graphType : Graph<'n, 'e> =
     { Kind = graphType
       Nodes = Map.empty
       OutEdges = Map.empty
       InEdges = Map.empty }
 
+/// <summary>
 /// Adds a node to the graph with the given ID and data.
 /// If a node with this ID already exists, its data will be replaced.
-///
-/// ## Example
-///
-/// ```fsharp
+/// </summary>
+/// <param name="id">The unique identifier for the node.</param>
+/// <param name="data">The data to store at the node.</param>
+/// <param name="graph">The graph to add the node to.</param>
+/// <returns>A new graph with the node added.</returns>
+/// <example>
+/// <code>
 /// graph
 /// |> addNode 1 "Node A"
 /// |> addNode 2 "Node B"
-/// ```
+/// </code>
+/// </example>
 let addNode (id: NodeId) (data: 'n) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
     { graph with Nodes = graph.Nodes |> Map.add id data }
 
+/// <summary>
 /// Helper function to add a directed edge using Map.change
+/// </summary>
 let private doAddDirectedEdge src dst weight (graph: Graph<'n, 'e>) =
     let addOrUpdate key mapOpt =
         match mapOpt with
@@ -64,24 +84,31 @@ let private doAddDirectedEdge src dst weight (graph: Graph<'n, 'e>) =
         OutEdges = graph.OutEdges |> Map.change src (addOrUpdate dst)
         InEdges = graph.InEdges |> Map.change dst (addOrUpdate src) }
 
+/// <summary>
 /// Adds an edge to the graph with the given weight.
 ///
 /// For directed graphs, adds a single edge from src to dst.
 /// For undirected graphs, adds edges in both directions.
-///
-/// > **Note:** If `src` or `dst` have not been added via `addNode`,
-/// > the edge will still be created in the edge dictionaries, but the
-/// > nodes will be missing from `graph.Nodes`. This creates "ghost nodes"
-/// > that are traversable but invisible to functions that iterate over
-/// > nodes (e.g. `order`, `allNodes`). Use `addEdgeEnsured` to
-/// > auto-create missing endpoints with a default value.
-///
-/// ## Example
-///
-/// ```fsharp
+/// </summary>
+/// <remarks>
+/// <strong>Note:</strong> If <c>src</c> or <c>dst</c> have not been added via <c>addNode</c>,
+/// the edge will still be created in the edge dictionaries, but the
+/// nodes will be missing from <c>graph.Nodes</c>. This creates "ghost nodes"
+/// that are traversable but invisible to functions that iterate over
+/// nodes (e.g. <c>order</c>, <c>allNodes</c>). Use <c>addEdgeEnsured</c> to
+/// auto-create missing endpoints with a default value.
+/// </remarks>
+/// <param name="src">The source node ID.</param>
+/// <param name="dst">The destination node ID.</param>
+/// <param name="weight">The weight of the edge.</param>
+/// <param name="graph">The graph to add the edge to.</param>
+/// <returns>A new graph with the edge added.</returns>
+/// <example>
+/// <code>
 /// graph
 /// |> addEdge 1 2 10
-/// ```
+/// </code>
+/// </example>
 let addEdge (src: NodeId) (dst: NodeId) (weight: 'e) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
     let g = doAddDirectedEdge src dst weight graph
 
@@ -89,62 +116,90 @@ let addEdge (src: NodeId) (dst: NodeId) (weight: 'e) (graph: Graph<'n, 'e>) : Gr
     | Directed -> g
     | Undirected -> doAddDirectedEdge dst src weight g
 
+/// <summary>
 /// Adds a node only if it doesn't already exist.
+/// </summary>
 let private ensureNode id data (graph: Graph<'n, 'e>) =
     if graph.Nodes |> Map.containsKey id then
         graph
     else
         addNode id data graph
 
-/// Like `addEdge`, but ensures both endpoint nodes exist first.
+/// <summary>
+/// Like <c>addEdge</c>, but ensures both endpoint nodes exist first.
 ///
-/// If `src` or `dst` is not already in the graph, it is created with
-/// the supplied `defaultData` before the edge is added. Nodes
+/// If <c>src</c> or <c>dst</c> is not already in the graph, it is created with
+/// the supplied <c>defaultData</c> before the edge is added. Nodes
 /// that already exist are left unchanged.
-///
-/// ## Example
-///
-/// ```fsharp
+/// </summary>
+/// <param name="src">The source node ID.</param>
+/// <param name="dst">The destination node ID.</param>
+/// <param name="weight">The weight of the edge.</param>
+/// <param name="defaultData">The default data for newly created nodes.</param>
+/// <param name="graph">The graph to add the edge to.</param>
+/// <returns>A new graph with the edge added and endpoints ensured.</returns>
+/// <example>
+/// <code>
 /// // Nodes 1 and 2 are created automatically with data "unknown"
 /// empty Directed
 /// |> addEdgeEnsured 1 2 10 "unknown"
-/// ```
-///
-/// ```fsharp
+/// </code>
+/// <code>
 /// // Existing nodes keep their data; only missing ones get the default
 /// empty Directed
 /// |> addNode 1 "Alice"
 /// |> addEdgeEnsured 1 2 5 "anon"
 /// // Node 1 is still "Alice", node 2 is "anon"
-/// ```
+/// </code>
+/// </example>
 let addEdgeEnsured (src: NodeId) (dst: NodeId) (weight: 'e) (defaultData: 'n) (graph: Graph<'n, 'e>) =
     graph
     |> ensureNode src defaultData
     |> ensureNode dst defaultData
     |> addEdge src dst weight
 
+/// <summary>
 /// Gets nodes you can travel TO (Successors).
+/// </summary>
+/// <param name="id">The node ID to get successors for.</param>
+/// <param name="graph">The graph.</param>
+/// <returns>A list of successor node IDs and edge weights.</returns>
 let successors (id: NodeId) (graph: Graph<'n, 'e>) : list<NodeId * 'e> =
     graph.OutEdges
     |> Map.tryFind id
     |> Option.map Map.toList
     |> Option.defaultValue []
 
+/// <summary>
 /// Gets nodes you came FROM (Predecessors).
+/// </summary>
+/// <param name="id">The node ID to get predecessors for.</param>
+/// <param name="graph">The graph.</param>
+/// <returns>A list of predecessor node IDs and edge weights.</returns>
 let predecessors (id: NodeId) (graph: Graph<'n, 'e>) : list<NodeId * 'e> =
     graph.InEdges
     |> Map.tryFind id
     |> Option.map Map.toList
     |> Option.defaultValue []
 
+/// <summary>
 /// Returns just the NodeIds of predecessors (without edge weights).
+/// </summary>
+/// <param name="node">The node ID to get predecessors for.</param>
+/// <param name="graph">The graph.</param>
+/// <returns>A list of predecessor node IDs.</returns>
 let predecessorIds (node: NodeId) (graph: Graph<'n, 'e>) : NodeId list = predecessors node graph |> List.map fst
 
+/// <summary>
 /// Gets everyone connected to the node, regardless of direction.
 ///
-/// For undirected graphs, this is equivalent to `successors`.
+/// For undirected graphs, this is equivalent to <c>successors</c>.
 /// For directed graphs, this combines both outgoing and incoming edges
 /// without duplicates.
+/// </summary>
+/// <param name="id">The node ID to get neighbors for.</param>
+/// <param name="graph">The graph.</param>
+/// <returns>A list of connected node IDs and edge weights.</returns>
 let neighbors (id: NodeId) (graph: Graph<'n, 'e>) : list<NodeId * 'e> =
     match graph.Kind with
     | Undirected -> successors id graph
@@ -160,28 +215,45 @@ let neighbors (id: NodeId) (graph: Graph<'n, 'e>) : list<NodeId * 'e> =
             else
                 inc :: acc)
 
+/// <summary>
 /// Returns all node IDs in the graph.
 /// This includes all nodes, even isolated nodes with no edges.
+/// </summary>
+/// <param name="graph">The graph.</param>
+/// <returns>A list of all node IDs.</returns>
 let allNodes (graph: Graph<'n, 'e>) : list<NodeId> =
     graph.Nodes |> Map.toList |> List.map fst
 
+/// <summary>
 /// Returns the number of nodes in the graph (graph order).
-///
-/// **Time Complexity:** O(1)
+/// </summary>
+/// <remarks>
+/// <strong>Time Complexity:</strong> O(1)
+/// </remarks>
+/// <param name="graph">The graph.</param>
+/// <returns>The number of nodes.</returns>
 let order (graph: Graph<'n, 'e>) : int = graph.Nodes.Count
 
+/// <summary>
 /// Returns the number of nodes in the graph.
-/// Equivalent to `order`.
-///
-/// **Time Complexity:** O(1)
+/// Equivalent to <c>order</c>.
+/// </summary>
+/// <remarks>
+/// <strong>Time Complexity:</strong> O(1)
+/// </remarks>
 let nodeCount = order
 
+/// <summary>
 /// Returns the number of edges in the graph.
 ///
 /// For undirected graphs, each edge is counted once (the pair {u, v}).
 /// For directed graphs, each directed edge (u -> v) is counted once.
-///
-/// **Time Complexity:** O(V)
+/// </summary>
+/// <remarks>
+/// <strong>Time Complexity:</strong> O(V)
+/// </remarks>
+/// <param name="graph">The graph.</param>
+/// <returns>The number of edges.</returns>
 let edgeCount (graph: Graph<'n, 'e>) : int =
     let count =
         graph.OutEdges
@@ -191,18 +263,27 @@ let edgeCount (graph: Graph<'n, 'e>) : int =
     | Directed -> count
     | Undirected -> count / 2
 
+/// <summary>
 /// Returns just the NodeIds of successors (without edge weights).
 /// Convenient for traversal algorithms that only need the IDs.
+/// </summary>
+/// <param name="id">The node ID to get successors for.</param>
+/// <param name="graph">The graph.</param>
+/// <returns>A list of successor node IDs.</returns>
 let successorIds (id: NodeId) (graph: Graph<'n, 'e>) : list<NodeId> = successors id graph |> List.map fst
 
+/// <summary>
 /// Removes a node and all its connected edges (incoming and outgoing).
-///
-/// **Time Complexity:** O(deg(v)) - proportional to the number of edges
+/// </summary>
+/// <remarks>
+/// <strong>Time Complexity:</strong> O(deg(v)) - proportional to the number of edges
 /// connected to the node, not the whole graph.
-///
-/// ## Example
-///
-/// ```fsharp
+/// </remarks>
+/// <param name="id">The ID of the node to remove.</param>
+/// <param name="graph">The graph to remove the node from.</param>
+/// <returns>A new graph with the node and its connections removed.</returns>
+/// <example>
+/// <code>
 /// let graph =
 ///   empty Directed
 ///   |> addNode 1 "A"
@@ -213,7 +294,8 @@ let successorIds (id: NodeId) (graph: Graph<'n, 'e>) : list<NodeId> = successors
 ///
 /// let graph = removeNode 2 graph
 /// // Node 2 is removed, along with edges 1->2 and 2->3
-/// ```
+/// </code>
+/// </example>
 let removeNode (id: NodeId) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
     let targets = successors id graph |> List.map fst
     let sources = predecessors id graph |> List.map fst
@@ -251,7 +333,9 @@ let removeNode (id: NodeId) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
         OutEdges = newOutCleaned
         InEdges = newInCleaned }
 
+/// <summary>
 /// Helper for removing directed edge
+/// </summary>
 let private doRemoveDirectedEdge src dst (graph: Graph<'n, 'e>) =
     let newOut =
         graph.OutEdges
@@ -271,14 +355,19 @@ let private doRemoveDirectedEdge src dst (graph: Graph<'n, 'e>) =
         OutEdges = newOut
         InEdges = newIn }
 
+/// <summary>
 /// Removes an edge from src to dst.
 /// For undirected graphs, removes edges in both directions.
-///
-/// **Time Complexity:** O(1)
-///
-/// ## Example
-///
-/// ```fsharp
+/// </summary>
+/// <remarks>
+/// <strong>Time Complexity:</strong> O(1)
+/// </remarks>
+/// <param name="src">The source node ID.</param>
+/// <param name="dst">The destination node ID.</param>
+/// <param name="graph">The graph to remove the edge from.</param>
+/// <returns>A new graph with the edge removed.</returns>
+/// <example>
+/// <code>
 /// // Directed graph - removes single directed edge
 /// let graph =
 ///   empty Directed
@@ -287,7 +376,8 @@ let private doRemoveDirectedEdge src dst (graph: Graph<'n, 'e>) =
 ///   |> addEdge 1 2 10
 ///   |> removeEdge 1 2
 /// // Edge 1->2 is removed
-/// ```
+/// </code>
+/// </example>
 let removeEdge (src: NodeId) (dst: NodeId) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
     let g = doRemoveDirectedEdge src dst graph
 
@@ -295,7 +385,9 @@ let removeEdge (src: NodeId) (dst: NodeId) (graph: Graph<'n, 'e>) : Graph<'n, 'e
     | Directed -> g
     | Undirected -> doRemoveDirectedEdge dst src g
 
+/// <summary>
 /// Helper for adding edge with combine function
+/// </summary>
 let private doAddDirectedCombine src dst weight combine (graph: Graph<'n, 'e>) =
     let addOrCombine key mapOpt =
         match mapOpt with
@@ -314,17 +406,31 @@ let private doAddDirectedCombine src dst weight combine (graph: Graph<'n, 'e>) =
             |> Map.change src (addOrCombine dst)
         InEdges = graph.InEdges |> Map.change dst (addOrCombine src) }
 
-/// Adds an edge, but if an edge already exists between `src` and `dst`,
-/// it combines the new weight with the existing one using `combine`.
+/// <summary>
+/// Adds an edge, but if an edge already exists between <c>src</c> and <c>dst</c>,
+/// it combines the new weight with the existing one using <c>combine</c>.
 ///
-/// The combine function receives `(existingWeight, newWeight)` and should
+/// The combine function receives <c>(existingWeight, newWeight)</c> and should
 /// return the combined weight.
+/// </summary>
+/// <remarks>
+/// <strong>Time Complexity:</strong> O(1)
 ///
-/// **Time Complexity:** O(1)
-///
-/// ## Example
-///
-/// ```fsharp
+/// <h2>Use Cases</h2>
+/// <ul>
+/// <li><strong>Edge contraction</strong> in graph algorithms (Stoer-Wagner min-cut)</li>
+/// <li><strong>Multi-graph support</strong> (adding parallel edges with combined weights)</li>
+/// <li><strong>Incremental graph building</strong> (accumulating weights from multiple sources)</li>
+/// </ul>
+/// </remarks>
+/// <param name="src">The source node ID.</param>
+/// <param name="dst">The destination node ID.</param>
+/// <param name="weight">The weight of the edge.</param>
+/// <param name="combine">A function to combine existing and new weights.</param>
+/// <param name="graph">The graph to add the edge to.</param>
+/// <returns>A new graph with the edge added or weights combined.</returns>
+/// <example>
+/// <code>
 /// let graph =
 ///   empty Directed
 ///   |> addNode 1 "A"
@@ -332,13 +438,8 @@ let private doAddDirectedCombine src dst weight combine (graph: Graph<'n, 'e>) =
 ///   |> addEdge 1 2 10
 ///   |> addEdgeWithCombine 1 2 5 (+)
 /// // Edge 1->2 now has weight 15 (10 + 5)
-/// ```
-///
-/// ## Use Cases
-///
-/// - **Edge contraction** in graph algorithms (Stoer-Wagner min-cut)
-/// - **Multi-graph support** (adding parallel edges with combined weights)
-/// - **Incremental graph building** (accumulating weights from multiple sources)
+/// </code>
+/// </example>
 let addEdgeWithCombine (src: NodeId) (dst: NodeId) (weight: 'e) (combine: 'e -> 'e -> 'e) (graph: Graph<'n, 'e>) =
     let g = doAddDirectedCombine src dst weight combine graph
 
