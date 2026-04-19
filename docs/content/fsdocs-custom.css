@@ -1,0 +1,26 @@
+/* Hide line numbers in FSharp.Formatting code snippets */
+.lines {
+    display: none;
+}
+
+/* Ensure the code snippet takes full width and looks clean */
+.snippet {
+    padding-left: 10px !important;
+}
+
+table.pre {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+pre.fssnip {
+    margin: 0;
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: var(--code-bg, #f8f9fa);
+    font-family: var(--font-mono);
+}
+
+[data-theme="dark"] pre.fssnip {
+    background-color: #1e1e1e;
+}
