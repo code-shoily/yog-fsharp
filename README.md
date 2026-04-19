@@ -17,6 +17,8 @@
 
 ```
 
+> **Note**: This is a work in progress and is being actively developed. API design is subject to change.
+
 [![NuGet Version](https://img.shields.io/nuget/v/Yog.FSharp)](https://www.nuget.org/packages/Yog.FSharp/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Yog.FSharp)](https://www.nuget.org/packages/Yog.FSharp/)
 [![Documentation](https://img.shields.io/badge/docs-online-blue)](https://code-shoily.github.io/yog-fsharp)
