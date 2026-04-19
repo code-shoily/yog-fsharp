@@ -92,11 +92,9 @@ let private doAddDirectedEdge src dst weight (graph: Graph<'n, 'e>) =
 /// </summary>
 /// <remarks>
 /// <strong>Note:</strong> If <c>src</c> or <c>dst</c> have not been added via <c>addNode</c>,
-/// the edge will still be created in the edge dictionaries, but the
-/// nodes will be missing from <c>graph.Nodes</c>. This creates "ghost nodes"
-/// that are traversable but invisible to functions that iterate over
-/// nodes (e.g. <c>order</c>, <c>allNodes</c>). Use <c>addEdgeEnsured</c> to
-/// auto-create missing endpoints with a default value.
+/// an <c>ArgumentException</c> is thrown. To automatically create missing
+/// endpoints when adding an edge, use <c>addEdgeEnsured</c> or
+/// <c>addEdgeEnsuredWith</c>.
 /// </remarks>
 /// <param name="src">The source node ID.</param>
 /// <param name="dst">The destination node ID.</param>

@@ -16,12 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation for Visualization & Export formats
 - Comprehensive test suite for Network Simplex algorithm verification
 - **Gleam vs F# comparison document** - Detailed side-by-side feature comparison (docs/GLEAM_FSHARP_COMPARISON.md)
+- `addEdgeEnsuredWith` function for dynamically creating missing endpoints using a callback
 
 ### Changed
 - Improved README structure with usage examples and real-world use cases
 - Updated documentation to accurately reflect all implemented features
 - Enhanced DOCS.md with complete example listing
 - **Network Simplex algorithm marked as EXPERIMENTAL** due to incomplete pivot implementation
+- `addEdge` and `addEdgeWithCombine` now throw an exception if source or destination nodes do not exist instead of creating "ghost nodes"
+- `addEdgeEnsured` now takes separate default values for source and destination nodes
 
 ### Fixed
 - Fixed documentation deployment URLs with proper trailing slash handling
