@@ -1,42 +1,39 @@
 /// GDF (GUESS Graph Format) serialization support.
-///
+/// 
 /// Provides functions to serialize graphs in GDF format, a simple text-based format
 /// used by Gephi and other graph visualization tools. GDF uses a column-based format
 /// similar to CSV with separate sections for nodes and edges.
-///
+/// 
 /// ## Format Overview
-///
+/// 
 /// GDF files consist of two sections:
 /// - **nodedef>** - Defines node columns and data
 /// - **edgedef>** - Defines edge columns and data
-///
+/// 
 /// ## Example
-///
-/// ```fsharp
-/// open Yog.IO
-/// open Yog.Model
-///
-/// // Create a simple graph
-/// let graph =
-///     empty Directed
-///     |> addNode 1 "Alice"
-///     |> addNode 2 "Bob"
-///     |> addEdge 1 2 5
-///
-/// // Serialize to GDF
-/// let gdf = Gdf.serialize graph
-/// File.WriteAllText("graph.gdf", gdf)
-/// ```
-///
+/// 
+///     open Yog.IO
+///     open Yog.Model
+///     
+///     // Create a simple graph
+///     let graph =
+///         empty Directed
+///         |> addNode 1 "Alice"
+///         |> addNode 2 "Bob"
+///         |> addEdge 1 2 5
+///     
+///     // Serialize to GDF
+///     let gdf = Gdf.serialize graph
+///     File.WriteAllText("graph.gdf", gdf)
+/// 
 /// ## Output Format
-///
-/// ```
+/// 
 /// nodedef>name VARCHAR,label VARCHAR
 /// 1,Alice
 /// 2,Bob
 /// edgedef>node1 VARCHAR,node2 VARCHAR,weight VARCHAR
 /// 1,2,5
-/// ```
+/// 
 module Yog.IO.Gdf
 
 open System.Text
@@ -108,32 +105,30 @@ let private buildEdgeHeader (options: Options) (attributes: string list) (direct
 // =============================================================================
 
 /// Serializes a graph to GDF format with custom attribute mappers and options.
-///
+/// 
 /// This function allows you to control how node and edge data are converted
 /// to GDF attributes, and customize the output format.
-///
+/// 
 /// **Time Complexity:** O(V + E)
-///
+/// 
 /// ## Example
-///
-/// ```fsharp
-/// type Person = { Name: string; Age: int }
-/// type Connection = { Weight: int; Type: string }
-///
-/// let graph =
-///     empty Directed
-///     |> addNode 1 { Name = "Alice"; Age = 30 }
-///     |> addNode 2 { Name = "Bob"; Age = 25 }
-///     |> addEdge 1 2 { Weight = 5; Type = "friend" }
-///
-/// let nodeAttrs p = ["label", p.Name; "age", string p.Age]
-/// let edgeAttrs c = ["weight", string c.Weight; "type", c.Type]
-///
-/// let gdf = Gdf.serializeWith nodeAttrs edgeAttrs defaultOptions graph
-/// ```
-///
+/// 
+///     type Person = { Name: string; Age: int }
+///     type Connection = { Weight: int; Type: string }
+///     
+///     let graph =
+///         empty Directed
+///         |> addNode 1 { Name = "Alice"; Age = 30 }
+///         |> addNode 2 { Name = "Bob"; Age = 25 }
+///         |> addEdge 1 2 { Weight = 5; Type = "friend" }
+///     
+///     let nodeAttrs p = ["label", p.Name; "age", string p.Age]
+///     let edgeAttrs c = ["weight", string c.Weight; "type", c.Type]
+///     
+///     let gdf = Gdf.serializeWith nodeAttrs edgeAttrs defaultOptions graph
+/// 
 /// ## Use Cases
-///
+/// 
 /// - Exporting graphs for Gephi visualization
 /// - Simple text-based graph interchange format
 /// - Easy to parse and generate programmatically
@@ -203,25 +198,24 @@ let serializeWith
     sb.ToString()
 
 /// Serializes a graph to GDF format where node and edge data are strings.
-///
+/// 
 /// This is a simplified version of `serializeWith` for graphs where
 /// node data and edge data are already strings. The string data is used
 /// as the "label" attribute for both nodes and edges.
-///
+/// 
 /// **Time Complexity:** O(V + E)
-///
+/// 
 /// ## Example
-///
-/// ```fsharp
-/// let graph =
-///     empty Directed
-///     |> addNode 1 "Alice"
-///     |> addNode 2 "Bob"
-///     |> addEdge 1 2 "friend"
-///
-/// let gdf = Gdf.serialize graph
-/// File.WriteAllText("graph.gdf", gdf)
-/// ```
+/// 
+///     let graph =
+///         empty Directed
+///         |> addNode 1 "Alice"
+///         |> addNode 2 "Bob"
+///         |> addEdge 1 2 "friend"
+///     
+///     let gdf = Gdf.serialize graph
+///     File.WriteAllText("graph.gdf", gdf)
+/// 
 let serialize (graph: Graph<string, string>) : string =
     serializeWith
         (fun label -> ["label", label])
@@ -230,18 +224,17 @@ let serialize (graph: Graph<string, string>) : string =
         graph
 
 /// Serializes a graph to GDF format with custom options.
-///
+/// 
 /// Uses default attribute mapping (single "label" column) but allows
 /// customization of separator and type annotations.
-///
+/// 
 /// **Time Complexity:** O(V + E)
-///
+/// 
 /// ## Example
-///
-/// ```fsharp
-/// let options = { defaultOptions with Separator = "\t"; IncludeTypes = false }
-/// let gdf = Gdf.serializeWithOptions options graph
-/// ```
+/// 
+///     let options = { defaultOptions with Separator = "\t"; IncludeTypes = false }
+///     let gdf = Gdf.serializeWithOptions options graph
+/// 
 let serializeWithOptions (options: Options) (graph: Graph<string, string>) : string =
     serializeWith
         (fun label -> ["label", label])
@@ -250,24 +243,23 @@ let serializeWithOptions (options: Options) (graph: Graph<string, string>) : str
         graph
 
 /// Serializes a graph to GDF format with integer edge weights.
-///
+/// 
 /// This is a convenience function for the common case of graphs with
 /// integer weights. Node data is used as labels, and edge weights are
 /// serialized to the "weight" column.
-///
+/// 
 /// **Time Complexity:** O(V + E)
-///
+/// 
 /// ## Example
-///
-/// ```fsharp
-/// let graph =
-///     empty Directed
-///     |> addNode 1 "Alice"
-///     |> addNode 2 "Bob"
-///     |> addEdge 1 2 5
-///
-/// let gdf = Gdf.serializeWeighted graph
-/// ```
+/// 
+///     let graph =
+///         empty Directed
+///         |> addNode 1 "Alice"
+///         |> addNode 2 "Bob"
+///         |> addEdge 1 2 5
+///     
+///     let gdf = Gdf.serializeWeighted graph
+/// 
 let serializeWeighted (graph: Graph<string, int>) : string =
     serializeWith
         (fun label -> ["label", label])

@@ -1,11 +1,11 @@
 /// Centrality measures for identifying important nodes in graphs.
-///
+/// 
 /// Provides degree, closeness, harmonic, betweenness, PageRank, eigenvector, Katz,
 /// and alpha centrality measures. All functions return a Map<NodeId, float> mapping
 /// nodes to their centrality scores.
-///
+/// 
 /// ## Overview
-///
+/// 
 /// | Measure | Function | Best For | Complexity |
 /// |---------|----------|----------|------------|
 /// | Degree | degree | Local connectivity | O(V + E) |
@@ -52,13 +52,13 @@ let degree (mode: DegreeMode) (graph: Graph<'n, 'e>) : Centrality =
     |> Map.ofList
 
 /// Calculates Closeness Centrality for all nodes.
-///
+/// 
 /// Closeness centrality measures how close a node is to all other nodes.
 /// Formula: C(v) = (n - 1) / Σ d(v, u) for all u ≠ v
-///
+/// 
 /// Note: In disconnected graphs, nodes that cannot reach all others get 0.0.
 /// Consider using harmonicCentrality for disconnected graphs.
-///
+/// 
 /// Time Complexity: O(V * (V + E) log V) using Dijkstra from each node
 let closeness
     (zero: 'e)
@@ -91,12 +91,12 @@ let closeness
         |> Map.ofList
 
 /// Calculates Harmonic Centrality for all nodes.
-///
+/// 
 /// Harmonic centrality is a variation of closeness that handles disconnected graphs
 /// gracefully. It sums the reciprocals of shortest path distances.
-///
+/// 
 /// Formula: H(v) = Σ (1 / d(v, u)) / (n - 1) for all reachable u ≠ v
-///
+/// 
 /// Time Complexity: O(V * (V + E) log V)
 let harmonicCentrality
     (zero: 'e)
@@ -361,14 +361,14 @@ let eigenvector (maxIterations: int) (tolerance: float) (graph: Graph<'n, 'e>) :
         |> Map.ofSeq
 
 /// Calculates Katz Centrality for all nodes.
-///
+/// 
 /// Katz centrality adds an attenuation factor (alpha) to prevent infinite accumulation
 /// in cycles, plus a constant term (beta) for base centrality.
-///
+/// 
 /// Formula: C(v) = α * Σ C(u) + β for all neighbors u
-///
+/// 
 /// Time Complexity: O(max_iterations * (V + E))
-///
+/// 
 /// Parameters:
 /// - alpha: Attenuation factor (must be < 1/largest_eigenvalue, typically 0.1-0.3)
 /// - beta: Base centrality (typically 1.0)
@@ -428,14 +428,14 @@ let katz
         |> Map.ofSeq
 
 /// Calculates Alpha Centrality for all nodes.
-///
+/// 
 /// Alpha centrality is a generalization of Katz centrality for directed graphs.
 /// Unlike Katz, it does not include a constant beta term.
-///
+/// 
 /// Formula: C(v) = α * Σ C(u) for all predecessors u (or neighbors for undirected)
-///
+/// 
 /// Time Complexity: O(max_iterations * (V + E))
-///
+/// 
 /// Parameters:
 /// - alpha: Attenuation factor (typically 0.1-0.5)
 /// - initial: Initial centrality value for all nodes

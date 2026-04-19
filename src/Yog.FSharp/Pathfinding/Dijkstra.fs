@@ -1,25 +1,25 @@
 /// Dijkstra's algorithm for single-source shortest paths in graphs with non-negative edge weights.
-///
+/// 
 /// Dijkstra's algorithm finds the shortest path from a source node to all other reachable
 /// nodes in a graph. It works by maintaining a priority queue of nodes to visit,
 /// always expanding the node with the smallest known distance.
-///
+/// 
 /// ## Algorithm
-///
+/// 
 /// | Algorithm | Function | Complexity | Best For |
 /// |-----------|----------|------------|----------|
 /// | Dijkstra (single-target) | shortestPath | O((V + E) log V) | One-to-one shortest path |
 /// | Dijkstra (single-source) | singleSourceDistances | O((V + E) log V) | One-to-all shortest paths |
 /// | Implicit Dijkstra | implicitDijkstra | O((V + E) log V) | Large/infinite graphs |
-///
+/// 
 /// ## History
-///
+/// 
 /// Edsger W. Dijkstra published this algorithm in 1959. The original paper described
 /// it for finding the shortest path between two nodes, but it's commonly used for
 /// single-source shortest paths to all nodes.
-///
+/// 
 /// ## Use Cases
-///
+/// 
 /// - Network routing: OSPF, IS-IS protocols use Dijkstra
 /// - Map services: Shortest driving directions
 /// - Social networks: Degrees of separation

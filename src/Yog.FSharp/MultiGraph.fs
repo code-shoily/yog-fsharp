@@ -6,11 +6,11 @@ open Yog.Model
 type EdgeId = int
 
 /// A multigraph that can hold multiple (parallel) edges between the same pair of nodes.
-///
+/// 
 /// ## Type Parameters
 /// - `'n`: Node data type (must support equality)
 /// - `'e`: Edge data type (must support equality)
-///
+/// 
 /// ## Fields
 /// - `Kind`: Directed or Undirected
 /// - `Nodes`: Map from NodeId to node data
@@ -40,14 +40,14 @@ type WalkControl =
     | Halt
 
 /// Multigraph data structure supporting parallel edges.
-///
+/// 
 /// A multigraph allows multiple edges between the same pair of nodes,
 /// useful for modeling scenarios like:
 /// - Multi-modal transportation (different routes between cities)
 /// - Redundant network connections
 /// - Temporal graphs (same edge at different times)
 /// - Multiple relationship types (without using hypergraphs)
-///
+/// 
 /// ## Comparison with Simple Graph
 /// | Aspect | MultiGraph | Graph |
 /// |--------|-----------|-------|
@@ -55,41 +55,41 @@ type WalkControl =
 /// | Edge identity | EdgeId per edge | No identity |
 /// | Storage | Map<EdgeId, Edge> | Nested maps |
 /// | Use case | Multi-modal, redundant | Standard algorithms |
-///
+/// 
 /// ## Operations
 /// - `addEdge`: Creates new edge, returns EdgeId
 /// - `toSimpleGraph`: Collapse parallel edges using merge function
 /// - `toSimpleGraphMinEdges`: Keep minimum weight edge
 /// - `toSimpleGraphSumEdges`: Sum parallel edge weights
-///
+/// 
 /// ## Example
-/// ```fsharp
-/// open Yog.Multi
-///
-/// // Model multiple flights between cities
-/// let multiGraph =
-///     Model.empty Directed
-///     |> Model.addNode 0 "NYC"
-///     |> Model.addNode 1 "LON"
-///     |> fun g ->
-///         let g1, _ = Model.addEdge 0 1 (Flight("BA112", 420)) g
-///         let g2, _ = Model.addEdge 0 1 (Flight("VS003", 400)) g1
-///         g2
-///
-/// // Collapse to simple graph with cheapest flight
-/// let simple = Model.toSimpleGraphMinEdges compare multiGraph
-/// ```
+/// 
+///     open Yog.Multi
+///     
+///     // Model multiple flights between cities
+///     let multiGraph =
+///         Model.empty Directed
+///         |> Model.addNode 0 "NYC"
+///         |> Model.addNode 1 "LON"
+///         |> fun g ->
+///             let g1, _ = Model.addEdge 0 1 (Flight("BA112", 420)) g
+///             let g2, _ = Model.addEdge 0 1 (Flight("VS003", 400)) g1
+///             g2
+///     
+///     // Collapse to simple graph with cheapest flight
+///     let simple = Model.toSimpleGraphMinEdges compare multiGraph
+/// 
 module Model =
 
     /// Creates an empty multigraph.
-    ///
+    /// 
     /// ## Parameters
     /// - `kind`: Directed or Undirected
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// let graph = Model.empty Directed
-    /// ```
+    /// 
+    ///     let graph = Model.empty Directed
+    /// 
     let empty kind : MultiGraph<'n, 'e> =
         { Kind = kind
           Nodes = Map.empty
@@ -99,23 +99,23 @@ module Model =
           NextEdgeId = 0 }
 
     /// Adds a node to the multigraph.
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// let graph = Model.empty Directed |> Model.addNode 0 "A"
-    /// ```
+    /// 
+    ///     let graph = Model.empty Directed |> Model.addNode 0 "A"
+    /// 
     let addNode id data (graph: MultiGraph<'n, 'e>) =
         { graph with Nodes = Map.add id data graph.Nodes }
 
     /// Adds an edge between two nodes.
-    ///
+    /// 
     /// ## Returns
     /// Tuple of (updated graph, new EdgeId)
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// let graph, edgeId = Model.addEdge 0 1 "weight" graph
-    /// ```
+    /// 
+    ///     let graph, edgeId = Model.addEdge 0 1 "weight" graph
+    /// 
     let addEdge src dst data (graph: MultiGraph<'n, 'e>) =
         let eid = graph.NextEdgeId
         let newEdges = Map.add eid (src, dst, data) graph.Edges
@@ -140,7 +140,7 @@ module Model =
         eid
 
     /// Gets successors with their EdgeIds.
-    ///
+    /// 
     /// ## Returns
     /// List of (target node, EdgeId, edge data)
     let successors id (graph: MultiGraph<'n, 'e>) =
@@ -153,22 +153,22 @@ module Model =
             | _ -> None)
 
     /// Collapses the multigraph into a simple Graph by combining parallel edges.
-    ///
+    /// 
     /// ## Parameters
     /// - `combineFn`: Function to merge edge weights when multiple edges exist
     /// - `graph`: The multigraph to collapse
-    ///
+    /// 
     /// ## Returns
     /// A simple Graph with combined edges.
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// // Sum parallel edge weights
-    /// let simple = Model.toSimpleGraph (+) multiGraph
-    ///
-    /// // Keep maximum weight
-    /// let simple = Model.toSimpleGraph max multiGraph
-    /// ```
+    /// 
+    ///     // Sum parallel edge weights
+    ///     let simple = Model.toSimpleGraph (+) multiGraph
+    ///     
+    ///     // Keep maximum weight
+    ///     let simple = Model.toSimpleGraph max multiGraph
+    /// 
     let toSimpleGraph (combineFn: 'e -> 'e -> 'e) (graph: MultiGraph<'n, 'e>) : Graph<'n, 'e> =
         let mutable (simple: Graph<'n, 'e>) = Yog.Model.empty graph.Kind
 
@@ -191,7 +191,7 @@ module Model =
         simple
 
     /// Collapses the multigraph by keeping the minimum weight.
-    ///
+    /// 
     /// ## Parameters
     /// - `compareFn`: Comparison function for edge weights
     let toSimpleGraphMinEdges (compareFn: 'e -> 'e -> int) (graph: MultiGraph<'n, 'e>) : Graph<'n, 'e> =
@@ -199,7 +199,7 @@ module Model =
         toSimpleGraph minFn graph
 
     /// Collapses the multigraph by summing weights.
-    ///
+    /// 
     /// ## Parameters
     /// - `addFn`: Addition function for edge weights
     let toSimpleGraphSumEdges (addFn: 'e -> 'e -> 'e) (graph: MultiGraph<'n, 'e>) : Graph<'n, 'e> =
@@ -210,7 +210,7 @@ module Traversal =
     open Model
 
     /// Breadth-first search traversal.
-    ///
+    /// 
     /// ## Returns
     /// List of visited node IDs in BFS order.
     let bfs (source: NodeId) (graph: MultiGraph<'n, 'e>) =
@@ -236,7 +236,7 @@ module Traversal =
         loop [ source ] (Set.singleton source) Set.empty []
 
 /// Eulerian circuit algorithms for multigraphs.
-///
+/// 
 /// An Eulerian circuit is a trail that visits every edge exactly once
 /// and returns to the starting vertex.
 module Eulerian =
@@ -272,22 +272,21 @@ module Eulerian =
             Some path
 
     /// Finds an Eulerian circuit if one exists.
-    ///
+    /// 
     /// ## Conditions
     /// - Graph must be connected
     /// - All vertices must have even degree (for undirected)
     /// - For directed: in-degree = out-degree for all vertices
-    ///
+    /// 
     /// ## Returns
     /// `Some edgeIdList` forming the circuit, or `None` if no circuit exists.
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// match Eulerian.findEulerianCircuit graph with
-    /// | Some path -> printfn "Eulerian circuit: %A" path
-    /// | None -> printfn "No Eulerian circuit exists"
-    /// ```
-    ///
+    /// 
+    ///     match Eulerian.findEulerianCircuit graph with
+    ///     | Some path -> printfn "Eulerian circuit: %A" path
+    ///     | None -> printfn "No Eulerian circuit exists"
+    /// 
     /// ## Use Cases
     /// - Route planning (visit every road exactly once)
     /// - DNA sequencing (de Bruijn graphs)

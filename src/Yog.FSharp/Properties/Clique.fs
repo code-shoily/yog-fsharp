@@ -1,23 +1,23 @@
 /// Clique finding algorithms using the Bron-Kerbosch algorithm.
-///
+/// 
 /// A clique is a subset of nodes where every pair of nodes is connected by an edge.
 /// Cliques represent tightly-knit communities or fully-connected subgraphs.
-///
+/// 
 /// ## Algorithms
-///
+/// 
 /// | Problem | Algorithm | Function | Complexity |
 /// |---------|-----------|----------|------------|
 /// | Maximum clique | Bron-Kerbosch with pivot | maxClique | O(3^(n/3)) |
 /// | All maximal cliques | Bron-Kerbosch | allMaximalCliques | O(3^(n/3)) |
 /// | k-Cliques | Bron-Kerbosch with pruning | kCliques | O(3^(n/3)) |
-///
+/// 
 /// ## Note
-///
+/// 
 /// Finding the maximum clique is NP-hard. The O(3^(n/3)) bound is tight - there
 /// exist graphs with exactly 3^(n/3) maximal cliques (Moon-Moser graphs).
-///
+/// 
 /// ## Use Cases
-///
+/// 
 /// - Social network analysis: Finding tightly-knit friend groups
 /// - Bioinformatics: Protein interaction clusters
 /// - Finance: Detecting collusion rings in trading

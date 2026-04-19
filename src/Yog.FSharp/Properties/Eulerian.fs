@@ -1,32 +1,32 @@
 /// Eulerian path and circuit algorithms using Hierholzer's algorithm.
-///
+/// 
 /// An Eulerian path visits every edge exactly once.
 /// An Eulerian circuit visits every edge exactly once and returns to the start.
 /// These problems originated from the famous Seven Bridges of Königsberg
 /// solved by Leonhard Euler in 1736, founding graph theory.
-///
+/// 
 /// ## Algorithms
-///
+/// 
 /// | Problem | Algorithm | Function | Complexity |
 /// |---------|-----------|----------|------------|
 /// | Eulerian circuit check | Degree counting | hasEulerianCircuit | O(V + E) |
 /// | Eulerian path check | Degree counting | hasEulerianPath | O(V + E) |
 /// | Find circuit | Hierholzer's | findEulerianCircuit | O(E) |
 /// | Find path | Hierholzer's | findEulerianPath | O(E) |
-///
+/// 
 /// ## Necessary and Sufficient Conditions
-///
+/// 
 /// **Undirected Graphs:**
 /// - Circuit: All vertices have even degree, connected (ignoring isolates)
 /// - Path: Exactly 0 or 2 vertices have odd degree, connected
-///
+/// 
 /// **Directed Graphs:**
 /// - Circuit: In-degree = Out-degree for all vertices, weakly connected
 /// - Path: At most one vertex has (out - in) = 1 (start),
 ///   at most one has (in - out) = 1 (end), all others balanced
-///
+/// 
 /// ## Use Cases
-///
+/// 
 /// - Route planning: Garbage collection, snow plowing, mail delivery
 /// - DNA sequencing: Constructing genomes from overlapping fragments
 /// - Circuit board drilling: Optimizing drill paths for PCB manufacturing

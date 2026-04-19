@@ -11,13 +11,13 @@ type Direction =
     | Descendants
 
 /// DAG-specific algorithms that leverage acyclicity guarantees.
-///
+/// 
 /// These algorithms are optimized for DAGs and would be incorrect or inefficient
 /// on general graphs with cycles. The DAG property enables linear-time solutions
 /// for problems that are NP-hard on general graphs.
-///
+/// 
 /// ## Algorithms Provided
-///
+/// 
 /// | Algorithm | Complexity | Use Case |
 /// |-----------|------------|----------|
 /// | `topologicalSort` | O(V+E) | Task scheduling, dependency ordering |
@@ -27,16 +27,16 @@ type Direction =
 /// | `transitiveReduction` | O(V×E) | Simplify graphs, remove implied edges |
 /// | `countReachability` | O(V+E) | Impact analysis, prerequisite counting |
 /// | `lowestCommonAncestors` | O(V×(V+E)) | Merge bases, shared dependencies |
-///
+/// 
 /// ## Why DAGs Are Special
-///
+/// 
 /// DAGs enable efficient algorithms for problems that are intractable on general graphs:
 /// - **Longest Path**: O(V+E) on DAGs vs NP-hard on general graphs
 /// - **Topological Sort**: Always succeeds on DAGs vs may fail with cycles
 /// - **Shortest Path**: O(V+E) on DAGs vs O((V+E) log V) with Dijkstra
-///
+/// 
 /// ## References
-///
+/// 
 /// - [Wikipedia: Directed Acyclic Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)
 /// - [Longest Path Problem](https://en.wikipedia.org/wiki/Longest_path_problem)
 /// - [Transitive Closure](https://en.wikipedia.org/wiki/Transitive_closure)
@@ -44,53 +44,52 @@ type Direction =
 module Algorithms =
 
     /// Topological sort guaranteed to succeed for the Dag type.
-    ///
+    /// 
     /// ## Complexity
     /// - **Time**: O(V + E)
     /// - **Space**: O(V)
-    ///
+    /// 
     /// ## Returns
     /// List of node IDs in topological order (sources before targets).
-    ///
+    /// 
     /// ## Note
     /// This function cannot fail because the Dag type guarantees acyclicity.
     /// If it somehow encounters a cycle, it raises an exception (indicating a bug).
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// let order = Algorithms.topologicalSort dag
-    /// // Process nodes in dependency order
-    /// for node in order do
-    ///     executeTask node
-    /// ```
+    /// 
+    ///     let order = Algorithms.topologicalSort dag
+    ///     // Process nodes in dependency order
+    ///     for node in order do
+    ///         executeTask node
+    /// 
     let topologicalSort (dag: Dag<'n, 'e>) =
         match Yog.Traversal.topologicalSort (toGraph dag) with
         | Ok sorted -> sorted
         | Error _ -> failwith "Logic error: Dag contained a cycle"
 
     /// Finds the Longest Path (Critical Path) in O(V+E).
-    ///
+    /// 
     /// In a DAG, the longest path problem is well-defined and solvable in linear time.
     /// This is useful for critical path analysis in project scheduling.
-    ///
+    /// 
     /// ## Type Constraint
     /// Edge weights must be integers.
-    ///
+    /// 
     /// ## Complexity
     /// - **Time**: O(V + E)
     /// - **Space**: O(V)
-    ///
+    /// 
     /// ## Returns
     /// List of node IDs forming the longest path from any source to any sink.
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// // Task durations as edge weights
-    /// let criticalPath = Algorithms.longestPath dag
-    /// printfn "Project duration: %d"
-    ///     (criticalPath.Length - 1)
-    /// ```
-    ///
+    /// 
+    ///     // Task durations as edge weights
+    ///     let criticalPath = Algorithms.longestPath dag
+    ///     printfn "Project duration: %d"
+    ///         (criticalPath.Length - 1)
+    /// 
     /// ## Use Cases
     /// - Project management (PERT/CPM)
     /// - Scheduling with dependencies
@@ -131,27 +130,26 @@ module Algorithms =
                 reconstruct endNode []
 
     /// Transitive Closure: Reachability map with merged weights.
-    ///
+    /// 
     /// Computes a new DAG where there's a direct edge from u to v if v is reachable
     /// from u in the original DAG. Edge weights are merged using the provided function.
-    ///
+    /// 
     /// ## Parameters
     /// - `mergeFn`: Function to combine weights when multiple paths exist
     /// - `dag`: The input DAG
-    ///
+    /// 
     /// ## Complexity
     /// - **Time**: O(V² + VE) - processes each edge and potential path
     /// - **Space**: O(V²) - stores reachability for all pairs
-    ///
+    /// 
     /// ## Returns
     /// A new DAG representing the transitive closure.
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// // Merge by taking minimum weight along any path
-    /// let closure = Algorithms.transitiveClosure min dag
-    /// ```
-    ///
+    /// 
+    ///     // Merge by taking minimum weight along any path
+    ///     let closure = Algorithms.transitiveClosure min dag
+    /// 
     /// ## Use Cases
     /// - Dependency analysis (what indirectly depends on what)
     /// - Reachability queries
@@ -193,27 +191,26 @@ module Algorithms =
         | Error _ -> failwith "Closure error"
 
     /// Count total descendants or ancestors using set-based DP.
-    ///
+    /// 
     /// ## Parameters
     /// - `direction`: Count Ancestors (can reach node) or Descendants (reachable from node)
     /// - `dag`: The input DAG
-    ///
+    /// 
     /// ## Complexity
     /// - **Time**: O(V + E)
     /// - **Space**: O(V²) in worst case (storing all reachability sets)
-    ///
+    /// 
     /// ## Returns
     /// Map from node ID to count of reachable nodes in the specified direction.
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// // Count how many tasks depend on each task (descendants)
-    /// let impact = Algorithms.countReachability Descendants dag
-    ///
-    /// // Count prerequisites for each task (ancestors)
-    /// let prerequisites = Algorithms.countReachability Ancestors dag
-    /// ```
-    ///
+    /// 
+    ///     // Count how many tasks depend on each task (descendants)
+    ///     let impact = Algorithms.countReachability Descendants dag
+    ///     
+    ///     // Count prerequisites for each task (ancestors)
+    ///     let prerequisites = Algorithms.countReachability Ancestors dag
+    /// 
     /// ## Use Cases
     /// - Impact analysis (how many things break if X fails)
     /// - Work prioritization (tasks with many prerequisites first)
@@ -246,33 +243,32 @@ module Algorithms =
         reachSets |> Map.map (fun _ s -> Set.count s)
 
     /// Computes the transitive reduction of a DAG.
-    ///
+    /// 
     /// The transitive reduction removes all edges that are redundant - i.e., edges
     /// u -> v where there exists an indirect path from u to v through other nodes.
     /// The result has the minimum number of edges while preserving all reachability
     /// relationships.
-    ///
+    /// 
     /// This is the inverse of transitive closure.
-    ///
+    /// 
     /// ## Parameters
     /// - `mergeFn`: Function to combine weights when multiple paths exist
     /// - `dag`: The input DAG
-    ///
+    /// 
     /// ## Complexity
     /// - **Time**: O(V×E)
     /// - **Space**: O(V²)
-    ///
+    /// 
     /// ## Returns
     /// A new DAG with redundant edges removed.
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// // Original: A->B, B->C, A->C (A->C is implied by A->B->C)
-    /// // Reduction removes: A->C
-    /// // Result: A->B, B->C
-    /// let minimal = Algorithms.transitiveReduction min dag
-    /// ```
-    ///
+    /// 
+    ///     // Original: A->B, B->C, A->C (A->C is implied by A->B->C)
+    ///     // Reduction removes: A->C
+    ///     // Result: A->B, B->C
+    ///     let minimal = Algorithms.transitiveReduction min dag
+    /// 
     /// ## Use Cases
     /// - Simplifying dependency graphs
     /// - Removing implied dependencies
@@ -304,32 +300,31 @@ module Algorithms =
         | Error _ -> failwith "Reduction should preserve acyclicity"
 
     /// Finds the shortest path between two specific nodes in a weighted DAG.
-    ///
+    /// 
     /// Uses dynamic programming on the topologically sorted DAG to find the minimum
     /// weight path from `src` to `dst`. Unlike Dijkstra's algorithm which works on
     /// general graphs in O((V+E) log V), this leverages the DAG property for linear
     /// time complexity.
-    ///
+    /// 
     /// ## Type Constraint
     /// Edge weights must be integers.
-    ///
+    /// 
     /// ## Complexity
     /// - **Time**: O(V + E)
     /// - **Space**: O(V)
-    ///
+    /// 
     /// ## Returns
     /// - `Some path`: List of node IDs from src to dst with minimum total weight
     /// - `None`: If no path exists from src to dst
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// match Algorithms.shortestPath dag 0 5 with
-    /// | Some path ->
-    ///     printfn "Shortest path: %A" path
-    /// | None ->
-    ///     printfn "No path exists"
-    /// ```
-    ///
+    /// 
+    ///     match Algorithms.shortestPath dag 0 5 with
+    ///     | Some path ->
+    ///         printfn "Shortest path: %A" path
+    ///     | None ->
+    ///         printfn "No path exists"
+    /// 
     /// ## Use Cases
     /// - Finding fastest route in task dependencies
     /// - Minimum cost path in project networks
@@ -367,10 +362,10 @@ module Algorithms =
             Some(reconstruct dst [])
 
     /// Checks if a path exists from start to target in the DAG.
-    ///
+    /// 
     /// Performs a simple DFS traversal. Since the graph is a DAG, no cycle
     /// detection is needed.
-    ///
+    /// 
     /// **Time Complexity:** O(V + E) in the worst case
     let private hasPath (dag: Dag<'n, 'e>) (start: NodeId) (target: NodeId) : bool =
         let graph = toGraph dag
@@ -390,30 +385,29 @@ module Algorithms =
         dfs start Set.empty
 
     /// Finds the lowest common ancestors (LCAs) of two nodes.
-    ///
+    /// 
     /// A common ancestor of nodes A and B is any node that has paths to both A and B.
     /// The "lowest" common ancestors are those that are not ancestors of any other
     /// common ancestor - they are the "closest" shared dependencies.
-    ///
+    /// 
     /// ## Parameters
     /// - `nodeA`: First node
     /// - `nodeB`: Second node
     /// - `dag`: The input DAG
-    ///
+    /// 
     /// ## Complexity
     /// - **Time**: O(V×(V+E))
     /// - **Space**: O(V)
-    ///
+    /// 
     /// ## Returns
     /// List of node IDs representing the lowest common ancestors.
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// // Given: X->A, X->B, Y->A, Z->B
-    /// // LCAs of A and B are [X] - the most specific shared ancestor
-    /// let lcas = Algorithms.lowestCommonAncestors nodeA nodeB dag
-    /// ```
-    ///
+    /// 
+    ///     // Given: X->A, X->B, Y->A, Z->B
+    ///     // LCAs of A and B are [X] - the most specific shared ancestor
+    ///     let lcas = Algorithms.lowestCommonAncestors nodeA nodeB dag
+    /// 
     /// ## Use Cases
     /// - Finding merge bases in version control
     /// - Identifying shared dependencies

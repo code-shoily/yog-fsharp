@@ -1,24 +1,22 @@
 /// Mermaid diagram rendering.
-///
+/// 
 /// Provides functions to export graphs in Mermaid syntax for embedding
 /// in markdown documents.
-///
+/// 
 /// ## Example
-///
-/// ```fsharp
-/// open Yog.IO
-/// open Yog.Model
-///
-/// let graph =
-///     empty Directed
-///     |> addNode 1 "Start"
-///     |> addNode 2 "End"
-///     |> addEdge 1 2 5
-///
-/// // Export to Mermaid for markdown
-/// let mermaid = Mermaid.render Mermaid.defaultOptions graph
-/// printfn "```mermaid\n%s\n```" mermaid
-/// ```
+/// 
+///     open Yog.IO
+///     open Yog.Model
+///     
+///     let graph =
+///         empty Directed
+///         |> addNode 1 "Start"
+///         |> addNode 2 "End"
+///         |> addEdge 1 2 5
+///     
+///     // Export to Mermaid for markdown
+///     let mermaid = Mermaid.render Mermaid.defaultOptions graph
+/// 
 module Yog.IO.Mermaid
 
 open System.Text
@@ -36,7 +34,7 @@ type Options<'n, 'e> =
       HighlightedEdges: Set<NodeId * NodeId> }
 
 /// Default configuration for Mermaid output.
-///
+/// 
 /// Uses node ID as a label and edge weight as a string.
 let defaultOptions<'n, 'e> : Options<'n, 'e> =
     { NodeLabel = fun id _ -> string id
@@ -45,41 +43,39 @@ let defaultOptions<'n, 'e> : Options<'n, 'e> =
       HighlightedEdges = Set.empty }
 
 /// Converts a graph to Mermaid diagram syntax.
-///
+/// 
 /// Mermaid diagrams can be embedded directly in markdown and rendered
 /// by many documentation tools (GitHub, GitLab, Notion, etc.).
-///
+/// 
 /// **Time Complexity:** O(V + E)
-///
+/// 
 /// ## Example
-///
-/// ```fsharp
-/// let graph =
-///     empty Directed
-///     |> addNode 1 "Start"
-///     |> addNode 2 "Process"
-///     |> addNode 3 "End"
-///     |> addEdge 1 2 5
-///     |> addEdge 2 3 3
-///
-/// // Highlight a path
-/// let options = { Mermaid.defaultOptions with
-///     HighlightedNodes = Set.ofList [1; 2; 3]
-///     HighlightedEdges = Set.ofList [(1, 2); (2, 3)]
-/// }
-///
-/// let diagram = Mermaid.render options graph
-/// // graph TD
-/// //   classDef highlight fill:#ffeb3b,stroke:#f57c00,stroke-width:3px
-/// //   1["Start"]:::highlight
-/// //   2["Process"]:::highlight
-/// //   3["End"]:::highlight
-/// //   1 -->|"5"| 2:::highlightEdge
-/// //   2 -->|"3"| 3:::highlightEdge
-/// ```
-///
+/// 
+///     let graph =
+///         empty Directed
+///         |> addNode 1 "Start"
+///         |> addNode 2 "Process"
+///         |> addNode 3 "End"
+///         |> addEdge 1 2 5
+///         |> addEdge 2 3 3
+///     
+///     // Highlight a path
+///     let options = { Mermaid.defaultOptions with
+///         HighlightedNodes = Set.ofList [1; 2; 3]
+///         HighlightedEdges = Set.ofList [(1, 2); (2, 3)]
+///     }
+///     
+///     let diagram = Mermaid.render options graph
+///     // graph TD
+///     //   classDef highlight fill:#ffeb3b,stroke:#f57c00,stroke-width:3px
+///     //   1["Start"]:::highlight
+///     //   2["Process"]:::highlight
+///     //   3["End"]:::highlight
+///     //   1 -->|"5"| 2:::highlightEdge
+///     //   2 -->|"3"| 3:::highlightEdge
+/// 
 /// ## Use Cases
-///
+/// 
 /// - Documentation and README files
 /// - Wiki pages
 /// - Presentation slides
@@ -138,17 +134,16 @@ let render (options: Options<'n, 'e>) (graph: Graph<'n, 'e>) : string =
     sb.ToString()
 
 /// Renders a graph to a Mermaid file.
-///
+/// 
 /// ## Example
-///
-/// ```fsharp
-/// let graph =
-///     empty Directed
-///     |> addNode 1 "A"
-///     |> addNode 2 "B"
-///     |> addEdge 1 2 5
-///
-/// Mermaid.writeFile "output.mmd" Mermaid.defaultOptions graph
-/// ```
+/// 
+///     let graph =
+///         empty Directed
+///         |> addNode 1 "A"
+///         |> addNode 2 "B"
+///         |> addEdge 1 2 5
+///     
+///     Mermaid.writeFile "output.mmd" Mermaid.defaultOptions graph
+/// 
 let writeFile (path: string) (options: Options<'n, 'e>) (graph: Graph<'n, 'e>) : unit =
     System.IO.File.WriteAllText(path, render options graph)

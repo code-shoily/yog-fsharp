@@ -1,19 +1,19 @@
 /// Bipartite graph analysis and matching algorithms.
-///
+/// 
 /// A graph is bipartite (2-colorable) if its vertices can be divided into two disjoint sets
 /// such that every edge connects a vertex in one set to a vertex in the other set.
 /// Equivalently, a bipartite graph contains no odd-length cycles.
-///
+/// 
 /// ## Algorithms
-///
+/// 
 /// | Problem | Algorithm | Function | Complexity |
 /// |---------|-----------|----------|------------|
 /// | Bipartite check | BFS 2-coloring | isBipartite, partition | O(V + E) |
 /// | Maximum matching | Augmenting paths | maximumMatching | O(VE) |
 /// | Stable matching | Gale-Shapley | stableMarriage | O(V²) |
-///
+/// 
 /// ## Use Cases
-///
+/// 
 /// - Job assignment: Workers to tasks they can perform
 /// - Scheduling: Time slots to events without conflicts
 /// - Recommendation systems: Users to items they might like

@@ -1,27 +1,27 @@
 /// Optimized distance matrix computation for subsets of nodes.
-///
+/// 
 /// This module provides an auto-selecting algorithm for computing shortest path
 /// distances between specified "points of interest" (POIs) in a graph. It chooses
 /// between Floyd-Warshall and multiple Dijkstra runs based on POI density.
-///
+/// 
 /// ## Algorithm Selection
-///
+/// 
 /// | Algorithm | When Selected | Complexity |
 /// |-----------|---------------|------------|
 /// | Floyd-Warshall | Many POIs (> V/3) | O(V³) then filter |
 /// | Dijkstra × P | Few POIs (≤ V/3) | O(P × (V + E) log V) |
-///
+/// 
 /// ## Heuristic
-///
+/// 
 /// The crossover point is P > V/3 where P is the number of points of interest:
 /// - **Dense POIs**: Floyd-Warshall computes all-pairs once, then filter
 /// - **Sparse POIs**: Run Dijkstra from each POI individually
-///
+/// 
 /// This heuristic balances the O(V³) Floyd-Warshall against the O(P(V+E) log V)
 /// cost of multiple Dijkstra runs.
-///
+/// 
 /// ## Use Cases
-///
+/// 
 /// - Game AI: Pathfinding between key locations (not all nodes)
 /// - Logistics: Distance matrix for delivery stops
 /// - Facility location: Distances between candidate sites
@@ -32,10 +32,10 @@ open Yog.Model
 open Yog.Pathfinding
 
 /// Computes shortest distances between all pairs of points of interest.
-///
+/// 
 /// Automatically chooses between Floyd-Warshall and multiple Dijkstra runs
 /// based on the density of POIs relative to graph size.
-///
+/// 
 /// Time Complexity: O(V³) or O(P * (V + E) log V)
 let distanceMatrix
     (zero: 'e)

@@ -14,10 +14,10 @@ type Transition<'n, 'e> =
     | RemoveNode of id: NodeId
 
 /// A Live Builder for incremental graph construction.
-///
+/// 
 /// Tracks label-to-ID mappings and pending transitions.
 /// Changes are applied via `sync` to a target graph.
-///
+/// 
 /// ## Type Parameters
 /// - `'n`: Node label type (must support comparison)
 /// - `'e`: Edge weight type
@@ -30,13 +30,13 @@ type LiveBuilder<'n, 'e when 'n: comparison> =
       Pending: Transition<'n, 'e> list }
 
 /// Live graph builder for incremental graph construction.
-///
+/// 
 /// The Live builder queues changes (additions and removals) that can be applied
 /// to a graph in batches via `sync`. This is useful for:
 /// - Building graphs incrementally from streaming data
 /// - Delaying expensive graph operations until necessary
 /// - Tracking pending changes before commit
-///
+/// 
 /// ## Comparison with LabeledBuilder
 /// | Aspect | LiveBuilder | LabeledBuilder |
 /// |--------|-------------|----------------|
@@ -44,22 +44,21 @@ type LiveBuilder<'n, 'e when 'n: comparison> =
 /// | Sync required | Yes | No |
 /// | Remove operations | Yes | No |
 /// | Use case | Streaming/mutable | Static construction |
-///
+/// 
 /// ## Example
-/// ```fsharp
-/// open Yog.Builder
-///
-/// // Queue multiple changes
-/// let builder, graph =
-///     Live.create<string, int>()
-///     |> Live.addEdge "Alice" "Bob" 5
-///     |> Live.addEdge "Bob" "Charlie" 3
-///     |> Live.removeEdge "Alice" "Bob"
-///     |> Live.sync (Yog.Model.empty Directed)
-///
-/// // graph now contains only Bob -> Charlie
-/// ```
-///
+/// 
+///     open Yog.Builder
+///     
+///     // Queue multiple changes
+///     let builder, graph =
+///         Live.create<string, int>()
+///         |> Live.addEdge "Alice" "Bob" 5
+///         |> Live.addEdge "Bob" "Charlie" 3
+///         |> Live.removeEdge "Alice" "Bob"
+///         |> Live.sync (Yog.Model.empty Directed)
+///     
+///     // graph now contains only Bob -> Charlie
+/// 
 /// ## Transition Types
 /// - `AddNode`: Create a new node with given ID and label
 /// - `AddEdge`: Create an edge between node IDs
@@ -68,11 +67,11 @@ type LiveBuilder<'n, 'e when 'n: comparison> =
 module Live =
 
     /// Creates a new empty live builder.
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// let builder = Live.create<string, int>()
-    /// ```
+    /// 
+    ///     let builder = Live.create<string, int>()
+    /// 
     let create<'n, 'e when 'n: comparison> () : LiveBuilder<'n, 'e> =
         { Registry = Map.empty
           NextId = 0
@@ -93,15 +92,15 @@ module Live =
             id
 
     /// Queues an edge addition between two labels.
-    ///
+    /// 
     /// Creates nodes automatically if they don't exist.
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// let builder =
-    ///     Live.create<string, int>()
-    ///     |> Live.addEdge "A" "B" 10
-    /// ```
+    /// 
+    ///     let builder =
+    ///         Live.create<string, int>()
+    ///         |> Live.addEdge "A" "B" 10
+    /// 
     let addEdge fromLabel toLabel weight builder =
         let b1, srcId = ensureNode fromLabel builder
         let b2, dstId = ensureNode toLabel b1
@@ -112,7 +111,7 @@ module Live =
     let addSimpleEdge fromLabel toLabel builder = addEdge fromLabel toLabel 1 builder
 
     /// Queues an edge removal.
-    ///
+    /// 
     /// Silently ignored if either label doesn't exist.
     let removeEdge fromLabel toLabel builder =
         match Map.tryFind fromLabel builder.Registry, Map.tryFind toLabel builder.Registry with
@@ -122,7 +121,7 @@ module Live =
         | _ -> builder
 
     /// Queues a node removal and removes it from the label registry.
-    ///
+    /// 
     /// Silently ignored if the label doesn't exist.
     let removeNode label builder =
         match Map.tryFind label builder.Registry with
@@ -135,22 +134,22 @@ module Live =
         | None -> builder
 
     /// Synchronizes pending changes to the provided graph.
-    ///
+    /// 
     /// Returns the updated builder (with cleared queue) and the updated graph.
-    ///
+    /// 
     /// ## Parameters
     /// - `builder`: The LiveBuilder with pending changes
     /// - `graph`: The target graph to apply changes to
-    ///
+    /// 
     /// ## Returns
     /// Tuple of (builder with cleared pending, updated graph)
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// let builder, updatedGraph =
-    ///     myBuilder
-    ///     |> Live.sync existingGraph
-    /// ```
+    /// 
+    ///     let builder, updatedGraph =
+    ///         myBuilder
+    ///         |> Live.sync existingGraph
+    /// 
     let sync (builder: LiveBuilder<'n, 'e>) (graph: Graph<'n, 'e>) =
         if List.isEmpty builder.Pending then
             builder, graph
@@ -170,15 +169,15 @@ module Live =
             { builder with Pending = [] }, updatedGraph
 
     /// Discards all pending changes without applying them.
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// let cleanBuilder = Live.purgePending builder
-    /// ```
+    /// 
+    ///     let cleanBuilder = Live.purgePending builder
+    /// 
     let purgePending builder = { builder with Pending = [] }
 
     /// Looks up the NodeId for a label.
-    ///
+    /// 
     /// ## Returns
     /// `Some id` if the label is registered, `None` otherwise.
     let getId label builder = Map.tryFind label builder.Registry
@@ -191,14 +190,14 @@ module Live =
     let pendingCount builder = List.length builder.Pending
 
     /// Migrate from a static LabeledBuilder to a LiveBuilder.
-    ///
+    /// 
     /// Preserves all labels and IDs but starts with an empty pending queue.
-    ///
+    /// 
     /// ## Example
-    /// ```fsharp
-    /// let labeled = Labeled.directed<string, int>() |> Labeled.addEdge "A" "B" 1
-    /// let live = Live.fromLabeled labeled
-    /// ```
+    /// 
+    ///     let labeled = Labeled.directed<string, int>() |> Labeled.addEdge "A" "B" 1
+    ///     let live = Live.fromLabeled labeled
+    /// 
     let fromLabeled (labeled: LabeledBuilder<'n, 'e>) : LiveBuilder<'n, 'e> =
         { Registry = labeled.LabelToId
           NextId = labeled.NextId

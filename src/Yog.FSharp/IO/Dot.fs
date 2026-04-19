@@ -1,24 +1,23 @@
 /// DOT (Graphviz) graph rendering.
-///
+/// 
 /// Provides functions to export graphs in DOT format for visualization
 /// with Graphviz tools.
-///
+/// 
 /// ## Example
-///
-/// ```fsharp
-/// open Yog.IO
-/// open Yog.Model
-///
-/// let graph =
-///     empty Directed
-///     |> addNode 1 "Start"
-///     |> addNode 2 "End"
-///     |> addEdge 1 2 5
-///
-/// // Export to DOT for Graphviz
-/// let dot = Dot.render Dot.defaultOptions graph
-/// File.WriteAllText("graph.dot", dot)
-/// ```
+/// 
+///     open Yog.IO
+///     open Yog.Model
+///     
+///     let graph =
+///         empty Directed
+///         |> addNode 1 "Start"
+///         |> addNode 2 "End"
+///         |> addEdge 1 2 5
+///     
+///     // Export to DOT for Graphviz
+///     let dot = Dot.render Dot.defaultOptions graph
+///     File.WriteAllText("graph.dot", dot)
+/// 
 module Yog.IO.Dot
 
 open System.Text
@@ -40,7 +39,7 @@ type Options<'n, 'e> =
       HighlightColor: string }
 
 /// Default configuration for DOT output.
-///
+/// 
 /// Uses node ID as a label and edge weight as a string.
 let defaultOptions<'n, 'e> : Options<'n, 'e> =
     { NodeLabel = fun id _ -> string id
@@ -51,37 +50,35 @@ let defaultOptions<'n, 'e> : Options<'n, 'e> =
       HighlightColor = "red" }
 
 /// Converts a graph to DOT (Graphviz) syntax.
-///
+/// 
 /// The DOT format can be processed by Graphviz tools:
 /// `dot -Tpng -o graph.png graph.dot`
-///
+/// 
 /// **Time Complexity:** O(V + E)
-///
+/// 
 /// ## Example
-///
-/// ```fsharp
-/// let graph =
-///     empty Directed
-///     |> addNode 1 "Start"
-///     |> addNode 2 "Process"
-///     |> addEdge 1 2 "5"
-///
-/// let options = { Dot.defaultOptions with
-///     NodeLabel = fun id data -> $"{id}:{data}"
-///     HighlightedNodes = Set.ofList [1]
-/// }
-///
-/// let diagram = Dot.render options graph
-/// // digraph G {
-/// //   node [shape=ellipse];
-/// //   1 [label="1:Start", fillcolor="red", style=filled];
-/// //   2 [label="2:Process"];
-/// //   1 -> 2 [label="5"];
-/// // }
-/// ```
-///
+/// 
+///     let graph =
+///         empty Directed
+///         |> addNode 1 "Start"
+///         |> addNode 2 "Process"
+///         |> addEdge 1 2 "5"
+///     
+///     let options = { Dot.defaultOptions with
+///         NodeLabel = fun id data -> $"{id}:{data}"
+///         HighlightedNodes = Set.ofList [1]
+///     }
+///     
+///     let diagram = Dot.render options graph
+///     // digraph G {
+///     //   node [shape=ellipse];
+///     //   1 [label="1:Start", fillcolor="red", style=filled];
+///     //   2 [label="2:Process"];
+///     //   1 -> 2 [label="5"];
+///     // }
+/// 
 /// ## Use Cases
-///
+/// 
 /// - Professional graph visualization
 /// - Publication-quality diagrams
 /// - Complex graph layouts (hierarchical, circular, etc.)
@@ -137,17 +134,16 @@ let render (options: Options<'n, 'e>) (graph: Graph<'n, 'e>) : string =
     sb.ToString()
 
 /// Renders a graph to a DOT file.
-///
+/// 
 /// ## Example
-///
-/// ```fsharp
-/// let graph =
-///     empty Directed
-///     |> addNode 1 "A"
-///     |> addNode 2 "B"
-///     |> addEdge 1 2 5
-///
-/// Dot.writeFile "output.dot" Dot.defaultOptions graph
-/// ```
+/// 
+///     let graph =
+///         empty Directed
+///         |> addNode 1 "A"
+///         |> addNode 2 "B"
+///         |> addEdge 1 2 5
+///     
+///     Dot.writeFile "output.dot" Dot.defaultOptions graph
+/// 
 let writeFile (path: string) (options: Options<'n, 'e>) (graph: Graph<'n, 'e>) : unit =
     System.IO.File.WriteAllText(path, render options graph)
