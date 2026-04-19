@@ -85,7 +85,7 @@ let closeness
             else
                 let totalDistance =
                     distances
-                    |> Map.fold (fun acc _ d -> add acc d) zero
+                    |> Map.fold (fun acc _ -> add acc) zero
 
                 source, float (n - 1) / toFloat totalDistance)
         |> Map.ofList
