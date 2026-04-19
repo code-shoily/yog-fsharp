@@ -39,14 +39,14 @@ type Graph<'nodeData, 'edgeData> =
 
 /// <summary>
 /// Creates a new empty graph of the specified type.
+///
+/// **Example:**
+/// ```fsharp
+/// let graph = Model.empty Directed
+/// ```
 /// </summary>
 /// <param name="graphType">The type of the graph.</param>
 /// <returns>A new empty graph.</returns>
-/// <example>
-/// <code>
-/// let graph = Model.empty Directed
-/// </code>
-/// </example>
 let empty graphType : Graph<'n, 'e> =
     { Kind = graphType
       Nodes = Map.empty
@@ -56,18 +56,18 @@ let empty graphType : Graph<'n, 'e> =
 /// <summary>
 /// Adds a node to the graph with the given ID and data.
 /// If a node with this ID already exists, its data will be replaced.
+///
+/// **Example:**
+/// ```fsharp
+/// graph
+/// |> addNode 1 "Node A"
+/// |> addNode 2 "Node B"
+/// ```
 /// </summary>
 /// <param name="id">The unique identifier for the node.</param>
 /// <param name="data">The data to store at the node.</param>
 /// <param name="graph">The graph to add the node to.</param>
 /// <returns>A new graph with the node added.</returns>
-/// <example>
-/// <code>
-/// graph
-/// |> addNode 1 "Node A"
-/// |> addNode 2 "Node B"
-/// </code>
-/// </example>
 let addNode (id: NodeId) (data: 'n) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
     { graph with Nodes = graph.Nodes |> Map.add id data }
 
@@ -89,6 +89,12 @@ let private doAddDirectedEdge src dst weight (graph: Graph<'n, 'e>) =
 ///
 /// For directed graphs, adds a single edge from src to dst.
 /// For undirected graphs, adds edges in both directions.
+///
+/// **Example:**
+/// ```fsharp
+/// graph
+/// |> addEdge 1 2 10
+/// ```
 /// </summary>
 /// <remarks>
 /// <strong>Note:</strong> If <c>src</c> or <c>dst</c> have not been added via <c>addNode</c>,
@@ -101,12 +107,6 @@ let private doAddDirectedEdge src dst weight (graph: Graph<'n, 'e>) =
 /// <param name="weight">The weight of the edge.</param>
 /// <param name="graph">The graph to add the edge to.</param>
 /// <returns>A new graph with the edge added.</returns>
-/// <example>
-/// <code>
-/// graph
-/// |> addEdge 1 2 10
-/// </code>
-/// </example>
 let addEdge (src: NodeId) (dst: NodeId) (weight: 'e) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
     if not (graph.Nodes |> Map.containsKey src) then
         invalidArg "src" (sprintf "Source node %d does not exist in the graph." src)
@@ -134,6 +134,20 @@ let private ensureNode id data (graph: Graph<'n, 'e>) =
 /// If <c>src</c> or <c>dst</c> is not already in the graph, it is created with
 /// the supplied default data before the edge is added. Nodes
 /// that already exist are left unchanged.
+///
+/// **Example:**
+/// ```fsharp
+/// // Nodes 1 and 2 are created automatically with data "unknown"
+/// empty Directed
+/// |> addEdgeEnsured 1 2 10 "unknown" "unknown"
+/// ```
+/// ```fsharp
+/// // Existing nodes keep their data; only missing ones get the default
+/// empty Directed
+/// |> addNode 1 "Alice"
+/// |> addEdgeEnsured 1 2 5 "anon" "anon"
+/// // Node 1 is still "Alice", node 2 is "anon"
+/// ```
 /// </summary>
 /// <param name="src">The source node ID.</param>
 /// <param name="dst">The destination node ID.</param>
@@ -142,20 +156,6 @@ let private ensureNode id data (graph: Graph<'n, 'e>) =
 /// <param name="dstDefault">The default data for the destination node if it doesn't exist.</param>
 /// <param name="graph">The graph to add the edge to.</param>
 /// <returns>A new graph with the edge added and endpoints ensured.</returns>
-/// <example>
-/// <code>
-/// // Nodes 1 and 2 are created automatically with data "unknown"
-/// empty Directed
-/// |> addEdgeEnsured 1 2 10 "unknown" "unknown"
-/// </code>
-/// <code>
-/// // Existing nodes keep their data; only missing ones get the default
-/// empty Directed
-/// |> addNode 1 "Alice"
-/// |> addEdgeEnsured 1 2 5 "anon" "anon"
-/// // Node 1 is still "Alice", node 2 is "anon"
-/// </code>
-/// </example>
 let addEdgeEnsured (src: NodeId) (dst: NodeId) (weight: 'e) (srcDefault: 'n) (dstDefault: 'n) (graph: Graph<'n, 'e>) =
     graph
     |> ensureNode src srcDefault
@@ -300,16 +300,9 @@ let successorIds (id: NodeId) (graph: Graph<'n, 'e>) : list<NodeId> = successors
 
 /// <summary>
 /// Removes a node and all its connected edges (incoming and outgoing).
-/// </summary>
-/// <remarks>
-/// <strong>Time Complexity:</strong> O(deg(v)) - proportional to the number of edges
-/// connected to the node, not the whole graph.
-/// </remarks>
-/// <param name="id">The ID of the node to remove.</param>
-/// <param name="graph">The graph to remove the node from.</param>
-/// <returns>A new graph with the node and its connections removed.</returns>
-/// <example>
-/// <code>
+///
+/// **Example:**
+/// ```fsharp
 /// let graph =
 ///   empty Directed
 ///   |> addNode 1 "A"
@@ -320,8 +313,15 @@ let successorIds (id: NodeId) (graph: Graph<'n, 'e>) : list<NodeId> = successors
 ///
 /// let graph = removeNode 2 graph
 /// // Node 2 is removed, along with edges 1->2 and 2->3
-/// </code>
-/// </example>
+/// ```
+/// </summary>
+/// <remarks>
+/// <strong>Time Complexity:</strong> O(deg(v)) - proportional to the number of edges
+/// connected to the node, not the whole graph.
+/// </remarks>
+/// <param name="id">The ID of the node to remove.</param>
+/// <param name="graph">The graph to remove the node from.</param>
+/// <returns>A new graph with the node and its connections removed.</returns>
 let removeNode (id: NodeId) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
     let targets = successors id graph |> List.map fst
     let sources = predecessors id graph |> List.map fst
@@ -384,16 +384,9 @@ let private doRemoveDirectedEdge src dst (graph: Graph<'n, 'e>) =
 /// <summary>
 /// Removes an edge from src to dst.
 /// For undirected graphs, removes edges in both directions.
-/// </summary>
-/// <remarks>
-/// <strong>Time Complexity:</strong> O(1)
-/// </remarks>
-/// <param name="src">The source node ID.</param>
-/// <param name="dst">The destination node ID.</param>
-/// <param name="graph">The graph to remove the edge from.</param>
-/// <returns>A new graph with the edge removed.</returns>
-/// <example>
-/// <code>
+///
+/// **Example:**
+/// ```fsharp
 /// // Directed graph - removes single directed edge
 /// let graph =
 ///   empty Directed
@@ -402,8 +395,15 @@ let private doRemoveDirectedEdge src dst (graph: Graph<'n, 'e>) =
 ///   |> addEdge 1 2 10
 ///   |> removeEdge 1 2
 /// // Edge 1->2 is removed
-/// </code>
-/// </example>
+/// ```
+/// </summary>
+/// <remarks>
+/// <strong>Time Complexity:</strong> O(1)
+/// </remarks>
+/// <param name="src">The source node ID.</param>
+/// <param name="dst">The destination node ID.</param>
+/// <param name="graph">The graph to remove the edge from.</param>
+/// <returns>A new graph with the edge removed.</returns>
 let removeEdge (src: NodeId) (dst: NodeId) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
     let g = doRemoveDirectedEdge src dst graph
 
@@ -438,6 +438,17 @@ let private doAddDirectedCombine src dst weight combine (graph: Graph<'n, 'e>) =
 ///
 /// The combine function receives <c>(existingWeight, newWeight)</c> and should
 /// return the combined weight.
+///
+/// **Example:**
+/// ```fsharp
+/// let graph =
+///   empty Directed
+///   |> addNode 1 "A"
+///   |> addNode 2 "B"
+///   |> addEdge 1 2 10
+///   |> addEdgeWithCombine 1 2 5 (+)
+/// // Edge 1->2 now has weight 15 (10 + 5)
+/// ```
 /// </summary>
 /// <remarks>
 /// <strong>Time Complexity:</strong> O(1)
@@ -455,17 +466,6 @@ let private doAddDirectedCombine src dst weight combine (graph: Graph<'n, 'e>) =
 /// <param name="combine">A function to combine existing and new weights.</param>
 /// <param name="graph">The graph to add the edge to.</param>
 /// <returns>A new graph with the edge added or weights combined.</returns>
-/// <example>
-/// <code>
-/// let graph =
-///   empty Directed
-///   |> addNode 1 "A"
-///   |> addNode 2 "B"
-///   |> addEdge 1 2 10
-///   |> addEdgeWithCombine 1 2 5 (+)
-/// // Edge 1->2 now has weight 15 (10 + 5)
-/// </code>
-/// </example>
 let addEdgeWithCombine (src: NodeId) (dst: NodeId) (weight: 'e) (combine: 'e -> 'e -> 'e) (graph: Graph<'n, 'e>) =
     if not (graph.Nodes |> Map.containsKey src) then
         invalidArg "src" (sprintf "Source node %d does not exist in the graph." src)
