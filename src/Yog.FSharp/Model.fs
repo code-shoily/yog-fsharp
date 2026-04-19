@@ -78,8 +78,7 @@ let private doAddDirectedEdge src dst weight (graph: Graph<'n, 'e>) =
 ///
 /// ## Example
 ///
-///     graph
-///     |> addEdge 1 2 10
+///     addEdge 1 2 10 graph
 ///
 /// **Note:** If `src` or `dst` have not been added via `addNode`,
 /// an `ArgumentException` is thrown. To automatically create missing
@@ -121,12 +120,10 @@ let private ensureNode id data (graph: Graph<'n, 'e>) =
 /// ## Example
 ///
 ///     // Nodes 1 and 2 are created automatically with data "unknown"
-///     empty Directed
-///     |> addEdgeEnsured 1 2 10 "unknown" "unknown"
+///     addEdgeEnsured 1 2 10 "unknown" "unknown" empty Directed
 ///
 ///     // Existing nodes keep their data; only missing ones get the default
-///     empty Directed
-///     |> addNode 1 "Alice"
+///     addEdgeEnsured 1 2 5 "anon" "anon" (addNode 1 "Alice" empty Directed)
 ///     |> addEdgeEnsured 1 2 5 "anon" "anon"
 ///     // Node 1 is still "Alice", node 2 is "anon"
 ///
@@ -147,15 +144,27 @@ let addEdgeEnsured (src: NodeId) (dst: NodeId) (weight: 'e) (srcDefault: 'n) (ds
 
 /// Like `addEdge`, but ensures both endpoint nodes exist first by generating
 /// default data via a callback.
+///
+/// ## Example
+///
+///     // Nodes 1 and 2 are created automatically with data "unknown"
+///     addEdgeEnsuredWith (fun id -> sprintf "node-%d" id) 1 2 10 (empty Directed)
+///
+///     // Existing nodes keep their data; only missing ones get the default
+///     empty Directed
+///     |> addNode 1 "Alice"
+///     |> addEdgeEnsuredWith (fun id -> sprintf "node-%d" id) 1 2 5
+///     // Node 1 is still "Alice", node 2 is "node-2"
+///
 /// ## Parameters
+/// - `createDefault`: A callback that takes a NodeId and returns the default data for that node.
 /// - `src`: The source node ID.
 /// - `dst`: The destination node ID.
 /// - `weight`: The weight of the edge.
-/// - `createDefault`: A callback that takes a NodeId and returns the default data for that node.
 /// - `graph`: The graph to add the edge to.
 /// ## Returns
 /// A new graph with the edge added and endpoints ensured.
-let addEdgeEnsuredWith (src: NodeId) (dst: NodeId) (weight: 'e) (createDefault: NodeId -> 'n) (graph: Graph<'n, 'e>) =
+let addEdgeEnsuredWith (createDefault: NodeId -> 'n) (src: NodeId) (dst: NodeId) (weight: 'e) (graph: Graph<'n, 'e>) =
     let ensureNodeWith id (g: Graph<'n, 'e>) =
         if g.Nodes |> Map.containsKey id then
             g

@@ -332,7 +332,7 @@ let ``addEdgeEnsuredWith uses callback for missing nodes`` () =
     let graph =
         empty Directed
         |> addNode 1 "Existing"
-        |> addEdgeEnsuredWith 1 2 10 (fun id -> sprintf "Generated_%d" id)
+        |> addEdgeEnsuredWith (fun id -> sprintf "Generated_%d" id) 1 2 10
 
     Assert.Equal(2, order graph)
     Assert.Equal("Existing", graph.Nodes.[1])
