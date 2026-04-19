@@ -18,49 +18,31 @@ open Yog.Centrality
 // =============================================================================
 
 let makeDirectedGraph (edges: (NodeId * NodeId) list) : Graph<unit, int> =
-    let allNodes =
-        edges
-        |> List.collect (fun (u, v) -> [ u; v ])
-        |> List.distinct
+    let allNodes = edges |> List.collect (fun (u, v) -> [ u; v ]) |> List.distinct
 
     let g = empty Directed
 
-    let gWithNodes =
-        allNodes
-        |> List.fold (fun acc n -> addNode n () acc) g
+    let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-    edges
-    |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
+    edges |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
 
 let makeUndirectedGraph (edges: (NodeId * NodeId) list) : Graph<unit, int> =
-    let allNodes =
-        edges
-        |> List.collect (fun (u, v) -> [ u; v ])
-        |> List.distinct
+    let allNodes = edges |> List.collect (fun (u, v) -> [ u; v ]) |> List.distinct
 
     let g = empty Undirected
 
-    let gWithNodes =
-        allNodes
-        |> List.fold (fun acc n -> addNode n () acc) g
+    let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-    edges
-    |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
+    edges |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
 
 let makeWeightedGraph (edges: (NodeId * NodeId * int) list) : Graph<unit, int> =
-    let allNodes =
-        edges
-        |> List.collect (fun (u, v, _) -> [ u; v ])
-        |> List.distinct
+    let allNodes = edges |> List.collect (fun (u, v, _) -> [ u; v ]) |> List.distinct
 
     let g = empty Directed
 
-    let gWithNodes =
-        allNodes
-        |> List.fold (fun acc n -> addNode n () acc) g
+    let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-    edges
-    |> List.fold (fun acc (u, v, w) -> addEdge u v w acc) gWithNodes
+    edges |> List.fold (fun acc (u, v, w) -> addEdge u v w acc) gWithNodes
 
 // =============================================================================
 // DEGREE CENTRALITY TESTS
@@ -70,11 +52,7 @@ module DegreeCentralityTests =
     [<Fact>]
     let ``degree - star graph center has highest degree`` () =
         // Star: 0 connected to 1, 2, 3, 4
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (0, 4) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (0, 4) ]
 
         let result = degree TotalDegree graph
 
@@ -86,13 +64,7 @@ module DegreeCentralityTests =
     [<Fact>]
     let ``degree - complete graph all nodes equal`` () =
         // K4: complete graph with 4 nodes
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (1, 2)
-                                  (1, 3)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (1, 2); (1, 3); (2, 3) ]
 
         let result = degree TotalDegree graph
 
@@ -103,10 +75,7 @@ module DegreeCentralityTests =
     [<Fact>]
     let ``degree - directed in-degree`` () =
         // 1 -> 0, 2 -> 0 (node 0 has in-degree 2)
-        let graph =
-            makeDirectedGraph [ (1, 0)
-                                (2, 0)
-                                (3, 0) ]
+        let graph = makeDirectedGraph [ (1, 0); (2, 0); (3, 0) ]
 
         let result = degree InDegree graph
 
@@ -116,10 +85,7 @@ module DegreeCentralityTests =
     [<Fact>]
     let ``degree - directed out-degree`` () =
         // 0 -> 1, 0 -> 2 (node 0 has out-degree 2)
-        let graph =
-            makeDirectedGraph [ (0, 1)
-                                (0, 2)
-                                (0, 3) ]
+        let graph = makeDirectedGraph [ (0, 1); (0, 2); (0, 3) ]
 
         let result = degree OutDegree graph
 
@@ -153,11 +119,7 @@ module ClosenessCentralityTests =
     [<Fact>]
     let ``closeness - star graph center has highest closeness`` () =
         // Star: 0 at center, all others at distance 1
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (0, 4) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (0, 4) ]
 
         let result = closenessInt graph
 
@@ -168,11 +130,7 @@ module ClosenessCentralityTests =
     [<Fact>]
     let ``closeness - path graph middle has highest closeness`` () =
         // Path: 0 - 1 - 2 - 3 - 4
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3)
-                                  (3, 4) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3); (3, 4) ]
 
         let result = closenessInt graph
 
@@ -204,13 +162,7 @@ module ClosenessCentralityTests =
     [<Fact>]
     let ``closeness - complete graph all nodes equal`` () =
         // K4: all nodes at distance 1 from each other
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (1, 2)
-                                  (1, 3)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (1, 2); (1, 3); (2, 3) ]
 
         let result = closenessInt graph
 
@@ -238,11 +190,7 @@ module BetweennessCentralityTests =
     [<Fact>]
     let ``betweenness - star graph center has maximum betweenness`` () =
         // Star: 0 at center
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (0, 4) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (0, 4) ]
 
         let result = betweennessInt graph
 
@@ -255,13 +203,7 @@ module BetweennessCentralityTests =
     [<Fact>]
     let ``betweenness - complete graph all zero`` () =
         // K4: no node lies on shortest path between others (direct edges)
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (1, 2)
-                                  (1, 3)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (1, 2); (1, 3); (2, 3) ]
 
         let result = betweennessInt graph
 
@@ -314,11 +256,7 @@ module PageRankTests =
     let ``pagerank - star graph center has highest rank`` () =
         // Star: 0 at center (everyone links to center)
         // Actually for undirected, edges go both ways
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (0, 4) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (0, 4) ]
 
         let result = pagerank defaultOptions graph
 
@@ -374,10 +312,7 @@ module EigenvectorCentralityTests =
     [<Fact>]
     let ``eigenvector - connected to important nodes`` () =
         // Node 0 connected to 1 and 2, node 1 connected to 2
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (1, 2) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (1, 2) ]
 
         let result = eigenvector 100 0.0001 graph
 
@@ -400,10 +335,7 @@ module EigenvectorCentralityTests =
     [<Fact>]
     let ``eigenvector - star graph`` () =
         // Star: center connected to everyone
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3) ]
 
         let result = eigenvector 100 0.0001 graph
 
@@ -413,11 +345,7 @@ module EigenvectorCentralityTests =
     [<Fact>]
     let ``eigenvector - isolated node has zero`` () =
         // Triangle plus isolated node
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ]
-            |> addNode 3 ()
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ] |> addNode 3 ()
 
         let result = eigenvector 100 0.0001 graph
 
@@ -481,11 +409,7 @@ module ComparativeTests =
     [<Fact>]
     let ``different centralities give different insights`` () =
         // Star graph: center is most central by most measures
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (0, 4) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (0, 4) ]
 
         let degreeResult = degreeTotal graph
         let closenessResult = closenessInt graph
@@ -515,11 +439,7 @@ module ComparativeTests =
     [<Fact>]
     let ``centrality rankings are consistent`` () =
         // Path: 0 - 1 - 2 - 3 - 4
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3)
-                                  (3, 4) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3); (3, 4) ]
 
         let result = degreeTotal graph
 
@@ -538,11 +458,7 @@ module ComparativeTests =
 module HarmonicCentralityTests =
     [<Fact>]
     let ``harmonic - star graph center has highest`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (0, 4) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (0, 4) ]
 
         let result = harmonicCentralityInt graph
 
@@ -565,13 +481,7 @@ module HarmonicCentralityTests =
 
     [<Fact>]
     let ``harmonic - complete graph all equal`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (1, 2)
-                                  (1, 3)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (1, 2); (1, 3); (2, 3) ]
 
         let result = harmonicCentralityInt graph
 
@@ -586,10 +496,7 @@ module HarmonicCentralityTests =
 module AlphaCentralityTests =
     [<Fact>]
     let ``alpha - star graph`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3) ]
 
         let result = alphaCentrality 0.3 1.0 100 0.0001 graph
 
@@ -599,10 +506,7 @@ module AlphaCentralityTests =
 
     [<Fact>]
     let ``alpha - path graph`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3) ]
 
         let result = alphaCentrality 0.3 1.0 100 0.0001 graph
 

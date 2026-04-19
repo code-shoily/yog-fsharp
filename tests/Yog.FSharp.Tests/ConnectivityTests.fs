@@ -16,34 +16,22 @@ open Yog.Connectivity
 // =============================================================================
 
 let makeDirectedGraph (edges: (NodeId * NodeId) list) : Graph<unit, int> =
-    let allNodes =
-        edges
-        |> List.collect (fun (u, v) -> [ u; v ])
-        |> List.distinct
+    let allNodes = edges |> List.collect (fun (u, v) -> [ u; v ]) |> List.distinct
 
     let g = empty Directed
 
-    let gWithNodes =
-        allNodes
-        |> List.fold (fun acc n -> addNode n () acc) g
+    let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-    edges
-    |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
+    edges |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
 
 let makeUndirectedGraph (edges: (NodeId * NodeId) list) : Graph<unit, int> =
-    let allNodes =
-        edges
-        |> List.collect (fun (u, v) -> [ u; v ])
-        |> List.distinct
+    let allNodes = edges |> List.collect (fun (u, v) -> [ u; v ]) |> List.distinct
 
     let g = empty Undirected
 
-    let gWithNodes =
-        allNodes
-        |> List.fold (fun acc n -> addNode n () acc) g
+    let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-    edges
-    |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
+    edges |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
 
 // =============================================================================
 // STRONGLY CONNECTED COMPONENTS (TARJAN'S) TESTS
@@ -73,10 +61,7 @@ module SCCTests =
     [<Fact>]
     let ``SCC - simple cycle single component`` () =
         // 0 -> 1 -> 2 -> 0
-        let graph =
-            makeDirectedGraph [ (0, 1)
-                                (1, 2)
-                                (2, 0) ]
+        let graph = makeDirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         let result = stronglyConnectedComponents graph
         Assert.Equal(1, result.Length)
@@ -101,37 +86,23 @@ module SCCTests =
     let ``SCC - two separate cycles`` () =
         // Cycle 1: 0 <-> 1
         // Cycle 2: 2 <-> 3
-        let graph =
-            makeDirectedGraph [ (0, 1)
-                                (1, 0)
-                                (2, 3)
-                                (3, 2) ]
+        let graph = makeDirectedGraph [ (0, 1); (1, 0); (2, 3); (3, 2) ]
 
         let result = stronglyConnectedComponents graph
         Assert.Equal(2, result.Length)
         // Each cycle should have 2 nodes
-        Assert.True(
-            result
-            |> List.forall (fun comp -> comp.Length = 2)
-        )
+        Assert.True(result |> List.forall (fun comp -> comp.Length = 2))
 
     [<Fact>]
     let ``SCC - mixed cycle and non-cycle`` () =
         // Cycle: 0 -> 1 -> 2 -> 0
         // Non-cycle: 2 -> 3
-        let graph =
-            makeDirectedGraph [ (0, 1)
-                                (1, 2)
-                                (2, 0)
-                                (2, 3) ]
+        let graph = makeDirectedGraph [ (0, 1); (1, 2); (2, 0); (2, 3) ]
 
         let result = stronglyConnectedComponents graph
         Assert.Equal(2, result.Length)
 
-        let sizes =
-            result
-            |> List.map (fun c -> c.Length)
-            |> List.sort
+        let sizes = result |> List.map (fun c -> c.Length) |> List.sort
 
         Assert.Equal<int list>([ 1; 3 ], sizes)
 
@@ -145,21 +116,12 @@ module SCCTests =
         //                  |
         //                  v
         //                  3 (cycle)
-        let graph =
-            makeDirectedGraph [ (0, 1)
-                                (1, 2)
-                                (2, 0)
-                                (2, 3)
-                                (3, 4)
-                                (4, 3) ]
+        let graph = makeDirectedGraph [ (0, 1); (1, 2); (2, 0); (2, 3); (3, 4); (4, 3) ]
 
         let result = stronglyConnectedComponents graph
         Assert.Equal(2, result.Length)
 
-        let sizes =
-            result
-            |> List.map (fun c -> c.Length)
-            |> List.sort
+        let sizes = result |> List.map (fun c -> c.Length) |> List.sort
 
         Assert.Equal<int list>([ 2; 3 ], sizes)
 
@@ -170,20 +132,12 @@ module SCCTests =
         //    1   2
         //     \ /
         //      3 <-> 1 (cycle between 1 and 3)
-        let graph =
-            makeDirectedGraph [ (0, 1)
-                                (0, 2)
-                                (1, 3)
-                                (2, 3)
-                                (3, 1) ]
+        let graph = makeDirectedGraph [ (0, 1); (0, 2); (1, 3); (2, 3); (3, 1) ]
 
         let result = stronglyConnectedComponents graph
         Assert.Equal(3, result.Length) // {0}, {2}, {1,3}
 
-        let sizes =
-            result
-            |> List.map (fun c -> c.Length)
-            |> List.sort
+        let sizes = result |> List.map (fun c -> c.Length) |> List.sort
 
         Assert.Equal<int list>([ 1; 1; 2 ], sizes)
 
@@ -217,12 +171,7 @@ module SCCTests =
     [<Fact>]
     let ``SCC - large cycle`` () =
         // 0 -> 1 -> 2 -> 3 -> 4 -> 0
-        let edges =
-            [ (0, 1)
-              (1, 2)
-              (2, 3)
-              (3, 4)
-              (4, 0) ]
+        let edges = [ (0, 1); (1, 2); (2, 3); (3, 4); (4, 0) ]
 
         let graph = makeDirectedGraph edges
         let result = stronglyConnectedComponents graph
@@ -236,10 +185,7 @@ module SCCTests =
 module KosarajuTests =
     [<Fact>]
     let ``Kosaraju - simple cycle`` () =
-        let graph =
-            makeDirectedGraph [ (0, 1)
-                                (1, 2)
-                                (2, 0) ]
+        let graph = makeDirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         let result = kosaraju graph
         Assert.Equal(1, result.Length)
@@ -247,28 +193,16 @@ module KosarajuTests =
 
     [<Fact>]
     let ``Kosaraju - matches Tarjan results`` () =
-        let graph =
-            makeDirectedGraph [ (0, 1)
-                                (1, 2)
-                                (2, 0)
-                                (2, 3)
-                                (3, 4)
-                                (4, 3) ]
+        let graph = makeDirectedGraph [ (0, 1); (1, 2); (2, 0); (2, 3); (3, 4); (4, 3) ]
 
         let tarjanResult = stronglyConnectedComponents graph
         let kosarajuResult = kosaraju graph
         // Both should find same number of SCCs
         Assert.Equal(tarjanResult.Length, kosarajuResult.Length)
         // Both should find same component sizes
-        let tarjanSizes =
-            tarjanResult
-            |> List.map (fun c -> c.Length)
-            |> List.sort
+        let tarjanSizes = tarjanResult |> List.map (fun c -> c.Length) |> List.sort
 
-        let kosarajuSizes =
-            kosarajuResult
-            |> List.map (fun c -> c.Length)
-            |> List.sort
+        let kosarajuSizes = kosarajuResult |> List.map (fun c -> c.Length) |> List.sort
 
         Assert.Equal<int list>(tarjanSizes, kosarajuSizes)
 
@@ -286,10 +220,7 @@ module KosarajuTests =
 
     [<Fact>]
     let ``Kosaraju - linear chain`` () =
-        let graph =
-            makeDirectedGraph [ (0, 1)
-                                (1, 2)
-                                (2, 3) ]
+        let graph = makeDirectedGraph [ (0, 1); (1, 2); (2, 3) ]
 
         let result = kosaraju graph
         Assert.Equal(4, result.Length)
@@ -316,10 +247,7 @@ module BridgesTests =
         // 0 - 1
         // |   |
         // 2 --+
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         let result = analyze graph
         Assert.Equal(0, result.Bridges.Length)
@@ -327,10 +255,7 @@ module BridgesTests =
     [<Fact>]
     let ``Bridges - chain has all edges as bridges`` () =
         // 0 - 1 - 2 - 3
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3) ]
 
         let result = analyze graph
         Assert.Equal(3, result.Bridges.Length)
@@ -341,31 +266,26 @@ module BridgesTests =
         // Bridge: 2-3
         // Triangle 2: 3-4-5-3
         let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) // Triangle 1
-                                  (2, 3) // Bridge
-                                  (3, 4)
-                                  (4, 5)
-                                  (5, 3) ] // Triangle 2
+            makeUndirectedGraph
+                [ (0, 1)
+                  (1, 2)
+                  (2, 0) // Triangle 1
+                  (2, 3) // Bridge
+                  (3, 4)
+                  (4, 5)
+                  (5, 3) ] // Triangle 2
 
         let result = analyze graph
         Assert.Equal(1, result.Bridges.Length)
         // The bridge should be (2,3) or (3,2)
         let bridge = result.Bridges.[0]
 
-        Assert.True(
-            (fst bridge = 2 && snd bridge = 3)
-            || (fst bridge = 3 && snd bridge = 2)
-        )
+        Assert.True((fst bridge = 2 && snd bridge = 3) || (fst bridge = 3 && snd bridge = 2))
 
     [<Fact>]
     let ``Bridges - star graph all edges are bridges`` () =
         // Center node 0 connected to 1, 2, 3
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3) ]
 
         let result = analyze graph
         Assert.Equal(3, result.Bridges.Length)
@@ -390,10 +310,7 @@ module BridgesTests =
         //   1 -- 2
         //   |
         //   3
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (1, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (1, 3) ]
 
         let result = analyze graph
         // All three edges are bridges
@@ -419,10 +336,7 @@ module ArticulationPointsTests =
 
     [<Fact>]
     let ``Articulation points - triangle`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         let result = analyze graph
         Assert.Equal(0, result.ArticulationPoints.Length)
@@ -431,10 +345,7 @@ module ArticulationPointsTests =
     let ``Articulation points - chain`` () =
         // 0 - 1 - 2 - 3
         // Articulation points: 1, 2
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3) ]
 
         let result = analyze graph
         Assert.Equal(2, result.ArticulationPoints.Length)
@@ -444,10 +355,7 @@ module ArticulationPointsTests =
     [<Fact>]
     let ``Articulation points - star center`` () =
         // Center 0 connected to 1, 2, 3
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3) ]
 
         let result = analyze graph
         Assert.Equal(1, result.ArticulationPoints.Length)
@@ -459,13 +367,7 @@ module ArticulationPointsTests =
         // Connection: 2-3
         // Triangle 2: 3-4-5-3
         let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0)
-                                  (2, 3)
-                                  (3, 4)
-                                  (4, 5)
-                                  (5, 3) ]
+            makeUndirectedGraph [ (0, 1); (1, 2); (2, 0); (2, 3); (3, 4); (4, 5); (5, 3) ]
 
         let result = analyze graph
         // Articulation points: 2 and 3
@@ -476,10 +378,7 @@ module ArticulationPointsTests =
     [<Fact>]
     let ``Articulation points - complete graph`` () =
         // Complete graph has no articulation points
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (1, 2) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (1, 2) ]
 
         let result = analyze graph
         Assert.Equal(0, result.ArticulationPoints.Length)
@@ -489,10 +388,7 @@ module ArticulationPointsTests =
         //      0
         //     /|\
         //    1 2 3
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3) ]
 
         let result = analyze graph
         Assert.Equal(1, result.ArticulationPoints.Length)
@@ -505,11 +401,7 @@ module ArticulationPointsTests =
         //    1   2
         //   / \
         //  3   4
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (1, 3)
-                                  (1, 4) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (1, 3); (1, 4) ]
 
         let result = analyze graph
         // Articulation points: 0, 1
@@ -520,10 +412,7 @@ module ArticulationPointsTests =
     [<Fact>]
     let ``Articulation points - disconnected graph`` () =
         // Two separate components: 0-1 and 2-3-4
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (2, 3)
-                                  (3, 4) ]
+        let graph = makeUndirectedGraph [ (0, 1); (2, 3); (3, 4) ]
 
         let result = analyze graph
         // Only node 3 is an articulation point
@@ -539,10 +428,7 @@ module CombinedTests =
     let ``Connectivity - bridges imply articulation points`` () =
         // If a graph has a bridge, at least one endpoint is usually an articulation point
         // Exception: graphs with only 2 nodes
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3) ]
 
         let result = analyze graph
         // Has 3 bridges
@@ -552,11 +438,7 @@ module CombinedTests =
 
     [<Fact>]
     let ``Connectivity - cycle has no bridges or articulation points`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3)
-                                  (3, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3); (3, 0) ]
 
         let result = analyze graph
         Assert.Equal(0, result.Bridges.Length)
@@ -572,19 +454,13 @@ module CombinedTests =
     [<Fact>]
     let ``SCC vs connectivity - directed cycle`` () =
         // Directed cycle
-        let directedGraph =
-            makeDirectedGraph [ (0, 1)
-                                (1, 2)
-                                (2, 0) ]
+        let directedGraph = makeDirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         let sccResult = stronglyConnectedComponents directedGraph
         Assert.Equal(1, sccResult.Length) // All in one SCC
 
         // Same structure as undirected
-        let undirectedGraph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ]
+        let undirectedGraph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         let connResult = analyze undirectedGraph
         Assert.Equal(0, connResult.Bridges.Length)
@@ -603,9 +479,7 @@ module CombinedTests =
     [<Fact>]
     let ``Large graph - many disconnected nodes`` () =
         // Many isolated nodes
-        let graph =
-            [ 0..99 ]
-            |> List.fold (fun g n -> addNode n () g) (empty Directed)
+        let graph = [ 0..99 ] |> List.fold (fun g n -> addNode n () g) (empty Directed)
 
         let result = stronglyConnectedComponents graph
         Assert.Equal(100, result.Length)

@@ -16,34 +16,22 @@ open Yog.Properties.Bipartite
 // =============================================================================
 
 let makeUndirectedGraph (edges: (NodeId * NodeId) list) : Graph<unit, int> =
-    let allNodes =
-        edges
-        |> List.collect (fun (u, v) -> [ u; v ])
-        |> List.distinct
+    let allNodes = edges |> List.collect (fun (u, v) -> [ u; v ]) |> List.distinct
 
     let g = empty Undirected
 
-    let gWithNodes =
-        allNodes
-        |> List.fold (fun acc n -> addNode n () acc) g
+    let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-    edges
-    |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
+    edges |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
 
 let makeDirectedGraph (edges: (NodeId * NodeId) list) : Graph<unit, int> =
-    let allNodes =
-        edges
-        |> List.collect (fun (u, v) -> [ u; v ])
-        |> List.distinct
+    let allNodes = edges |> List.collect (fun (u, v) -> [ u; v ]) |> List.distinct
 
     let g = empty Directed
 
-    let gWithNodes =
-        allNodes
-        |> List.fold (fun acc n -> addNode n () acc) g
+    let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-    edges
-    |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
+    edges |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
 
 // =============================================================================
 // IS BIPARTITE TESTS
@@ -68,64 +56,41 @@ module IsBipartiteTests =
     [<Fact>]
     let ``isBipartite - path is bipartite`` () =
         // Path: 0-1-2-3
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3) ]
 
         Assert.True(isBipartite graph)
 
     [<Fact>]
     let ``isBipartite - even cycle is bipartite`` () =
         // Square: 0-1-2-3-0
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3)
-                                  (3, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3); (3, 0) ]
 
         Assert.True(isBipartite graph)
 
     [<Fact>]
     let ``isBipartite - odd cycle is not bipartite`` () =
         // Triangle: 0-1-2-0
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         Assert.False(isBipartite graph)
 
     [<Fact>]
     let ``isBipartite - complete graph K3 not bipartite`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (0, 2) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (0, 2) ]
 
         Assert.False(isBipartite graph)
 
     [<Fact>]
     let ``isBipartite - complete graph K4 not bipartite`` () =
         // Actually K4 is not bipartite either (contains triangles)
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (1, 2)
-                                  (1, 3)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (1, 2); (1, 3); (2, 3) ]
 
         Assert.False(isBipartite graph)
 
     [<Fact>]
     let ``isBipartite - star graph is bipartite`` () =
         // Star with center 0
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (0, 4) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (0, 4) ]
 
         Assert.True(isBipartite graph)
 
@@ -139,11 +104,7 @@ module IsBipartiteTests =
     let ``isBipartite - one component bipartite one not`` () =
         // Component 1: edge (bipartite)
         // Component 2: triangle (not bipartite)
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (2, 3)
-                                  (3, 4)
-                                  (4, 2) ]
+        let graph = makeUndirectedGraph [ (0, 1); (2, 3); (3, 4); (4, 2) ]
 
         Assert.False(isBipartite graph)
 
@@ -159,20 +120,14 @@ module IsBipartiteTests =
 module PartitionTests =
     [<Fact>]
     let ``partition - returns None for non-bipartite`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ] // Triangle
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ] // Triangle
 
         let result = partition graph
         Assert.True(result.IsNone)
 
     [<Fact>]
     let ``partition - returns partitions for bipartite`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3) ] // Path
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3) ] // Path
 
         let result = partition graph
         Assert.True(result.IsSome)
@@ -194,11 +149,7 @@ module PartitionTests =
     let ``partition - square partitions correctly`` () =
         // Square: 0-1-2-3-0
         // One partition: 0, 2; Other: 1, 3
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3)
-                                  (3, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3); (3, 0) ]
 
         let result = partition graph
 
@@ -219,11 +170,7 @@ module PartitionTests =
     [<Fact>]
     let ``partition - star graph center in one partition`` () =
         // Star: center 0 connected to 1,2,3,4
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (0, 4) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (0, 4) ]
 
         let result = partition graph
 
@@ -268,10 +215,7 @@ module PartitionTests =
 
     [<Fact>]
     let ``partition covers all nodes`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3) ]
 
         let result = partition graph
 
@@ -325,10 +269,7 @@ module MaximumMatchingTests =
         // 0->1->2 where 0,1 in left, 2 in right? Actually let's use proper bipartite
         // Left: 0, 1; Right: 2, 3
         // Edges: 0->2, 0->3, 1->2
-        let graph =
-            makeDirectedGraph [ (0, 2)
-                                (0, 3)
-                                (1, 2) ]
+        let graph = makeDirectedGraph [ (0, 2); (0, 3); (1, 2) ]
 
         let partition =
             { Left = Set.ofList [ 0; 1 ]
@@ -345,11 +286,7 @@ module MaximumMatchingTests =
     [<Fact>]
     let ``maximumMatching - complete bipartite K2,2`` () =
         // All possible edges exist
-        let graph =
-            makeDirectedGraph [ (0, 2)
-                                (0, 3)
-                                (1, 2)
-                                (1, 3) ]
+        let graph = makeDirectedGraph [ (0, 2); (0, 3); (1, 2); (1, 3) ]
 
         let partition =
             { Left = Set.ofList [ 0; 1 ]
@@ -375,10 +312,7 @@ module MaximumMatchingTests =
     [<Fact>]
     let ``maximumMatching - star from left`` () =
         // One left node connected to all right nodes
-        let graph =
-            makeDirectedGraph [ (0, 1)
-                                (0, 2)
-                                (0, 3) ]
+        let graph = makeDirectedGraph [ (0, 1); (0, 2); (0, 3) ]
 
         let partition =
             { Left = Set.ofList [ 0 ]
@@ -398,12 +332,14 @@ module StableMarriageTests =
     let ``stableMarriage - simple case`` () =
         // 2 men, 2 women
         let leftPrefs =
-            Map.ofList [ 0, [ 1; 0 ] // Man 0 prefers woman 1, then 0
-                         1, [ 0; 1 ] ] // Man 1 prefers woman 0, then 1
+            Map.ofList
+                [ 0, [ 1; 0 ] // Man 0 prefers woman 1, then 0
+                  1, [ 0; 1 ] ] // Man 1 prefers woman 0, then 1
 
         let rightPrefs =
-            Map.ofList [ 0, [ 0; 1 ] // Woman 0 prefers man 0, then 1
-                         1, [ 1; 0 ] ] // Woman 1 prefers man 1, then 0
+            Map.ofList
+                [ 0, [ 0; 1 ] // Woman 0 prefers man 0, then 1
+                  1, [ 1; 0 ] ] // Woman 1 prefers man 1, then 0
 
         let result = stableMarriage leftPrefs rightPrefs
 
@@ -421,8 +357,9 @@ module StableMarriageTests =
         let leftPrefs = Map.ofList [ 0, [ 0; 1 ]; 1, [ 0; 1 ] ]
 
         let rightPrefs =
-            Map.ofList [ 0, [ 1; 0 ] // Both women prefer man 1
-                         1, [ 1; 0 ] ]
+            Map.ofList
+                [ 0, [ 1; 0 ] // Both women prefer man 1
+                  1, [ 1; 0 ] ]
 
         let result = stableMarriage leftPrefs rightPrefs
 
@@ -432,15 +369,9 @@ module StableMarriageTests =
 
     [<Fact>]
     let ``stableMarriage - three couples`` () =
-        let leftPrefs =
-            Map.ofList [ 0, [ 0; 1; 2 ]
-                         1, [ 1; 2; 0 ]
-                         2, [ 2; 0; 1 ] ]
+        let leftPrefs = Map.ofList [ 0, [ 0; 1; 2 ]; 1, [ 1; 2; 0 ]; 2, [ 2; 0; 1 ] ]
 
-        let rightPrefs =
-            Map.ofList [ 0, [ 0; 1; 2 ]
-                         1, [ 1; 2; 0 ]
-                         2, [ 2; 0; 1 ] ]
+        let rightPrefs = Map.ofList [ 0, [ 0; 1; 2 ]; 1, [ 1; 2; 0 ]; 2, [ 2; 0; 1 ] ]
 
         let result = stableMarriage leftPrefs rightPrefs
 
@@ -475,13 +406,7 @@ module IntegrationTests =
     [<Fact>]
     let ``full bipartite workflow`` () =
         // Start with a bipartite graph
-        let graph =
-            makeUndirectedGraph [ (0, 3)
-                                  (0, 4)
-                                  (1, 3)
-                                  (1, 4)
-                                  (2, 4)
-                                  (2, 5) ]
+        let graph = makeUndirectedGraph [ (0, 3); (0, 4); (1, 3); (1, 4); (2, 4); (2, 5) ]
 
         // Step 1: Verify it's bipartite
         Assert.True(isBipartite graph)
@@ -515,10 +440,7 @@ module IntegrationTests =
 
     [<Fact>]
     let ``bipartite detection vs partition consistency`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3) ]
 
         let isBip = isBipartite graph
         let partitionOpt = partition graph
@@ -528,10 +450,7 @@ module IntegrationTests =
         Assert.True(partitionOpt.IsSome)
 
         // If not bipartite, partition should be None
-        let nonBip =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ]
+        let nonBip = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         Assert.False(isBipartite nonBip)
         Assert.True((partition nonBip).IsNone)
@@ -540,10 +459,11 @@ module IntegrationTests =
     let ``grid graph is bipartite`` () =
         // 2x2 grid
         let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2) // Top row and left column
-                                  (1, 3)
-                                  (2, 3) ] // Right column and bottom row
+            makeUndirectedGraph
+                [ (0, 1)
+                  (0, 2) // Top row and left column
+                  (1, 3)
+                  (2, 3) ] // Right column and bottom row
 
         Assert.True(isBipartite graph)
 

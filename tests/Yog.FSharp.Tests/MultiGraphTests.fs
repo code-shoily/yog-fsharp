@@ -32,10 +32,7 @@ module ModelTests =
 
     [<Fact>]
     let ``addNode replaces existing node data`` () =
-        let g =
-            Model.empty Directed
-            |> Model.addNode 0 "A"
-            |> Model.addNode 0 "B"
+        let g = Model.empty Directed |> Model.addNode 0 "A" |> Model.addNode 0 "B"
 
         Assert.Equal(1, g.Nodes.Count)
         Assert.Equal("B", g.Nodes.[0])
@@ -83,10 +80,7 @@ module ModelTests =
         Assert.Equal(2, g2.Edges.Count)
         // Both edges should exist
         let weights =
-            g2.Edges
-            |> Map.toList
-            |> List.map (fun (_, (_, _, w)) -> w)
-            |> Set.ofList
+            g2.Edges |> Map.toList |> List.map (fun (_, (_, _, w)) -> w) |> Set.ofList
 
         Assert.Equal<Set<int>>(Set.ofList [ 10; 20 ], weights)
 
@@ -139,10 +133,7 @@ module ModelTests =
         let succs = Model.successors 0 g2
         Assert.Equal(2, succs.Length)
         // Should return (target, edgeId, weight) tuples
-        let targets =
-            succs
-            |> List.map (fun (t, _, _) -> t)
-            |> Set.ofList
+        let targets = succs |> List.map (fun (t, _, _) -> t) |> Set.ofList
 
         Assert.Equal<Set<NodeId>>(Set.ofList [ 1; 2 ], targets)
 
@@ -454,10 +445,7 @@ module EulerianTests =
 module EdgeCaseTests =
     [<Fact>]
     let ``multigraph handles many parallel edges`` () =
-        let mutable g =
-            Model.empty Directed
-            |> Model.addNode 0 "A"
-            |> Model.addNode 1 "B"
+        let mutable g = Model.empty Directed |> Model.addNode 0 "A" |> Model.addNode 1 "B"
         // Add 100 parallel edges
         for i in 1..100 do
             let g', _ = Model.addEdge 0 1 i g

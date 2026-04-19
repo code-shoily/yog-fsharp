@@ -18,26 +18,18 @@ open Yog.Flow.MinCut
 module MaxFlowTests =
     /// Helper to create a flow network from edge list.
     let makeFlowNetwork (edges: (NodeId * NodeId * int) list) : Graph<unit, int> =
-        let allNodes =
-            edges
-            |> List.collect (fun (u, v, _) -> [ u; v ])
-            |> List.distinct
+        let allNodes = edges |> List.collect (fun (u, v, _) -> [ u; v ]) |> List.distinct
 
         let g = empty Directed
 
-        let gWithNodes =
-            allNodes
-            |> List.fold (fun acc n -> addNode n () acc) g
+        let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-        edges
-        |> List.fold (fun acc (u, v, cap) -> addEdge u v cap acc) gWithNodes
+        edges |> List.fold (fun acc (u, v, cap) -> addEdge u v cap acc) gWithNodes
 
     [<Fact>]
     let ``Max flow - simple line`` () =
         // 0 -> 1 -> 2 with capacities 10 and 5
-        let graph =
-            makeFlowNetwork [ (0, 1, 10)
-                              (1, 2, 5) ]
+        let graph = makeFlowNetwork [ (0, 1, 10); (1, 2, 5) ]
 
         let result = edmondsKarpInt 0 2 graph
 
@@ -49,11 +41,7 @@ module MaxFlowTests =
     let ``Max flow - two parallel paths`` () =
         // 0 -> 1 -> 3 (cap 5)
         // 0 -> 2 -> 3 (cap 3)
-        let graph =
-            makeFlowNetwork [ (0, 1, 5)
-                              (1, 3, 5)
-                              (0, 2, 3)
-                              (2, 3, 3) ]
+        let graph = makeFlowNetwork [ (0, 1, 5); (1, 3, 5); (0, 2, 3); (2, 3, 3) ]
 
         let result = edmondsKarpInt 0 3 graph
 
@@ -63,11 +51,7 @@ module MaxFlowTests =
     let ``Max flow - bottleneck`` () =
         // 0 -> 1 (10), 0 -> 2 (10)
         // 1 -> 3 (5), 2 -> 3 (5)  <- bottlenecks
-        let graph =
-            makeFlowNetwork [ (0, 1, 10)
-                              (0, 2, 10)
-                              (1, 3, 5)
-                              (2, 3, 5) ]
+        let graph = makeFlowNetwork [ (0, 1, 10); (0, 2, 10); (1, 3, 5); (2, 3, 5) ]
 
         let result = edmondsKarpInt 0 3 graph
 
@@ -78,11 +62,7 @@ module MaxFlowTests =
         // Classic diamond: 0 -> {1,2} -> 3
         // 0->1:10, 0->2:10, 1->3:10, 2->3:10, 1->2:5
         let graph =
-            makeFlowNetwork [ (0, 1, 10)
-                              (0, 2, 10)
-                              (1, 3, 10)
-                              (2, 3, 10)
-                              (1, 2, 5) ]
+            makeFlowNetwork [ (0, 1, 10); (0, 2, 10); (1, 3, 10); (2, 3, 10); (1, 2, 5) ]
 
         let result = edmondsKarpInt 0 3 graph
 
@@ -118,11 +98,7 @@ module MaxFlowTests =
         // 0 -> 1 -> 2 -> 3 (cap 1 each)
         // 0 -> 4 -> 2 -> 3 (cap 1 each)  // shares 2->3
         let graph =
-            makeFlowNetwork [ (0, 1, 1)
-                              (1, 2, 1)
-                              (2, 3, 2)
-                              (0, 4, 1)
-                              (4, 2, 1) ]
+            makeFlowNetwork [ (0, 1, 1); (1, 2, 1); (2, 3, 2); (0, 4, 1); (4, 2, 1) ]
 
         let result = edmondsKarpInt 0 3 graph
 
@@ -149,9 +125,7 @@ module MinCutTests =
 
     [<Fact>]
     let ``Min cut - simple line`` () =
-        let graph =
-            makeFlowNetwork [ (0, 1, 10)
-                              (1, 2, 5) ]
+        let graph = makeFlowNetwork [ (0, 1, 10); (1, 2, 5) ]
 
         let flowResult = edmondsKarpInt 0 2 graph
         let cut = minCut 0 compare flowResult
@@ -164,11 +138,7 @@ module MinCutTests =
     [<Fact>]
     let ``Min cut - two parallel paths`` () =
         // Both paths needed for max flow
-        let graph =
-            makeFlowNetwork [ (0, 1, 5)
-                              (1, 3, 5)
-                              (0, 2, 3)
-                              (2, 3, 3) ]
+        let graph = makeFlowNetwork [ (0, 1, 5); (1, 3, 5); (0, 2, 3); (2, 3, 3) ]
 
         let flowResult = edmondsKarpInt 0 3 graph
         let cut = minCut 0 compare flowResult
@@ -182,9 +152,7 @@ module MinCutTests =
     [<Fact>]
     let ``Min cut - source side contains only source`` () =
         // Direct edge with capacity limiting
-        let graph =
-            makeFlowNetwork [ (0, 1, 5)
-                              (1, 2, 100) ]
+        let graph = makeFlowNetwork [ (0, 1, 5); (1, 2, 100) ]
 
         let flowResult = edmondsKarpInt 0 2 graph
         let cut = minCut 0 compare flowResult
@@ -197,11 +165,7 @@ module MinCutTests =
     [<Fact>]
     let ``Min cut - max flow equals cut capacity`` () =
         // Verify max-flow min-cut theorem
-        let graph =
-            makeFlowNetwork [ (0, 1, 10)
-                              (0, 2, 10)
-                              (1, 3, 5)
-                              (2, 3, 7) ]
+        let graph = makeFlowNetwork [ (0, 1, 10); (0, 2, 10); (1, 3, 5); (2, 3, 7) ]
 
         let flowResult = edmondsKarpInt 0 3 graph
         let cut = minCut 0 compare flowResult
@@ -209,9 +173,7 @@ module MinCutTests =
         // Capacity of cut = sum of capacities from source side to sink side
         let cutCapacity =
             [ (1, 3, 5); (2, 3, 7) ] // edges crossing the cut
-            |> List.filter (fun (u, v, _) ->
-                Set.contains u cut.SourceSide
-                && Set.contains v cut.SinkSide)
+            |> List.filter (fun (u, v, _) -> Set.contains u cut.SourceSide && Set.contains v cut.SinkSide)
             |> List.sumBy (fun (_, _, cap) -> cap)
 
         Assert.Equal(flowResult.MaxFlow, cutCapacity)
@@ -227,11 +189,7 @@ module MinCostFlowTests =
     let ``minCostFlow - simple test`` () =
         // 0: demand -10 (sink), 1: demand 10 (source)
         // edge 1 -> 0 with cap 20, cost 5
-        let graph =
-            empty Directed
-            |> addNode 0 -10
-            |> addNode 1 10
-            |> addEdge 1 0 (20, 5)
+        let graph = empty Directed |> addNode 0 -10 |> addNode 1 10 |> addEdge 1 0 (20, 5)
 
         // The function should return Ok or Error; just call it and don't crash
         let res = minCostFlow graph id fst snd
@@ -244,11 +202,7 @@ module MinCostFlowTests =
 
     [<Fact>]
     let ``minCostFlow - unbalanced demands`` () =
-        let graph =
-            empty Directed
-            |> addNode 0 -10
-            |> addNode 1 5
-            |> addEdge 1 0 (20, 5)
+        let graph = empty Directed |> addNode 0 -10 |> addNode 1 5 |> addEdge 1 0 (20, 5)
 
         let res = minCostFlow graph id fst snd
 
@@ -264,28 +218,19 @@ module MinCostFlowTests =
 module GlobalMinCutTests =
     /// Helper for undirected weighted graph.
     let makeUndirectedNetwork (edges: (NodeId * NodeId * int) list) : Graph<unit, int> =
-        let allNodes =
-            edges
-            |> List.collect (fun (u, v, _) -> [ u; v ])
-            |> List.distinct
+        let allNodes = edges |> List.collect (fun (u, v, _) -> [ u; v ]) |> List.distinct
 
         let g = empty Undirected
 
-        let gWithNodes =
-            allNodes
-            |> List.fold (fun acc n -> addNode n () acc) g
+        let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-        edges
-        |> List.fold (fun acc (u, v, w) -> addEdge u v w acc) gWithNodes
+        edges |> List.fold (fun acc (u, v, w) -> addEdge u v w acc) gWithNodes
 
     [<Fact>]
     let ``Global min cut - simple triangle`` () =
         // Triangle: 0-1 (1), 1-2 (1), 0-2 (1)
         // Min cut is any single edge: weight 1
-        let graph =
-            makeUndirectedNetwork [ (0, 1, 1)
-                                    (1, 2, 1)
-                                    (0, 2, 1) ]
+        let graph = makeUndirectedNetwork [ (0, 1, 1); (1, 2, 1); (0, 2, 1) ]
 
         let result = globalMinCut graph
 
@@ -296,9 +241,7 @@ module GlobalMinCutTests =
     let ``Global min cut - bridge`` () =
         // 0-1-2 where 1-2 is a bridge
         // Min cut should separate {0,1} from {2} with weight 1
-        let graph =
-            makeUndirectedNetwork [ (0, 1, 5)
-                                    (1, 2, 1) ]
+        let graph = makeUndirectedNetwork [ (0, 1, 5); (1, 2, 1) ]
 
         let result = globalMinCut graph
 
@@ -309,11 +252,7 @@ module GlobalMinCutTests =
     let ``Global min cut - star graph`` () =
         // Center node 0 connected to 1,2,3,4 with weight 1 each
         // Min cut is any single edge: weight 1
-        let graph =
-            makeUndirectedNetwork [ (0, 1, 1)
-                                    (0, 2, 1)
-                                    (0, 3, 1)
-                                    (0, 4, 1) ]
+        let graph = makeUndirectedNetwork [ (0, 1, 1); (0, 2, 1); (0, 3, 1); (0, 4, 1) ]
 
         let result = globalMinCut graph
 
@@ -324,12 +263,7 @@ module GlobalMinCutTests =
         // Complete graph with equal weights
         // Min cut separates 1 node from 3: weight = 3 (edges from that node)
         let graph =
-            makeUndirectedNetwork [ (0, 1, 1)
-                                    (0, 2, 1)
-                                    (0, 3, 1)
-                                    (1, 2, 1)
-                                    (1, 3, 1)
-                                    (2, 3, 1) ]
+            makeUndirectedNetwork [ (0, 1, 1); (0, 2, 1); (0, 3, 1); (1, 2, 1); (1, 3, 1); (2, 3, 1) ]
 
         let result = globalMinCut graph
 
@@ -345,11 +279,7 @@ module GlobalMinCutTests =
         // 0--2--3
         //    100
         let graph =
-            makeUndirectedNetwork [ (0, 1, 10)
-                                    (0, 2, 1)
-                                    (1, 2, 10)
-                                    (1, 3, 10)
-                                    (2, 3, 100) ]
+            makeUndirectedNetwork [ (0, 1, 10); (0, 2, 1); (1, 2, 10); (1, 3, 10); (2, 3, 100) ]
 
         let result = globalMinCut graph
 
@@ -372,13 +302,14 @@ module GlobalMinCutTests =
         // Triangle 1: 0-1-2, Triangle 2: 3-4-5
         // Bridge: 2-3 with weight 1
         let graph =
-            makeUndirectedNetwork [ (0, 1, 5)
-                                    (1, 2, 5)
-                                    (0, 2, 5) // Triangle 1
-                                    (3, 4, 5)
-                                    (4, 5, 5)
-                                    (3, 5, 5) // Triangle 2
-                                    (2, 3, 1) ] // Bridge
+            makeUndirectedNetwork
+                [ (0, 1, 5)
+                  (1, 2, 5)
+                  (0, 2, 5) // Triangle 1
+                  (3, 4, 5)
+                  (4, 5, 5)
+                  (3, 5, 5) // Triangle 2
+                  (2, 3, 1) ] // Bridge
 
         let result = globalMinCut graph
 
@@ -396,11 +327,7 @@ module MaxFlowPropertyTests =
     let ``max flow is non-negative`` (capacity: int) =
         let cap = abs capacity % 10000 + 1
 
-        let graph =
-            empty Directed
-            |> addNode 0 ()
-            |> addNode 1 ()
-            |> addEdge 0 1 cap
+        let graph = empty Directed |> addNode 0 () |> addNode 1 () |> addEdge 0 1 cap
 
         let result = edmondsKarpInt 0 1 graph
         result.MaxFlow >= 0
@@ -408,17 +335,13 @@ module MaxFlowPropertyTests =
     [<Property>]
     let ``max flow cannot exceed sum of outgoing capacities from source`` (c1: int) (c2: int) (c3: int) =
         // Use three positive capacities
-        let caps =
-            [ abs c1 % 100 + 1
-              abs c2 % 100 + 1
-              abs c3 % 100 + 1 ]
+        let caps = [ abs c1 % 100 + 1; abs c2 % 100 + 1; abs c3 % 100 + 1 ]
 
         let graph =
             let g = empty Directed |> addNode 0 () |> addNode 100 ()
 
             let gWithTargets =
-                [ 1 .. caps.Length ]
-                |> List.fold (fun acc i -> addNode i () acc) g
+                [ 1 .. caps.Length ] |> List.fold (fun acc i -> addNode i () acc) g
 
             caps
             |> List.mapi (fun i cap -> (i + 1, cap))

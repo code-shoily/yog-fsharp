@@ -1,19 +1,19 @@
 /// Bipartite graph analysis and matching algorithms.
-/// 
+///
 /// A graph is bipartite (2-colorable) if its vertices can be divided into two disjoint sets
 /// such that every edge connects a vertex in one set to a vertex in the other set.
 /// Equivalently, a bipartite graph contains no odd-length cycles.
-/// 
+///
 /// ## Algorithms
-/// 
+///
 /// | Problem | Algorithm | Function | Complexity |
 /// |---------|-----------|----------|------------|
 /// | Bipartite check | BFS 2-coloring | isBipartite, partition | O(V + E) |
 /// | Maximum matching | Augmenting paths | maximumMatching | O(VE) |
 /// | Stable matching | Gale-Shapley | stableMarriage | O(V²) |
-/// 
+///
 /// ## Use Cases
-/// 
+///
 /// - Job assignment: Workers to tasks they can perform
 /// - Scheduling: Time slots to events without conflicts
 /// - Recommendation systems: Users to items they might like
@@ -55,11 +55,7 @@ let isBipartite (graph: Graph<'n, 'e>) : bool =
         possible
 
     nodes
-    |> List.forall (fun n ->
-        if colors.ContainsKey(n) then
-            true
-        else
-            bfsColor n true)
+    |> List.forall (fun n -> if colors.ContainsKey(n) then true else bfsColor n true)
 
 /// Returns the two partitions of a bipartite graph, or None if the graph is not bipartite.
 let partition (graph: Graph<'n, 'e>) : Partition option =
@@ -80,9 +76,7 @@ let partition (graph: Graph<'n, 'e>) : Partition option =
                 if graph.Kind = Undirected then
                     successorIds node graph
                 else
-                    (successorIds node graph
-                     @ predecessorIds node graph)
-                    |> List.distinct
+                    (successorIds node graph @ predecessorIds node graph) |> List.distinct
 
             for neighbor in neighbors do
                 match colors.TryGetValue(neighbor) with
@@ -97,11 +91,7 @@ let partition (graph: Graph<'n, 'e>) : Partition option =
 
     let isPossible =
         nodes
-        |> List.forall (fun n ->
-            if colors.ContainsKey(n) then
-                true
-            else
-                bfsColor n true)
+        |> List.forall (fun n -> if colors.ContainsKey(n) then true else bfsColor n true)
 
     if not isPossible then
         None
@@ -151,9 +141,7 @@ let maximumMatching (partition: Partition) (graph: Graph<'n, 'e>) : (NodeId * No
         // This is the call that was throwing FS0020
         canMatch u (HashSet<NodeId>()) |> ignore
 
-    matchR
-    |> Seq.map (fun kvp -> kvp.Value, kvp.Key)
-    |> Seq.toList
+    matchR |> Seq.map (fun kvp -> kvp.Value, kvp.Key) |> Seq.toList
 
 // ============= Stable Marriage Problem =============
 
@@ -166,10 +154,7 @@ let stableMarriage (leftPrefs: Map<NodeId, NodeId list>) (rightPrefs: Map<NodeId
     // Pre-calculate rankings for O(1) preference comparison
     let rightRankings =
         rightPrefs
-        |> Map.map (fun _ prefList ->
-            prefList
-            |> List.mapi (fun i person -> person, i)
-            |> Map.ofList)
+        |> Map.map (fun _ prefList -> prefList |> List.mapi (fun i person -> person, i) |> Map.ofList)
 
     let freeLeft = Queue<NodeId>(leftPrefs.Keys)
     let leftMatches = Dictionary<NodeId, NodeId>()
@@ -205,9 +190,6 @@ let stableMarriage (leftPrefs: Map<NodeId, NodeId list>) (rightPrefs: Map<NodeId
                     // Reject, stay free
                     freeLeft.Enqueue(proposer)
 
-    { Matches =
-        leftMatches
-        |> Seq.map (fun kvp -> kvp.Key, kvp.Value)
-        |> Map.ofSeq }
+    { Matches = leftMatches |> Seq.map (fun kvp -> kvp.Key, kvp.Value) |> Map.ofSeq }
 
 let getPartner (person: NodeId) (marriage: StableMarriage) : NodeId option = marriage.Matches |> Map.tryFind person

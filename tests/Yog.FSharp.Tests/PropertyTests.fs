@@ -40,19 +40,14 @@ let ``edge count matches actual edges for directed`` () =
         |> addEdge 1 2 20
 
     let actualCount =
-        allNodes graph
-        |> List.sumBy (fun id -> successors id graph |> List.length)
+        allNodes graph |> List.sumBy (fun id -> successors id graph |> List.length)
 
     Assert.Equal(2, edgeCount graph)
     Assert.Equal(2, actualCount)
 
 [<Fact>]
 let ``edge count matches actual edges for undirected`` () =
-    let graph =
-        empty Undirected
-        |> addNode 0 0
-        |> addNode 1 1
-        |> addEdge 0 1 10
+    let graph = empty Undirected |> addNode 0 0 |> addNode 1 1 |> addEdge 0 1 10
 
     // Each undirected edge counted once, but appears in successor lists twice
     Assert.Equal(1, edgeCount graph)
@@ -72,25 +67,13 @@ let ``undirected graphs have symmetric edges`` () =
         |> addEdge 1 2 20
 
     // Every edge should appear in both directions
-    Assert.True(
-        successors 0 graph
-        |> List.exists (fun (id, w) -> id = 1 && w = 10)
-    )
+    Assert.True(successors 0 graph |> List.exists (fun (id, w) -> id = 1 && w = 10))
 
-    Assert.True(
-        successors 1 graph
-        |> List.exists (fun (id, w) -> id = 0 && w = 10)
-    )
+    Assert.True(successors 1 graph |> List.exists (fun (id, w) -> id = 0 && w = 10))
 
-    Assert.True(
-        successors 1 graph
-        |> List.exists (fun (id, w) -> id = 2 && w = 20)
-    )
+    Assert.True(successors 1 graph |> List.exists (fun (id, w) -> id = 2 && w = 20))
 
-    Assert.True(
-        successors 2 graph
-        |> List.exists (fun (id, w) -> id = 1 && w = 20)
-    )
+    Assert.True(successors 2 graph |> List.exists (fun (id, w) -> id = 1 && w = 20))
 
 // ============================================================================
 // PROPERTY 4: Neighbors == Successors for Undirected
@@ -98,11 +81,7 @@ let ``undirected graphs have symmetric edges`` () =
 
 [<Fact>]
 let ``neighbors equals successors for undirected graphs`` () =
-    let graph =
-        empty Undirected
-        |> addNode 0 0
-        |> addNode 1 1
-        |> addEdge 0 1 10
+    let graph = empty Undirected |> addNode 0 0 |> addNode 1 1 |> addEdge 0 1 10
 
     let nbrs = neighbors 0 graph |> List.sort
     let succs = successors 0 graph |> List.sort
@@ -139,11 +118,7 @@ let ``mapNodes preserves graph structure`` () =
 
 [<Fact>]
 let ``mapEdges preserves graph structure`` () =
-    let graph =
-        empty Directed
-        |> addNode 0 0
-        |> addNode 1 1
-        |> addEdge 0 1 10
+    let graph = empty Directed |> addNode 0 0 |> addNode 1 1 |> addEdge 0 1 10
 
     let mapped = mapEdges (fun weight -> weight * 2) graph
 
@@ -161,21 +136,13 @@ let ``mapEdges preserves graph structure`` () =
 [<Fact>]
 let ``isCyclic detects cycles correctly`` () =
     // Acyclic directed
-    let g1 =
-        empty Directed
-        |> addNode 0 0
-        |> addNode 1 1
-        |> addEdge 0 1 10
+    let g1 = empty Directed |> addNode 0 0 |> addNode 1 1 |> addEdge 0 1 10
 
     Assert.False(Yog.Properties.Cyclicity.isCyclic g1)
 
     // Cyclic directed
     let g2 =
-        empty Directed
-        |> addNode 0 0
-        |> addNode 1 1
-        |> addEdge 0 1 10
-        |> addEdge 1 0 10
+        empty Directed |> addNode 0 0 |> addNode 1 1 |> addEdge 0 1 10 |> addEdge 1 0 10
 
     Assert.True(Yog.Properties.Cyclicity.isCyclic g2)
 
@@ -237,26 +204,16 @@ let ``filterNodes removes incident edges`` () =
 
 [<Fact>]
 let ``toUndirected creates symmetric edges`` () =
-    let graph =
-        empty Directed
-        |> addNode 0 0
-        |> addNode 1 1
-        |> addEdge 0 1 10
+    let graph = empty Directed |> addNode 0 0 |> addNode 1 1 |> addEdge 0 1 10
 
     let undirected = toUndirected max graph
 
     Assert.Equal(Undirected, undirected.Kind)
 
     // Both directions should exist
-    Assert.True(
-        successors 0 undirected
-        |> List.exists (fun (id, w) -> id = 1 && w = 10)
-    )
+    Assert.True(successors 0 undirected |> List.exists (fun (id, w) -> id = 1 && w = 10))
 
-    Assert.True(
-        successors 1 undirected
-        |> List.exists (fun (id, w) -> id = 0 && w = 10)
-    )
+    Assert.True(successors 1 undirected |> List.exists (fun (id, w) -> id = 0 && w = 10))
 
 // ============================================================================
 // PROPERTY 9: Add/Remove Edge (Directed)
@@ -264,11 +221,7 @@ let ``toUndirected creates symmetric edges`` () =
 
 [<Fact>]
 let ``add and remove edge directed`` () =
-    let graph =
-        empty Directed
-        |> addNode 0 0
-        |> addNode 1 1
-        |> addEdge 0 1 10
+    let graph = empty Directed |> addNode 0 0 |> addNode 1 1 |> addEdge 0 1 10
 
     Assert.Equal(1, edgeCount graph)
     Assert.Equal<(NodeId * int) list>([ 1, 10 ], successors 0 graph)
@@ -284,22 +237,12 @@ let ``add and remove edge directed`` () =
 
 [<Fact>]
 let ``add and remove edge undirected - symmetric behavior - FIXED`` () =
-    let graph =
-        empty Undirected
-        |> addNode 0 0
-        |> addNode 1 1
-        |> addEdge 0 1 10 // Creates BOTH directions
+    let graph = empty Undirected |> addNode 0 0 |> addNode 1 1 |> addEdge 0 1 10 // Creates BOTH directions
 
     // Verify both directions exist
-    Assert.True(
-        successors 0 graph
-        |> List.exists (fun (id, _) -> id = 1)
-    )
+    Assert.True(successors 0 graph |> List.exists (fun (id, _) -> id = 1))
 
-    Assert.True(
-        successors 1 graph
-        |> List.exists (fun (id, _) -> id = 0)
-    )
+    Assert.True(successors 1 graph |> List.exists (fun (id, _) -> id = 0))
 
     let removed = removeEdge 0 1 graph // F# version removes BOTH directions!
 

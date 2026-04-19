@@ -1,25 +1,25 @@
 /// Dijkstra's algorithm for single-source shortest paths in graphs with non-negative edge weights.
-/// 
+///
 /// Dijkstra's algorithm finds the shortest path from a source node to all other reachable
 /// nodes in a graph. It works by maintaining a priority queue of nodes to visit,
 /// always expanding the node with the smallest known distance.
-/// 
+///
 /// ## Algorithm
-/// 
+///
 /// | Algorithm | Function | Complexity | Best For |
 /// |-----------|----------|------------|----------|
 /// | Dijkstra (single-target) | shortestPath | O((V + E) log V) | One-to-one shortest path |
 /// | Dijkstra (single-source) | singleSourceDistances | O((V + E) log V) | One-to-all shortest paths |
 /// | Implicit Dijkstra | implicitDijkstra | O((V + E) log V) | Large/infinite graphs |
-/// 
+///
 /// ## History
-/// 
+///
 /// Edsger W. Dijkstra published this algorithm in 1959. The original paper described
 /// it for finding the shortest path between two nodes, but it's commonly used for
 /// single-source shortest paths to all nodes.
-/// 
+///
 /// ## Use Cases
-/// 
+///
 /// - Network routing: OSPF, IS-IS protocols use Dijkstra
 /// - Map services: Shortest driving directions
 /// - Social networks: Degrees of separation
@@ -61,10 +61,7 @@ let shortestPath
         // Skip stale entries: if we already found a strictly better path to 'current', ignore this one
         let mutable bestKnown = zero
 
-        if
-            distances.TryGetValue(current, &bestKnown)
-            && compare dist bestKnown > 0
-        then
+        if distances.TryGetValue(current, &bestKnown) && compare dist bestKnown > 0 then
             ()
         elif current = goal then
             result <-
@@ -112,10 +109,7 @@ let singleSourceDistances
 
         let mutable bestKnown = zero
 
-        if
-            not (distances.TryGetValue(current, &bestKnown))
-            || compare dist bestKnown <= 0
-        then
+        if not (distances.TryGetValue(current, &bestKnown)) || compare dist bestKnown <= 0 then
             for (nextId, weight) in successors current graph do
                 let nextDist = add dist weight
                 let mutable nextBestKnown = zero
@@ -128,9 +122,7 @@ let singleSourceDistances
                     pq.Enqueue((nextDist, nextId), nextDist)
 
     // Convert the mutable Dictionary into an immutable F# Map for the caller
-    distances
-    |> Seq.map (fun kvp -> kvp.Key, kvp.Value)
-    |> Map.ofSeq
+    distances |> Seq.map (fun kvp -> kvp.Key, kvp.Value) |> Map.ofSeq
 
 /// Finds the shortest path in an implicit graph using Dijkstra's algorithm.
 let implicitDijkstra
@@ -159,10 +151,7 @@ let implicitDijkstra
 
         let mutable bestKnown = zero
 
-        if
-            distances.TryGetValue(current, &bestKnown)
-            && compare dist bestKnown > 0
-        then
+        if distances.TryGetValue(current, &bestKnown) && compare dist bestKnown > 0 then
             ()
         elif isGoal current then
             result <- Some dist
@@ -211,10 +200,7 @@ let implicitDijkstraBy
 
         let mutable bestKnown = zero
 
-        if
-            distances.TryGetValue(currentKey, &bestKnown)
-            && compare dist bestKnown > 0
-        then
+        if distances.TryGetValue(currentKey, &bestKnown) && compare dist bestKnown > 0 then
             ()
         elif isGoal current then
             result <- Some dist

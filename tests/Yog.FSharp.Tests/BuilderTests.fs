@@ -63,11 +63,7 @@ module GridBuilderTests =
         let succs = successors 0 grid.Graph
         // Should only have valid moves
         for (id, _) in succs do
-            let cellValue =
-                if id < 4 then
-                    data.[id / 2, id % 2]
-                else
-                    0
+            let cellValue = if id < 4 then data.[id / 2, id % 2] else 0
 
             Assert.True(cellValue > 2 || cellValue = 0)
 
@@ -170,18 +166,14 @@ module LabeledBuilderBasicTests =
 
     [<Fact>]
     let ``Labeled.addNode - adds a node explicitly`` () =
-        let builder =
-            Labeled.directed<string, int> ()
-            |> Labeled.addNode "A"
+        let builder = Labeled.directed<string, int> () |> Labeled.addNode "A"
 
         let id = Labeled.getId "A" builder
         Assert.True(id.IsSome)
 
     [<Fact>]
     let ``Labeled.addSimpleEdge - adds edge with weight 1`` () =
-        let builder =
-            Labeled.directed<string, int> ()
-            |> Labeled.addEdge "A" "B" 1
+        let builder = Labeled.directed<string, int> () |> Labeled.addEdge "A" "B" 1
 
         let succs = Labeled.successors "A" builder
         Assert.True(succs.IsSome)
@@ -216,9 +208,7 @@ module LiveBuilderBasicTests =
 
     [<Fact>]
     let ``Live.sync - applies pending changes`` () =
-        let builder =
-            Live.create<string, int> ()
-            |> Live.addEdge "A" "B" 10
+        let builder = Live.create<string, int> () |> Live.addEdge "A" "B" 10
 
         let builder2, graph = Live.sync builder (empty Directed)
 
@@ -238,9 +228,7 @@ module LiveBuilderBasicTests =
 
     [<Fact>]
     let ``Live.purgePending - clears queue`` () =
-        let builder =
-            Live.create<string, int> ()
-            |> Live.addEdge "A" "B" 1
+        let builder = Live.create<string, int> () |> Live.addEdge "A" "B" 1
 
         Assert.Equal(3, Live.pendingCount builder) // AddNode A, AddNode B, AddEdge
         let purged = Live.purgePending builder
@@ -248,9 +236,7 @@ module LiveBuilderBasicTests =
 
     [<Fact>]
     let ``Live.getId, allLabels - works with pending but un-synced state since registry updates sync-free`` () =
-        let builder =
-            Live.create<string, int> ()
-            |> Live.addEdge "A" "B" 1
+        let builder = Live.create<string, int> () |> Live.addEdge "A" "B" 1
 
         Assert.True((Live.getId "A" builder).IsSome)
         let labels = Live.allLabels builder

@@ -16,11 +16,7 @@ type Connection = { Weight: int; Type: string }
 
 [<Fact>]
 let ``serialize creates directed graph element`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 "5"
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 "5"
 
     let xml = serialize graph
 
@@ -28,11 +24,7 @@ let ``serialize creates directed graph element`` () =
 
 [<Fact>]
 let ``serialize creates undirected graph element`` () =
-    let graph =
-        empty Undirected
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 "5"
+    let graph = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 "5"
 
     let xml = serialize graph
 
@@ -40,10 +32,7 @@ let ``serialize creates undirected graph element`` () =
 
 [<Fact>]
 let ``serialize includes all nodes`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "Start"
-        |> addNode 2 "End"
+    let graph = empty Directed |> addNode 1 "Start" |> addNode 2 "End"
 
     let xml = serialize graph
 
@@ -52,10 +41,7 @@ let ``serialize includes all nodes`` () =
 
 [<Fact>]
 let ``serialize includes node data`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "Alice"
-        |> addNode 2 "Bob"
+    let graph = empty Directed |> addNode 1 "Alice" |> addNode 2 "Bob"
 
     let xml = serialize graph
 
@@ -81,11 +67,7 @@ let ``serialize includes all edges`` () =
 
 [<Fact>]
 let ``serialize includes edge data`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 ""
-        |> addNode 2 ""
-        |> addEdge 1 2 "42"
+    let graph = empty Directed |> addNode 1 "" |> addNode 2 "" |> addEdge 1 2 "42"
 
     let xml = serialize graph
 
@@ -102,11 +84,7 @@ let ``serialize empty graph`` () =
 
 [<Fact>]
 let ``serialize produces valid XML`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 "5"
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 "5"
 
     let xml = serialize graph
 
@@ -120,12 +98,9 @@ let ``serialize produces valid XML`` () =
 
 [<Fact>]
 let ``serializeWith creates custom node attributes`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "Alice"
-        |> addNode 2 "Bob"
+    let graph = empty Directed |> addNode 1 "Alice" |> addNode 2 "Bob"
 
-    let nodeAttr name = ["name", name; "type", "person"]
+    let nodeAttr name = [ "name", name; "type", "person" ]
     let edgeAttr _ = []
 
     let xml = serializeWith nodeAttr edgeAttr graph
@@ -137,14 +112,12 @@ let ``serializeWith creates custom node attributes`` () =
 
 [<Fact>]
 let ``serializeWith creates custom edge attributes`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 ""
-        |> addNode 2 ""
-        |> addEdge 1 2 42
+    let graph = empty Directed |> addNode 1 "" |> addNode 2 "" |> addEdge 1 2 42
 
     let nodeAttr _ = []
-    let edgeAttr weight = ["weight", string weight; "label", $"w={weight}"]
+
+    let edgeAttr weight =
+        [ "weight", string weight; "label", $"w={weight}" ]
 
     let xml = serializeWith nodeAttr edgeAttr graph
 
@@ -160,8 +133,8 @@ let ``serializeWith handles complex data types`` () =
         |> addNode 2 { Name = "Bob"; Age = 25 }
         |> addEdge 1 2 "friend"
 
-    let nodeAttr p = ["name", p.Name; "age", string p.Age]
-    let edgeAttr e = ["type", e]
+    let nodeAttr p = [ "name", p.Name; "age", string p.Age ]
+    let edgeAttr e = [ "type", e ]
 
     let xml = serializeWith nodeAttr edgeAttr graph
 
@@ -176,7 +149,8 @@ let ``serializeWith handles complex data types`` () =
 
 [<Fact>]
 let ``deserialize creates directed graph`` () =
-    let xml = """<?xml version="1.0" encoding="UTF-8"?>
+    let xml =
+        """<?xml version="1.0" encoding="UTF-8"?>
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
   <graph id="G" edgedefault="directed">
     <node id="1"><data key="label">A</data></node>
@@ -193,7 +167,8 @@ let ``deserialize creates directed graph`` () =
 
 [<Fact>]
 let ``deserialize creates undirected graph`` () =
-    let xml = """<?xml version="1.0" encoding="UTF-8"?>
+    let xml =
+        """<?xml version="1.0" encoding="UTF-8"?>
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
   <graph id="G" edgedefault="undirected">
     <node id="1"><data key="label">A</data></node>
@@ -208,7 +183,8 @@ let ``deserialize creates undirected graph`` () =
 
 [<Fact>]
 let ``deserialize restores node data`` () =
-    let xml = """<?xml version="1.0" encoding="UTF-8"?>
+    let xml =
+        """<?xml version="1.0" encoding="UTF-8"?>
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
   <graph id="G" edgedefault="directed">
     <node id="1"><data key="label">Alice</data></node>
@@ -226,7 +202,8 @@ let ``deserialize restores node data`` () =
 
 [<Fact>]
 let ``deserialize restores edge data`` () =
-    let xml = """<?xml version="1.0" encoding="UTF-8"?>
+    let xml =
+        """<?xml version="1.0" encoding="UTF-8"?>
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
   <graph id="G" edgedefault="directed">
     <node id="1"><data key="label">A</data></node>
@@ -242,7 +219,8 @@ let ``deserialize restores edge data`` () =
 
 [<Fact>]
 let ``deserialize restores multiple edges`` () =
-    let xml = """<?xml version="1.0" encoding="UTF-8"?>
+    let xml =
+        """<?xml version="1.0" encoding="UTF-8"?>
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
   <graph id="G" edgedefault="directed">
     <node id="1"/><node id="2"/><node id="3"/>
@@ -262,7 +240,8 @@ let ``deserialize restores multiple edges`` () =
 
 [<Fact>]
 let ``deserialize handles empty graph`` () =
-    let xml = """<?xml version="1.0" encoding="UTF-8"?>
+    let xml =
+        """<?xml version="1.0" encoding="UTF-8"?>
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
   <graph id="G" edgedefault="directed">
   </graph>
@@ -279,7 +258,8 @@ let ``deserialize handles empty graph`` () =
 
 [<Fact>]
 let ``deserializeWith reconstructs custom types`` () =
-    let xml = """<?xml version="1.0" encoding="UTF-8"?>
+    let xml =
+        """<?xml version="1.0" encoding="UTF-8"?>
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
   <graph id="G" edgedefault="directed">
     <node id="1">
@@ -303,7 +283,7 @@ let ``deserializeWith reconstructs custom types`` () =
     let edgeFolder (data: Map<string, string>) =
         Map.tryFind "weight" data |> Option.map int |> Option.defaultValue 0
 
-    let graph : Graph<Person, int> = deserializeWith nodeFolder edgeFolder xml
+    let graph: Graph<Person, int> = deserializeWith nodeFolder edgeFolder xml
 
     Assert.Equal("Alice", graph.Nodes.[1].Name)
     Assert.Equal(30, graph.Nodes.[1].Age)
@@ -337,11 +317,7 @@ let ``round-trip preserves directed graph structure`` () =
 
 [<Fact>]
 let ``round-trip preserves undirected graph structure`` () =
-    let original =
-        empty Undirected
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 "5"
+    let original = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 "5"
 
     let xml = serialize original
     let restored = deserialize xml
@@ -357,8 +333,8 @@ let ``round-trip with custom mappers preserves data`` () =
         |> addNode 2 { Name = "Bob"; Age = 25 }
         |> addEdge 1 2 "friend"
 
-    let nodeAttr p = ["name", p.Name; "age", string p.Age]
-    let edgeAttr e = ["type", e]
+    let nodeAttr p = [ "name", p.Name; "age", string p.Age ]
+    let edgeAttr e = [ "type", e ]
 
     let xml = serializeWith nodeAttr edgeAttr original
 
@@ -369,7 +345,7 @@ let ``round-trip with custom mappers preserves data`` () =
     let edgeFolder (data: Map<string, string>) =
         Map.tryFind "type" data |> Option.defaultValue ""
 
-    let restored : Graph<Person, string> = deserializeWith nodeFolder edgeFolder xml
+    let restored: Graph<Person, string> = deserializeWith nodeFolder edgeFolder xml
 
     Assert.Equal(original.Nodes.[1], restored.Nodes.[1])
     Assert.Equal(original.Nodes.[2], restored.Nodes.[2])
@@ -382,12 +358,10 @@ let ``round-trip with custom mappers preserves data`` () =
 [<Fact>]
 let ``writeFile and readFile round-trip`` () =
     let path = Path.GetTempFileName()
+
     try
         let original =
-            empty Directed
-            |> addNode 1 "Alice"
-            |> addNode 2 "Bob"
-            |> addEdge 1 2 "5"
+            empty Directed |> addNode 1 "Alice" |> addNode 2 "Bob" |> addEdge 1 2 "5"
 
         writeFile path original
         let restored = readFile path
@@ -397,11 +371,13 @@ let ``writeFile and readFile round-trip`` () =
         Assert.Equal(original.Kind, restored.Kind)
         Assert.Equal(original.Nodes.[1], Map.find "label" restored.Nodes.[1])
     finally
-        if File.Exists(path) then File.Delete(path)
+        if File.Exists(path) then
+            File.Delete(path)
 
 [<Fact>]
 let ``writeFileWith and readFileWith round-trip`` () =
     let path = Path.GetTempFileName()
+
     try
         let original =
             empty Directed
@@ -409,8 +385,8 @@ let ``writeFileWith and readFileWith round-trip`` () =
             |> addNode 2 { Name = "Bob"; Age = 25 }
             |> addEdge 1 2 "friend"
 
-        let nodeAttr p = ["name", p.Name; "age", string p.Age]
-        let edgeAttr e = ["type", e]
+        let nodeAttr p = [ "name", p.Name; "age", string p.Age ]
+        let edgeAttr e = [ "type", e ]
 
         writeFileWith nodeAttr edgeAttr path original
 
@@ -421,17 +397,19 @@ let ``writeFileWith and readFileWith round-trip`` () =
         let edgeFolder (data: Map<string, string>) =
             Map.tryFind "type" data |> Option.defaultValue ""
 
-        let restored : Graph<Person, string> = readFileWith nodeFolder edgeFolder path
+        let restored: Graph<Person, string> = readFileWith nodeFolder edgeFolder path
 
         Assert.Equal(original.Nodes.[1], restored.Nodes.[1])
         Assert.Equal(original.Nodes.[2], restored.Nodes.[2])
     finally
-        if File.Exists(path) then File.Delete(path)
+        if File.Exists(path) then
+            File.Delete(path)
 
 [<Fact>]
 let ``readFile handles non-existent file`` () =
-    let path = Path.Combine(Path.GetTempPath(), $"nonexistent-{System.Guid.NewGuid()}.graphml")
-    
+    let path =
+        Path.Combine(Path.GetTempPath(), $"nonexistent-{System.Guid.NewGuid()}.graphml")
+
     Assert.Throws<FileNotFoundException>(fun () -> readFile path |> ignore)
 
 // ============================================================================
@@ -456,7 +434,8 @@ let ``serialize handles isolated nodes`` () =
 
 [<Fact>]
 let ``deserialize handles nodes without data elements`` () =
-    let xml = """<?xml version="1.0" encoding="UTF-8"?>
+    let xml =
+        """<?xml version="1.0" encoding="UTF-8"?>
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
   <graph id="G" edgedefault="directed">
     <node id="1"/>
@@ -474,7 +453,8 @@ let ``deserialize handles nodes without data elements`` () =
 
 [<Fact>]
 let ``deserialize handles edges without data elements`` () =
-    let xml = """<?xml version="1.0" encoding="UTF-8"?>
+    let xml =
+        """<?xml version="1.0" encoding="UTF-8"?>
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
   <graph id="G" edgedefault="directed">
     <node id="1"/><node id="2"/>
@@ -491,15 +471,12 @@ let ``deserialize handles edges without data elements`` () =
 [<Fact>]
 let ``serialize handles special characters in data`` () =
     let graph =
-        empty Directed
-        |> addNode 1 "A & B"
-        |> addNode 2 "Test"
-        |> addEdge 1 2 "<edge>"
+        empty Directed |> addNode 1 "A & B" |> addNode 2 "Test" |> addEdge 1 2 "<edge>"
 
     let xml = serialize graph
-    
+
     // Should produce valid XML that can be parsed
     let restored = deserialize xml
-    
+
     // Note: XML encoding may change the format, but content should be preserved
     Assert.Equal(2, order restored)

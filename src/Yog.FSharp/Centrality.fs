@@ -1,11 +1,11 @@
 /// Centrality measures for identifying important nodes in graphs.
-/// 
+///
 /// Provides degree, closeness, harmonic, betweenness, PageRank, eigenvector, Katz,
 /// and alpha centrality measures. All functions return a Map<NodeId, float> mapping
 /// nodes to their centrality scores.
-/// 
+///
 /// ## Overview
-/// 
+///
 /// | Measure | Function | Best For | Complexity |
 /// |---------|----------|----------|------------|
 /// | Degree | degree | Local connectivity | O(V + E) |
@@ -44,21 +44,19 @@ let degree (mode: DegreeMode) (graph: Graph<'n, 'e>) : Centrality =
                 match mode with
                 | InDegree -> (predecessors id graph).Length
                 | OutDegree -> (successors id graph).Length
-                | TotalDegree ->
-                    (successors id graph).Length
-                    + (predecessors id graph).Length
+                | TotalDegree -> (successors id graph).Length + (predecessors id graph).Length
 
         id, float count / factor)
     |> Map.ofList
 
 /// Calculates Closeness Centrality for all nodes.
-/// 
+///
 /// Closeness centrality measures how close a node is to all other nodes.
 /// Formula: C(v) = (n - 1) / Σ d(v, u) for all u ≠ v
-/// 
+///
 /// Note: In disconnected graphs, nodes that cannot reach all others get 0.0.
 /// Consider using harmonicCentrality for disconnected graphs.
-/// 
+///
 /// Time Complexity: O(V * (V + E) log V) using Dijkstra from each node
 let closeness
     (zero: 'e)
@@ -71,9 +69,7 @@ let closeness
     let n = nodes.Length
 
     if n <= 1 then
-        nodes
-        |> List.map (fun id -> id, 0.0)
-        |> Map.ofList
+        nodes |> List.map (fun id -> id, 0.0) |> Map.ofList
     else
         nodes
         |> List.map (fun source ->
@@ -83,20 +79,18 @@ let closeness
             if distances.Count < n then
                 source, 0.0
             else
-                let totalDistance =
-                    distances
-                    |> Map.fold (fun acc _ -> add acc) zero
+                let totalDistance = distances |> Map.fold (fun acc _ -> add acc) zero
 
                 source, float (n - 1) / toFloat totalDistance)
         |> Map.ofList
 
 /// Calculates Harmonic Centrality for all nodes.
-/// 
+///
 /// Harmonic centrality is a variation of closeness that handles disconnected graphs
 /// gracefully. It sums the reciprocals of shortest path distances.
-/// 
+///
 /// Formula: H(v) = Σ (1 / d(v, u)) / (n - 1) for all reachable u ≠ v
-/// 
+///
 /// Time Complexity: O(V * (V + E) log V)
 let harmonicCentrality
     (zero: 'e)
@@ -109,9 +103,7 @@ let harmonicCentrality
     let n = nodes.Length
 
     if n <= 1 then
-        nodes
-        |> List.map (fun id -> id, 0.0)
-        |> Map.ofList
+        nodes |> List.map (fun id -> id, 0.0) |> Map.ofList
     else
         let denominator = float (n - 1)
 
@@ -129,10 +121,7 @@ let harmonicCentrality
                         else
                             let d = toFloat dist
 
-                            if d > 0.0 then
-                                sum + (1.0 / d)
-                            else
-                                sum)
+                            if d > 0.0 then sum + (1.0 / d) else sum)
                     0.0
 
             source, sumOfReciprocals / denominator)
@@ -206,22 +195,14 @@ let betweenness (zero: 'e) (add: 'e -> 'e -> 'e) (compare: 'e -> 'e -> int) (gra
             let w = stack.Pop()
 
             for v in preds.[w] do
-                delta.[v] <-
-                    delta.[v]
-                    + (sigma.[v] / sigma.[w]) * (1.0 + delta.[w])
+                delta.[v] <- delta.[v] + (sigma.[v] / sigma.[w]) * (1.0 + delta.[w])
 
             if w <> s then
                 cb.[w] <- cb.[w] + delta.[w]
 
-    let factor =
-        if graph.Kind = Undirected then
-            0.5
-        else
-            1.0
+    let factor = if graph.Kind = Undirected then 0.5 else 1.0
 
-    cb
-    |> Seq.map (fun kvp -> kvp.Key, kvp.Value * factor)
-    |> Map.ofSeq
+    cb |> Seq.map (fun kvp -> kvp.Key, kvp.Value * factor) |> Map.ofSeq
 
 /// PageRank options for convergence.
 type PageRankOptions =
@@ -272,9 +253,7 @@ let pagerank (options: PageRankOptions) (graph: Graph<'n, 'e>) : Centrality =
 
                 rankSum <- rankSum + ranks.[neighbor] / outDeg
 
-            newRanks.[node] <-
-                ((1.0 - options.Damping) / nFloat)
-                + options.Damping * (sinkSum + rankSum)
+            newRanks.[node] <- ((1.0 - options.Damping) / nFloat) + options.Damping * (sinkSum + rankSum)
 
         // Check convergence (L1 norm)
         let mutable diff = 0.0
@@ -289,9 +268,7 @@ let pagerank (options: PageRankOptions) (graph: Graph<'n, 'e>) : Centrality =
 
         iteration <- iteration + 1
 
-    ranks
-    |> Seq.map (fun kvp -> kvp.Key, kvp.Value)
-    |> Map.ofSeq
+    ranks |> Seq.map (fun kvp -> kvp.Key, kvp.Value) |> Map.ofSeq
 
 /// Calculates Eigenvector Centrality for all nodes.
 /// Node importance is based on the importance of its neighbors.
@@ -300,9 +277,7 @@ let eigenvector (maxIterations: int) (tolerance: float) (graph: Graph<'n, 'e>) :
     let n = nodes.Length
 
     if n <= 1 then
-        nodes
-        |> List.map (fun id -> id, 1.0)
-        |> Map.ofList
+        nodes |> List.map (fun id -> id, 1.0) |> Map.ofList
     else
         let mutable scores = Dictionary<NodeId, float>()
         let startVal = 1.0 / float n
@@ -356,19 +331,17 @@ let eigenvector (maxIterations: int) (tolerance: float) (graph: Graph<'n, 'e>) :
 
             iteration <- iteration + 1
 
-        scores
-        |> Seq.map (fun kvp -> kvp.Key, kvp.Value)
-        |> Map.ofSeq
+        scores |> Seq.map (fun kvp -> kvp.Key, kvp.Value) |> Map.ofSeq
 
 /// Calculates Katz Centrality for all nodes.
-/// 
+///
 /// Katz centrality adds an attenuation factor (alpha) to prevent infinite accumulation
 /// in cycles, plus a constant term (beta) for base centrality.
-/// 
+///
 /// Formula: C(v) = α * Σ C(u) + β for all neighbors u
-/// 
+///
 /// Time Complexity: O(max_iterations * (V + E))
-/// 
+///
 /// Parameters:
 /// - alpha: Attenuation factor (must be < 1/largest_eigenvalue, typically 0.1-0.3)
 /// - beta: Base centrality (typically 1.0)
@@ -423,19 +396,17 @@ let katz
 
             iteration <- iteration + 1
 
-        scores
-        |> Seq.map (fun kvp -> kvp.Key, kvp.Value)
-        |> Map.ofSeq
+        scores |> Seq.map (fun kvp -> kvp.Key, kvp.Value) |> Map.ofSeq
 
 /// Calculates Alpha Centrality for all nodes.
-/// 
+///
 /// Alpha centrality is a generalization of Katz centrality for directed graphs.
 /// Unlike Katz, it does not include a constant beta term.
-/// 
+///
 /// Formula: C(v) = α * Σ C(u) for all predecessors u (or neighbors for undirected)
-/// 
+///
 /// Time Complexity: O(max_iterations * (V + E))
-/// 
+///
 /// Parameters:
 /// - alpha: Attenuation factor (typically 0.1-0.5)
 /// - initial: Initial centrality value for all nodes
@@ -490,9 +461,7 @@ let alphaCentrality
 
             iteration <- iteration + 1
 
-        scores
-        |> Seq.map (fun kvp -> kvp.Key, kvp.Value)
-        |> Map.ofSeq
+        scores |> Seq.map (fun kvp -> kvp.Key, kvp.Value) |> Map.ofSeq
 
 // -----------------------------------------------------------------------------
 // Convenience Wrappers
@@ -504,9 +473,11 @@ let closenessInt graph = closeness 0 (+) compare float graph
 
 let closenessFloat graph = closeness 0.0 (+) compare id graph
 
-let harmonicCentralityInt graph = harmonicCentrality 0 (+) compare float graph
+let harmonicCentralityInt graph =
+    harmonicCentrality 0 (+) compare float graph
 
-let harmonicCentralityFloat graph = harmonicCentrality 0.0 (+) compare id graph
+let harmonicCentralityFloat graph =
+    harmonicCentrality 0.0 (+) compare id graph
 
 let betweennessInt graph = betweenness 0 (+) compare graph
 

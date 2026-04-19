@@ -134,25 +134,13 @@ let ``path graph interior nodes have degree 2`` () =
 let ``path graph connections`` () =
     let g = Classic.path 4 Undirected
     // Check linear connections
-    Assert.True(
-        neighbors 0 g
-        |> List.exists (fun (id, _) -> id = 1)
-    )
+    Assert.True(neighbors 0 g |> List.exists (fun (id, _) -> id = 1))
 
-    Assert.True(
-        neighbors 1 g
-        |> List.exists (fun (id, _) -> id = 0)
-    )
+    Assert.True(neighbors 1 g |> List.exists (fun (id, _) -> id = 0))
 
-    Assert.True(
-        neighbors 1 g
-        |> List.exists (fun (id, _) -> id = 2)
-    )
+    Assert.True(neighbors 1 g |> List.exists (fun (id, _) -> id = 2))
 
-    Assert.True(
-        neighbors 2 g
-        |> List.exists (fun (id, _) -> id = 3)
-    )
+    Assert.True(neighbors 2 g |> List.exists (fun (id, _) -> id = 3))
 
 [<Fact>]
 let ``path empty graph`` () =
@@ -198,10 +186,7 @@ let ``star graph connections`` () =
     let g = Classic.star 5 Undirected
     // All leaves connect to hub
     for i in 1..4 do
-        Assert.True(
-            neighbors i g
-            |> List.exists (fun (id, _) -> id = 0)
-        )
+        Assert.True(neighbors i g |> List.exists (fun (id, _) -> id = 0))
 
 [<Fact>]
 let ``star minimum graph`` () =

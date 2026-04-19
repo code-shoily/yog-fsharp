@@ -25,26 +25,18 @@ module DijkstraTests =
 
     /// Helper to create a weighted directed graph.
     let makeWeightedGraph (edges: (NodeId * NodeId * int) list) : Graph<unit, int> =
-        let allNodes =
-            edges
-            |> List.collect (fun (u, v, _) -> [ u; v ])
-            |> List.distinct
+        let allNodes = edges |> List.collect (fun (u, v, _) -> [ u; v ]) |> List.distinct
 
         let g = empty Directed
 
-        let gWithNodes =
-            allNodes
-            |> List.fold (fun acc n -> addNode n () acc) g
+        let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-        edges
-        |> List.fold (fun acc (u, v, w) -> addEdge u v w acc) gWithNodes
+        edges |> List.fold (fun acc (u, v, w) -> addEdge u v w acc) gWithNodes
 
     [<Fact>]
     let ``Dijkstra shortestPath - simple line`` () =
         // 0 --10--> 1 --5--> 2
-        let graph =
-            makeWeightedGraph [ (0, 1, 10)
-                                (1, 2, 5) ]
+        let graph = makeWeightedGraph [ (0, 1, 10); (1, 2, 5) ]
 
         let result = shortestPathInt 0 2 graph
 
@@ -56,10 +48,7 @@ module DijkstraTests =
     let ``Dijkstra shortestPath - two paths shorter via detour`` () =
         // 0 --100--> 2
         // 0 --1--> 1 --1--> 2
-        let graph =
-            makeWeightedGraph [ (0, 2, 100)
-                                (0, 1, 1)
-                                (1, 2, 1) ]
+        let graph = makeWeightedGraph [ (0, 2, 100); (0, 1, 1); (1, 2, 1) ]
 
         let result = shortestPathInt 0 2 graph
 
@@ -91,11 +80,7 @@ module DijkstraTests =
         //   0   3
         //   2\ /3
         //     2
-        let graph =
-            makeWeightedGraph [ (0, 1, 1)
-                                (0, 2, 2)
-                                (1, 3, 2)
-                                (2, 3, 3) ]
+        let graph = makeWeightedGraph [ (0, 1, 1); (0, 2, 2); (1, 3, 2); (2, 3, 3) ]
 
         let result = shortestPathInt 0 3 graph
 
@@ -104,10 +89,7 @@ module DijkstraTests =
 
     [<Fact>]
     let ``Dijkstra singleSourceDistances - computes all distances`` () =
-        let graph =
-            makeWeightedGraph [ (0, 1, 5)
-                                (0, 2, 10)
-                                (1, 2, 1) ]
+        let graph = makeWeightedGraph [ (0, 1, 5); (0, 2, 10); (1, 2, 1) ]
 
         let result = singleSourceDistancesInt 0 graph
 
@@ -156,10 +138,7 @@ module DijkstraTests =
 
     [<Fact>]
     let ``Dijkstra shortestPath - zero weight edges`` () =
-        let graph =
-            makeWeightedGraph [ (0, 1, 0)
-                                (1, 2, 0)
-                                (2, 3, 0) ]
+        let graph = makeWeightedGraph [ (0, 1, 0); (1, 2, 0); (2, 3, 0) ]
 
         let result = shortestPathInt 0 3 graph
         Assert.True(result.IsSome)
@@ -168,9 +147,7 @@ module DijkstraTests =
 
     [<Fact>]
     let ``Dijkstra shortestPath - self loop ignored`` () =
-        let graph =
-            makeWeightedGraph [ (0, 0, 5)
-                                (0, 1, 10) ]
+        let graph = makeWeightedGraph [ (0, 0, 5); (0, 1, 10) ]
 
         let result = shortestPathInt 0 1 graph
         Assert.True(result.IsSome)
@@ -180,11 +157,7 @@ module DijkstraTests =
     [<Fact>]
     let ``Dijkstra shortestPath - with cycle`` () =
         // Cycle: 0 -> 1 -> 2 -> 0
-        let graph =
-            makeWeightedGraph [ (0, 1, 1)
-                                (1, 2, 1)
-                                (2, 0, 1)
-                                (1, 3, 5) ]
+        let graph = makeWeightedGraph [ (0, 1, 1); (1, 2, 1); (2, 0, 1); (1, 3, 5) ]
 
         let result = shortestPathInt 0 3 graph
         Assert.True(result.IsSome)
@@ -194,22 +167,14 @@ module DijkstraTests =
     [<Fact>]
     let ``Dijkstra shortestPath - disconnected components`` () =
         // Two components: {0, 1} and {2, 3}
-        let graph =
-            makeWeightedGraph [ (0, 1, 1)
-                                (2, 3, 1) ]
+        let graph = makeWeightedGraph [ (0, 1, 1); (2, 3, 1) ]
 
         let result = shortestPathInt 0 3 graph
         Assert.True(result.IsNone)
 
     [<Fact>]
     let ``Dijkstra shortestPath - long chain`` () =
-        let edges =
-            [ (0, 1, 1)
-              (1, 2, 1)
-              (2, 3, 1)
-              (3, 4, 1)
-              (4, 5, 1)
-              (5, 6, 1) ]
+        let edges = [ (0, 1, 1); (1, 2, 1); (2, 3, 1); (3, 4, 1); (4, 5, 1); (5, 6, 1) ]
 
         let graph = makeWeightedGraph edges
         let result = shortestPathInt 0 6 graph
@@ -255,12 +220,7 @@ module DijkstraTests =
         // (9) (2)
         //  |   |
         //  4   4
-        let edges =
-            [ (0, 1, 1)
-              (0, 2, 2)
-              (0, 3, 4)
-              (1, 4, 9)
-              (2, 4, 2) ]
+        let edges = [ (0, 1, 1); (0, 2, 2); (0, 3, 4); (1, 4, 9); (2, 4, 2) ]
 
         let graph = makeWeightedGraph edges
         let result = shortestPathInt 0 4 graph
@@ -368,11 +328,7 @@ module DijkstraTests =
     [<Fact>]
     let ``Dijkstra singleSourceDistances - star graph`` () =
         // Center node 0 connected to 1, 2, 3, 4 with weights equal to node ID
-        let edges =
-            [ (0, 1, 1)
-              (0, 2, 2)
-              (0, 3, 3)
-              (0, 4, 4) ]
+        let edges = [ (0, 1, 1); (0, 2, 2); (0, 3, 3); (0, 4, 4) ]
 
         let graph = makeWeightedGraph edges
         let result = singleSourceDistancesInt 0 graph
@@ -420,10 +376,7 @@ module DijkstraTests =
     [<Fact>]
     let ``Dijkstra implicitDijkstra - grid Manhattan distance`` () =
         let successors ((x, y): int * int) =
-            [ (x + 1, y)
-              (x - 1, y)
-              (x, y + 1)
-              (x, y - 1) ]
+            [ (x + 1, y); (x - 1, y); (x, y + 1); (x, y - 1) ]
             |> List.filter (fun (nx, ny) -> nx >= 0 && ny >= 0 && nx <= 3 && ny <= 3)
             |> List.map (fun pos -> (pos, 1))
 
@@ -469,9 +422,7 @@ module DijkstraTests =
         // State is (position, metadata) but dedupe by position only
         let successors ((pos, mask): int * int) =
             match pos with
-            | 1 ->
-                [ ((2, mask + 1), 10)
-                  ((3, mask + 100), 5) ]
+            | 1 -> [ ((2, mask + 1), 10); ((3, mask + 100), 5) ]
             | 2 -> [ ((4, mask + 1), 1) ]
             | 3 -> [ ((4, mask + 100), 2) ]
             | _ -> []
@@ -515,9 +466,7 @@ module AStarTests =
     [<Fact>]
     let ``A* - simple path`` () =
         // 0 --1--> 1 --1--> 2
-        let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 1)
-                                              (1, 2, 1) ]
+        let graph = DijkstraTests.makeWeightedGraph [ (0, 1, 1); (1, 2, 1) ]
 
         let result = aStarInt manhattanHeuristic 0 2 graph
 
@@ -576,10 +525,7 @@ module AStarTests =
     let ``A* - zero heuristic equals Dijkstra`` () =
         // Zero heuristic should give same result as Dijkstra
         let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 5)
-                                              (0, 2, 2)
-                                              (2, 3, 2)
-                                              (1, 3, 1) ]
+            DijkstraTests.makeWeightedGraph [ (0, 1, 5); (0, 2, 2); (2, 3, 2); (1, 3, 1) ]
 
         let aStarResult = aStarInt (fun _ _ -> 0) 0 3 graph
         let dijkstraResult = shortestPathInt 0 3 graph
@@ -593,10 +539,7 @@ module AStarTests =
     [<Fact>]
     let ``A* - diamond with heuristic`` () =
         let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 1)
-                                              (0, 2, 10)
-                                              (1, 3, 1)
-                                              (2, 3, 1) ]
+            DijkstraTests.makeWeightedGraph [ (0, 1, 1); (0, 2, 10); (1, 3, 1); (2, 3, 1) ]
 
         let result = aStarInt manhattanHeuristic 0 3 graph
         Assert.True(result.IsSome)
@@ -648,11 +591,7 @@ module AStarTests =
 
     [<Fact>]
     let ``A* - with cycle`` () =
-        let edges =
-            [ (0, 1, 1)
-              (1, 2, 1)
-              (2, 0, 1)
-              (1, 3, 5) ]
+        let edges = [ (0, 1, 1); (1, 2, 1); (2, 0, 1); (1, 3, 5) ]
 
         let graph = DijkstraTests.makeWeightedGraph edges
         let result = aStarInt manhattanHeuristic 0 3 graph
@@ -661,11 +600,7 @@ module AStarTests =
 
     [<Fact>]
     let ``A* - longer chain`` () =
-        let edges =
-            [ (0, 1, 1)
-              (1, 2, 1)
-              (2, 3, 1)
-              (3, 4, 1) ]
+        let edges = [ (0, 1, 1); (1, 2, 1); (2, 3, 1); (3, 4, 1) ]
 
         let graph = DijkstraTests.makeWeightedGraph edges
         let result = aStarInt manhattanHeuristic 0 4 graph
@@ -686,10 +621,7 @@ module AStarTests =
     [<Fact>]
     let ``A* implicitAStar - grid with Manhattan heuristic`` () =
         let successors ((x, y): int * int) =
-            [ (x + 1, y)
-              (x - 1, y)
-              (x, y + 1)
-              (x, y - 1) ]
+            [ (x + 1, y); (x - 1, y); (x, y + 1); (x, y - 1) ]
             |> List.filter (fun (nx, ny) -> nx >= 0 && ny >= 0 && nx <= 3 && ny <= 3)
             |> List.map (fun pos -> (pos, 1))
 
@@ -713,9 +645,7 @@ module AStarTests =
     let ``A* implicitAStarBy - dedupe by position`` () =
         let successors ((pos, _): int * string) =
             match pos with
-            | 1 ->
-                [ ((2, "path1"), 5)
-                  ((3, "path2"), 10) ]
+            | 1 -> [ ((2, "path1"), 5); ((3, "path2"), 10) ]
             | 2 -> [ ((4, "end1"), 1) ]
             | 3 -> [ ((4, "end2"), 1) ]
             | _ -> []
@@ -736,9 +666,7 @@ module AStarTests =
 module BellmanFordTests =
     [<Fact>]
     let ``BellmanFord - simple path`` () =
-        let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 5)
-                                              (1, 2, 3) ]
+        let graph = DijkstraTests.makeWeightedGraph [ (0, 1, 5); (1, 2, 3) ]
 
         let result = bellmanFordInt 0 2 graph
 
@@ -752,10 +680,7 @@ module BellmanFordTests =
     let ``BellmanFord - negative weights without cycle`` () =
         // 0 --5--> 1 --(-10)--> 2 --3--> 3
         // Shortest: 0 -> 1 -> 2 -> 3 = -2
-        let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 5)
-                                              (1, 2, -10)
-                                              (2, 3, 3) ]
+        let graph = DijkstraTests.makeWeightedGraph [ (0, 1, 5); (1, 2, -10); (2, 3, 3) ]
 
         let result = bellmanFordInt 0 3 graph
 
@@ -767,10 +692,7 @@ module BellmanFordTests =
     let ``BellmanFord - detects negative cycle`` () =
         // 0 -> 1 (1), 1 -> 2 (-1), 2 -> 0 (-1)
         // Cycle sum: 1 + (-1) + (-1) = -1 < 0
-        let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 1)
-                                              (1, 2, -1)
-                                              (2, 0, -1) ]
+        let graph = DijkstraTests.makeWeightedGraph [ (0, 1, 1); (1, 2, -1); (2, 0, -1) ]
 
         let result = bellmanFordInt 0 2 graph
 
@@ -790,9 +712,7 @@ module BellmanFordTests =
 
     [<Fact>]
     let ``BellmanFord - no path to goal`` () =
-        let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 5) ]
-            |> addNode 2 ()
+        let graph = DijkstraTests.makeWeightedGraph [ (0, 1, 5) ] |> addNode 2 ()
 
         let result = bellmanFordInt 0 2 graph
 
@@ -818,10 +738,7 @@ module BellmanFordTests =
         // 0 -> 1 (4), 1 -> 2 (-5), 0 -> 2 (2), 2 -> 3 (1)
         // Best: 0 -> 1 -> 2 -> 3 = 4 + (-5) + 1 = 0
         let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 4)
-                                              (1, 2, -5)
-                                              (0, 2, 2)
-                                              (2, 3, 1) ]
+            DijkstraTests.makeWeightedGraph [ (0, 1, 4); (1, 2, -5); (0, 2, 2); (2, 3, 1) ]
 
         let result = bellmanFordInt 0 3 graph
 
@@ -841,11 +758,7 @@ module BellmanFordTests =
     [<Fact>]
     let ``BellmanFord - undirected with negative weights`` () =
         // Undirected edge with negative weight creates negative cycle
-        let graph =
-            empty Undirected
-            |> addNode 0 ()
-            |> addNode 1 ()
-            |> addEdge 0 1 -1
+        let graph = empty Undirected |> addNode 0 () |> addNode 1 () |> addEdge 0 1 -1
 
         let result = bellmanFordInt 0 1 graph
 
@@ -858,10 +771,7 @@ module BellmanFordTests =
         // 0 -> 1 (1) -> 2 (1)
         // 3 -> 4 (-1) -> 3 (negative cycle, but not on path from 0 to 2)
         let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 1)
-                                              (1, 2, 1)
-                                              (3, 4, -1)
-                                              (4, 3, -1) ]
+            DijkstraTests.makeWeightedGraph [ (0, 1, 1); (1, 2, 1); (3, 4, -1); (4, 3, -1) ]
 
         let result = bellmanFordInt 0 2 graph
 
@@ -871,12 +781,7 @@ module BellmanFordTests =
 
     [<Fact>]
     let ``BellmanFord - longer path with negative edges`` () =
-        let edges =
-            [ (0, 1, 5)
-              (1, 2, -3)
-              (2, 3, 2)
-              (3, 4, -1)
-              (4, 5, 3) ]
+        let edges = [ (0, 1, 5); (1, 2, -3); (2, 3, 2); (3, 4, -1); (4, 5, 3) ]
 
         let graph = DijkstraTests.makeWeightedGraph edges
         let result = bellmanFordInt 0 5 graph
@@ -926,10 +831,7 @@ module FloydWarshallTests =
     let ``FloydWarshall - all pairs in triangle`` () =
         // 0 --1--> 1 --1--> 2
         // 0 --3--> 2 (direct)
-        let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 1)
-                                              (1, 2, 1)
-                                              (0, 2, 3) ]
+        let graph = DijkstraTests.makeWeightedGraph [ (0, 1, 1); (1, 2, 1); (0, 2, 3) ]
 
         let result = floydWarshallInt graph
 
@@ -943,26 +845,18 @@ module FloydWarshallTests =
 
     [<Fact>]
     let ``FloydWarshall - detects negative cycle`` () =
-        let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 1)
-                                              (1, 2, -1)
-                                              (2, 0, -1) ]
+        let graph = DijkstraTests.makeWeightedGraph [ (0, 1, 1); (1, 2, -1); (2, 0, -1) ]
 
         let result = floydWarshallInt graph
 
         match result with
-        | Error () -> Assert.True(true)
+        | Error() -> Assert.True(true)
         | Ok _ -> Assert.True(false, "Should detect negative cycle")
 
     [<Fact>]
     let ``FloydWarshall - complete graph distances`` () =
         let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 4)
-                                              (0, 2, 1)
-                                              (1, 2, 2)
-                                              (1, 3, 5)
-                                              (2, 3, 1)
-                                              (3, 0, 7) ]
+            DijkstraTests.makeWeightedGraph [ (0, 1, 4); (0, 2, 1); (1, 2, 2); (1, 3, 5); (2, 3, 1); (3, 0, 7) ]
 
         let result = floydWarshallInt graph
 
@@ -985,15 +879,12 @@ module FloydWarshallTests =
 module FloatWrapperTests =
     [<Fact>]
     let ``FloydWarshall - negative cycle detection`` () =
-        let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 1)
-                                              (1, 2, -1)
-                                              (2, 0, -1) ]
+        let graph = DijkstraTests.makeWeightedGraph [ (0, 1, 1); (1, 2, -1); (2, 0, -1) ]
 
         let result = floydWarshallInt graph
 
         match result with
-        | Error () -> Assert.True(true)
+        | Error() -> Assert.True(true)
         | Ok _ -> Assert.True(false, "Should detect negative cycle")
 
     [<Fact>]
@@ -1045,11 +936,7 @@ module FloatWrapperTests =
     [<Fact>]
     let ``FloydWarshall - symmetric distances in undirected graph`` () =
         let graph =
-            let g =
-                empty Undirected
-                |> addNode 0 ()
-                |> addNode 1 ()
-                |> addNode 2 ()
+            let g = empty Undirected |> addNode 0 () |> addNode 1 () |> addNode 2 ()
 
             g |> addEdge 0 1 5 |> addEdge 1 2 3
 
@@ -1066,10 +953,7 @@ module FloatWrapperTests =
     [<Fact>]
     let ``FloydWarshall - transitive closure`` () =
         // 0 -> 1 -> 2 -> 3
-        let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 1)
-                                              (1, 2, 1)
-                                              (2, 3, 1) ]
+        let graph = DijkstraTests.makeWeightedGraph [ (0, 1, 1); (1, 2, 1); (2, 3, 1) ]
 
         let result = floydWarshallInt graph
 
@@ -1087,9 +971,7 @@ module FloatWrapperTests =
     [<Fact>]
     let ``FloydWarshall - disconnected components`` () =
         // Two components: {0, 1} and {2, 3}
-        let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 1)
-                                              (2, 3, 1) ]
+        let graph = DijkstraTests.makeWeightedGraph [ (0, 1, 1); (2, 3, 1) ]
 
         let result = floydWarshallInt graph
 
@@ -1106,10 +988,7 @@ module FloatWrapperTests =
     [<Fact>]
     let ``FloydWarshall - with cycles`` () =
         let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 1)
-                                              (1, 2, 1)
-                                              (2, 0, 1)
-                                              (1, 3, 5) ]
+            DijkstraTests.makeWeightedGraph [ (0, 1, 1); (1, 2, 1); (2, 0, 1); (1, 3, 5) ]
 
         let result = floydWarshallInt graph
 
@@ -1138,10 +1017,11 @@ module FloatWrapperTests =
     let ``FloydWarshall - complex with shorter indirect paths`` () =
         // Direct paths are longer than indirect
         let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 1)
-                                              (1, 2, 1)
-                                              (2, 3, 1) // Chain
-                                              (0, 3, 100) ] // Expensive direct path
+            DijkstraTests.makeWeightedGraph
+                [ (0, 1, 1)
+                  (1, 2, 1)
+                  (2, 3, 1) // Chain
+                  (0, 3, 100) ] // Expensive direct path
 
         let result = floydWarshallInt graph
 
@@ -1175,10 +1055,7 @@ module FloatWrapperTests =
 module DistanceMatrixTests =
     [<Fact>]
     let ``DistanceMatrix - computes POI distances`` () =
-        let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 5)
-                                              (0, 2, 10)
-                                              (1, 2, 1) ]
+        let graph = DijkstraTests.makeWeightedGraph [ (0, 1, 5); (0, 2, 10); (1, 2, 1) ]
 
         let result = distanceMatrixInt [ 0; 2 ] graph // Only care about 0 and 2
 
@@ -1205,14 +1082,12 @@ module DistanceMatrixTests =
 
     [<Fact>]
     let ``DistanceMatrix - detects negative cycle`` () =
-        let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 1)
-                                              (1, 0, -2) ]
+        let graph = DijkstraTests.makeWeightedGraph [ (0, 1, 1); (1, 0, -2) ]
 
         let result = distanceMatrixInt [ 0; 1 ] graph
 
         match result with
-        | Error () -> Assert.True(true)
+        | Error() -> Assert.True(true)
         | Ok _ -> Assert.True(false, "Should detect negative cycle")
 
     [<Fact>]
@@ -1220,12 +1095,7 @@ module DistanceMatrixTests =
         // 4 nodes, 4 POIs (100% density) -> should use Floyd-Warshall
         // Note: directed graph so not all pairs may be reachable
         let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, 1)
-                                              (0, 2, 2)
-                                              (0, 3, 3)
-                                              (1, 2, 1)
-                                              (1, 3, 2)
-                                              (2, 3, 1) ]
+            DijkstraTests.makeWeightedGraph [ (0, 1, 1); (0, 2, 2); (0, 3, 3); (1, 2, 1); (1, 3, 2); (2, 3, 1) ]
 
         let result = distanceMatrixInt [ 0; 1; 2; 3 ] graph
 
@@ -1261,9 +1131,7 @@ module PathfindingPropertyTests =
         let w1', w2' = w1 % 100 + 1, w2 % 100 + 1
         // Two paths: direct with w1+w2+1 (longer), or via node 1
         let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, w1')
-                                              (1, 2, w2')
-                                              (0, 2, w1' + w2' + 1) ]
+            DijkstraTests.makeWeightedGraph [ (0, 1, w1'); (1, 2, w2'); (0, 2, w1' + w2' + 1) ]
 
         let aStarResult = aStarInt (fun _ _ -> 0) 0 2 graph
         let dijkstraResult = shortestPathInt 0 2 graph
@@ -1290,29 +1158,17 @@ module PathfindingPropertyTests =
     let ``FloydWarshall satisfies triangle inequality`` (PositiveInt a) (PositiveInt b) (PositiveInt c) =
         let a', b', c' = a % 50 + 1, b % 50 + 1, c % 50 + 1
         // Create triangle with edge weights a, b, c
-        let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, a')
-                                              (1, 2, b')
-                                              (0, 2, c') ]
+        let graph = DijkstraTests.makeWeightedGraph [ (0, 1, a'); (1, 2, b'); (0, 2, c') ]
 
         let result = floydWarshallInt graph
 
         match result with
         | Ok dists ->
-            let d01 =
-                dists
-                |> Map.tryFind (0, 1)
-                |> Option.defaultValue 10000
+            let d01 = dists |> Map.tryFind (0, 1) |> Option.defaultValue 10000
 
-            let d12 =
-                dists
-                |> Map.tryFind (1, 2)
-                |> Option.defaultValue 10000
+            let d12 = dists |> Map.tryFind (1, 2) |> Option.defaultValue 10000
 
-            let d02 =
-                dists
-                |> Map.tryFind (0, 2)
-                |> Option.defaultValue 10000
+            let d02 = dists |> Map.tryFind (0, 2) |> Option.defaultValue 10000
             // d(0,2) <= d(0,1) + d(1,2)
             d02 <= d01 + d12
         | Error _ -> true // Negative cycle case

@@ -15,23 +15,16 @@ open Yog.Properties.Clique
 // =============================================================================
 
 let makeUndirectedGraph (edges: (NodeId * NodeId) list) : Graph<unit, int> =
-    let allNodes =
-        edges
-        |> List.collect (fun (u, v) -> [ u; v ])
-        |> List.distinct
+    let allNodes = edges |> List.collect (fun (u, v) -> [ u; v ]) |> List.distinct
 
     let g = empty Undirected
 
-    let gWithNodes =
-        allNodes
-        |> List.fold (fun acc n -> addNode n () acc) g
+    let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-    edges
-    |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
+    edges |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
 
 let addAllNodes nodes graph =
-    nodes
-    |> List.fold (fun acc n -> addNode n () acc) graph
+    nodes |> List.fold (fun acc n -> addNode n () acc) graph
 
 // =============================================================================
 // MAX CLIQUE TESTS
@@ -63,10 +56,7 @@ module MaxCliqueTests =
     [<Fact>]
     let ``maxClique - triangle`` () =
         // 0-1-2-0 forms a triangle (clique of size 3)
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         let result = maxClique graph
         Assert.Equal(3, result.Count)
@@ -77,11 +67,7 @@ module MaxCliqueTests =
     [<Fact>]
     let ``maxClique - square no diagonal`` () =
         // 0-1-2-3-0 is a cycle, no clique larger than 2
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3)
-                                  (3, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3); (3, 0) ]
 
         let result = maxClique graph
         Assert.Equal(2, result.Count) // Any edge
@@ -89,13 +75,7 @@ module MaxCliqueTests =
     [<Fact>]
     let ``maxClique - complete graph K4`` () =
         // All 4 nodes connected to each other
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (1, 2)
-                                  (1, 3)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (1, 2); (1, 3); (2, 3) ]
 
         let result = maxClique graph
         Assert.Equal(4, result.Count)
@@ -104,11 +84,12 @@ module MaxCliqueTests =
     let ``maxClique - kite graph`` () =
         // Triangle 0-1-2 with node 3 connected to 1 and 2
         let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) // Triangle
-                                  (1, 3)
-                                  (2, 3) ] // Node 3 connected to 1 and 2
+            makeUndirectedGraph
+                [ (0, 1)
+                  (1, 2)
+                  (2, 0) // Triangle
+                  (1, 3)
+                  (2, 3) ] // Node 3 connected to 1 and 2
 
         let result = maxClique graph
         // Max clique is the triangle 0-1-2 or 1-2-3 (both size 3)
@@ -118,11 +99,12 @@ module MaxCliqueTests =
     let ``maxClique - two cliques sharing edge`` () =
         // Triangle 0-1-2 and triangle 1-2-3 sharing edge 1-2
         let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) // First triangle
-                                  (1, 3)
-                                  (2, 3) ] // Second triangle with shared edge
+            makeUndirectedGraph
+                [ (0, 1)
+                  (1, 2)
+                  (2, 0) // First triangle
+                  (1, 3)
+                  (2, 3) ] // Second triangle with shared edge
 
         let result = maxClique graph
         Assert.Equal(3, result.Count)
@@ -130,10 +112,7 @@ module MaxCliqueTests =
     [<Fact>]
     let ``maxClique - path graph`` () =
         // Path: 0-1-2-3
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3) ]
 
         let result = maxClique graph
         // Max clique is just an edge (size 2)
@@ -142,11 +121,7 @@ module MaxCliqueTests =
     [<Fact>]
     let ``maxClique - star graph`` () =
         // Star: center 0, leaves 1,2,3,4
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (0, 4) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (0, 4) ]
 
         let result = maxClique graph
         // Max clique is just an edge (center + one leaf)
@@ -154,11 +129,7 @@ module MaxCliqueTests =
 
     [<Fact>]
     let ``maxClique - isolated nodes`` () =
-        let graph =
-            empty Undirected
-            |> addNode 0 ()
-            |> addNode 1 ()
-            |> addNode 2 ()
+        let graph = empty Undirected |> addNode 0 () |> addNode 1 () |> addNode 2 ()
 
         let result = maxClique graph
         // Max clique is size 1 (any single node)
@@ -195,10 +166,7 @@ module AllMaximalCliquesTests =
 
     [<Fact>]
     let ``allMaximalCliques - triangle`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         let result = allMaximalCliques graph
         // One maximal clique: the triangle itself
@@ -208,11 +176,7 @@ module AllMaximalCliquesTests =
     [<Fact>]
     let ``allMaximalCliques - square no diagonal`` () =
         // Cycle of 4
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3)
-                                  (3, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3); (3, 0) ]
 
         let result = allMaximalCliques graph
         // Four maximal cliques, each is an edge
@@ -224,10 +188,7 @@ module AllMaximalCliquesTests =
     [<Fact>]
     let ``allMaximalCliques - path of three edges`` () =
         // 0-1-2-3
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3) ]
 
         let result = allMaximalCliques graph
         // Three maximal cliques: {0,1}, {1,2}, {2,3}
@@ -237,11 +198,12 @@ module AllMaximalCliquesTests =
     let ``allMaximalCliques - two triangles sharing edge`` () =
         // Triangle 0-1-2 and triangle 1-2-3
         let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) // First triangle
-                                  (1, 3)
-                                  (2, 3) ] // Second triangle
+            makeUndirectedGraph
+                [ (0, 1)
+                  (1, 2)
+                  (2, 0) // First triangle
+                  (1, 3)
+                  (2, 3) ] // Second triangle
 
         let result = allMaximalCliques graph
         // Two maximal cliques: {0,1,2} and {1,2,3}
@@ -252,13 +214,7 @@ module AllMaximalCliquesTests =
 
     [<Fact>]
     let ``allMaximalCliques - complete graph K4`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (1, 2)
-                                  (1, 3)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (1, 2); (1, 3); (2, 3) ]
 
         let result = allMaximalCliques graph
         // One maximal clique: the whole graph
@@ -285,20 +241,14 @@ module KCliquesTests =
     [<Fact>]
     let ``kCliques - k=2 returns all edges`` () =
         // Triangle has 3 edges = 3 cliques of size 2
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         let result = kCliques 2 graph
         Assert.Equal(3, result.Length)
 
     [<Fact>]
     let ``kCliques - k=3 in triangle`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         let result = kCliques 3 graph
         // One triangle
@@ -314,26 +264,14 @@ module KCliquesTests =
     [<Fact>]
     let ``kCliques - complete graph K4, k=3`` () =
         // K4 has 4 choose 3 = 4 triangles
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (1, 2)
-                                  (1, 3)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (1, 2); (1, 3); (2, 3) ]
 
         let result = kCliques 3 graph
         Assert.Equal(4, result.Length)
 
     [<Fact>]
     let ``kCliques - complete graph K4, k=4`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (1, 2)
-                                  (1, 3)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (1, 2); (1, 3); (2, 3) ]
 
         let result = kCliques 4 graph
         // One clique of size 4 (the whole graph)
@@ -342,12 +280,13 @@ module KCliquesTests =
     [<Fact>]
     let ``kCliques - two disjoint triangles`` () =
         let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) // First triangle
-                                  (3, 4)
-                                  (4, 5)
-                                  (5, 3) ] // Second triangle
+            makeUndirectedGraph
+                [ (0, 1)
+                  (1, 2)
+                  (2, 0) // First triangle
+                  (3, 4)
+                  (4, 5)
+                  (5, 3) ] // Second triangle
 
         let result = kCliques 3 graph
         // Two triangles
@@ -357,12 +296,7 @@ module KCliquesTests =
     let ``kCliques - square with one diagonal`` () =
         // Square 0-1-2-3-0 with diagonal 0-2
         // Creates two triangles: 0-1-2 and 0-2-3
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3)
-                                  (3, 0)
-                                  (0, 2) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3); (3, 0); (0, 2) ]
 
         let result = kCliques 3 graph
         Assert.Equal(2, result.Length)
@@ -408,9 +342,7 @@ module EdgeCaseTests =
     [<Fact>]
     let ``clique algorithms handle isolated nodes`` () =
         let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ] // Triangle
+            makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ] // Triangle
             |> addNode 3 () // Isolated node
 
         let maxResult = maxClique graph
@@ -425,19 +357,13 @@ module EdgeCaseTests =
         Assert.Equal(4, kResult.Length)
 
     let makeUndirectedWeightedGraph edges =
-        let allNodes =
-            edges
-            |> List.collect (fun (u, v) -> [ u; v ])
-            |> List.distinct
+        let allNodes = edges |> List.collect (fun (u, v) -> [ u; v ]) |> List.distinct
 
         let g = empty Undirected
 
-        let gWithNodes =
-            allNodes
-            |> List.fold (fun acc n -> addNode n () acc) g
+        let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-        edges
-        |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
+        edges |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
 
     [<Fact>]
     let ``large clique detection`` () =
@@ -461,14 +387,15 @@ module EdgeCaseTests =
     let ``wheel graph cliques`` () =
         // Wheel: center 0, rim 1-2-3-4-1
         let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (0, 4) // Spokes
-                                  (1, 2)
-                                  (2, 3)
-                                  (3, 4)
-                                  (4, 1) ] // Rim
+            makeUndirectedGraph
+                [ (0, 1)
+                  (0, 2)
+                  (0, 3)
+                  (0, 4) // Spokes
+                  (1, 2)
+                  (2, 3)
+                  (3, 4)
+                  (4, 1) ] // Rim
 
         let maxResult = maxClique graph
         // Max clique is triangle (center + two adjacent rim nodes)
@@ -480,16 +407,10 @@ module EdgeCaseTests =
 
 // Helper for large clique test
 let makeUndirectedWeightedGraph edges =
-    let allNodes =
-        edges
-        |> List.collect (fun (u, v) -> [ u; v ])
-        |> List.distinct
+    let allNodes = edges |> List.collect (fun (u, v) -> [ u; v ]) |> List.distinct
 
     let g = empty Undirected
 
-    let gWithNodes =
-        allNodes
-        |> List.fold (fun acc n -> addNode n () acc) g
+    let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-    edges
-    |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
+    edges |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes

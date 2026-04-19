@@ -1,29 +1,29 @@
 /// Stoer-Wagner global minimum cut algorithm.
-/// 
+///
 /// Finds the minimum weight cut that partitions the graph into two non-empty sets,
 /// without specifying which nodes must be on which side (unlike s-t min cut).
-/// 
+///
 /// ## When to Use
 /// - Graph partitioning and clustering
 /// - Finding the weakest link in a network
 /// - Image segmentation
 /// - VLSI design (circuit partitioning)
 /// - Community detection in networks
-/// 
+///
 /// ## Key Concepts
-/// 
+///
 /// ### Global Minimum Cut
 /// A partition of nodes into two non-empty sets A and B that minimizes
 /// the sum of weights of edges crossing from A to B.
-/// 
+///
 /// ### Stoer-Wagner Algorithm
 /// Uses Maximum Adjacency Search (MAS) to find the "most tightly connected" node
 /// pair, then contracts them and repeats.
-/// 
+///
 /// ## Complexity
 /// - **Time**: O(V³) - cubic in number of vertices
 /// - **Space**: O(V + E)
-/// 
+///
 /// ## Comparison with Max-Flow Min-Cut
 /// | Aspect | Global Min Cut (Stoer-Wagner) | s-t Min Cut (Max Flow) |
 /// |--------|-------------------------------|------------------------|
@@ -31,7 +31,7 @@
 /// | Partitions | Any two non-empty sets | Separates specific nodes |
 /// | Algorithm | Contraction-based | Augmenting paths |
 /// | Complexity | O(V³) | O(VE²) |
-/// 
+///
 /// ## Maximum Adjacency Search
 /// The key subroutine orders vertices by their connectivity strength to the
 /// growing set, identifying the most tightly connected pair.
@@ -42,15 +42,17 @@ open Yog.Model
 open Yog.Transform
 
 /// Represents the sizes and weight of a graph partition.
-/// 
+///
 /// Returned by `globalMinCut`, describes the minimum cut found.
 type MinCut =
-    { /// Total weight of edges crossing the cut.
-      Weight: int
-      /// Number of nodes in the first partition.
-      GroupASize: int
-      /// Number of nodes in the second partition.
-      GroupBSize: int }
+    {
+        /// Total weight of edges crossing the cut.
+        Weight: int
+        /// Number of nodes in the first partition.
+        GroupASize: int
+        /// Number of nodes in the second partition.
+        GroupBSize: int
+    }
 
 // Internal custom comparer to mimic Gleam's `compare_max`:
 // Sorts by weight descending, then by node ID ascending for deterministic tie-breaking.
@@ -65,14 +67,14 @@ let private maxAdjacencyComparer =
                 weightCompare }
 
 /// Maximum Adjacency Search (MAS): finds the two most tightly connected nodes.
-/// 
+///
 /// ## Parameters
 /// - `graph`: Input graph with integer weights
-/// 
+///
 /// ## Returns
 /// Tuple of (s, t, cut_weight) where s and t are the most tightly connected nodes
 /// and cut_weight is the weight of edges from t to the rest of the graph.
-/// 
+///
 /// ## Algorithm
 /// 1. Start from arbitrary node
 /// 2. Repeatedly add the node with highest adjacency weight to the current set
@@ -127,8 +129,7 @@ let private maximumAdjacencySearch (graph: Graph<int, int>) : NodeId * NodeId * 
             if remaining.Contains(neighbor) then
                 let mutable existingW = 0
 
-                weights.TryGetValue(neighbor, &existingW)
-                |> ignore
+                weights.TryGetValue(neighbor, &existingW) |> ignore
 
                 let newW = existingW + edgeWeight
                 weights.[neighbor] <- newW
@@ -161,52 +162,49 @@ let rec private doMinCut (graph: Graph<int, int>) (best: MinCut) : MinCut =
               GroupASize = tSize
               GroupBSize = totalNodes - tSize }
 
-        let newBest =
-            if currentCut.Weight < best.Weight then
-                currentCut
-            else
-                best
+        let newBest = if currentCut.Weight < best.Weight then currentCut else best
 
         // Contract t into s
         let nextGraph = contract s t (+) graph
 
         // Update the merged node 's' to hold the combined size of the original nodes
         let nextGraphMerged =
-            { nextGraph with Nodes = nextGraph.Nodes |> Map.add s (sSize + tSize) }
+            { nextGraph with
+                Nodes = nextGraph.Nodes |> Map.add s (sSize + tSize) }
 
         doMinCut nextGraphMerged newBest
 
 /// Finds the global minimum cut of an undirected weighted graph using the
 /// Stoer-Wagner algorithm.
-/// 
+///
 /// ## Parameters
 /// - `graph`: Input graph with integer edge weights
-/// 
+///
 /// ## Returns
 /// `MinCut` containing the minimum cut weight and partition sizes.
-/// 
+///
 /// ## Algorithm
 /// 1. Run Maximum Adjacency Search to find most tightly connected pair
 /// 2. The last node added has a cut separating it from the rest
 /// 3. Contract the pair and repeat
 /// 4. Return the minimum cut found across all iterations
-/// 
+///
 /// ## Complexity
 /// - **Time**: O(V³)
 /// - **Space**: O(V + E)
-/// 
+///
 /// ## Example
-/// 
+///
 ///     // Create a weighted undirected graph
 ///     let graph =
 ///         empty Undirected
 ///         |> addNode 0 () |> addNode 1 () |> addNode 2 () |> addNode 3 ()
 ///         |> addEdge 0 1 3 |> addEdge 0 2 2 |> addEdge 1 2 4 |> addEdge 2 3 1
-///     
+///
 ///     let result = globalMinCut graph
 ///     // result.Weight = 1 (cut between node 2 and node 3)
 ///     // result.GroupASize = 3, result.GroupBSize = 1
-/// 
+///
 /// ## Use Cases
 /// - **Network reliability**: Find minimum edges to remove to disconnect graph
 /// - **Clustering**: Natural graph partitioning point

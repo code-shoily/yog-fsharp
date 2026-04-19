@@ -29,11 +29,7 @@ let hasEdge src dst (graph: Graph<'n, 'e>) =
 module DagModelTests =
     [<Fact>]
     let ``fromGraph - accepts acyclic graph`` () =
-        let graph =
-            empty Directed
-            |> addNode 0 "A"
-            |> addNode 1 "B"
-            |> addEdge 0 1 10
+        let graph = empty Directed |> addNode 0 "A" |> addNode 1 "B" |> addEdge 0 1 10
 
         let result = Model.fromGraph graph
 
@@ -78,11 +74,7 @@ module DagModelTests =
 
     [<Fact>]
     let ``toGraph - unwraps dag`` () =
-        let graph =
-            empty Directed
-            |> addNode 0 "A"
-            |> addNode 1 "B"
-            |> addEdge 0 1 10
+        let graph = empty Directed |> addNode 0 "A" |> addNode 1 "B" |> addEdge 0 1 10
 
         let dag = Model.fromGraph graph |> unwrapDag
         let unwrapped = Model.toGraph dag
@@ -123,11 +115,7 @@ module DagModelTests =
 
     [<Fact>]
     let ``addEdge - rejects edge that creates cycle`` () =
-        let graph =
-            empty Directed
-            |> addNode 0 "A"
-            |> addNode 1 "B"
-            |> addEdge 0 1 10
+        let graph = empty Directed |> addNode 0 "A" |> addNode 1 "B" |> addEdge 0 1 10
 
         let dag = Model.fromGraph graph |> unwrapDag
         let result = Model.addEdge 1 0 20 dag // Would create cycle
@@ -138,11 +126,7 @@ module DagModelTests =
 
     [<Fact>]
     let ``removeNode - removes node from dag`` () =
-        let graph =
-            empty Directed
-            |> addNode 0 "A"
-            |> addNode 1 "B"
-            |> addEdge 0 1 10
+        let graph = empty Directed |> addNode 0 "A" |> addNode 1 "B" |> addEdge 0 1 10
 
         let dag = Model.fromGraph graph |> unwrapDag
         let dag2 = Model.removeNode 1 dag
@@ -152,11 +136,7 @@ module DagModelTests =
 
     [<Fact>]
     let ``removeEdge - removes edge from dag`` () =
-        let graph =
-            empty Directed
-            |> addNode 0 "A"
-            |> addNode 1 "B"
-            |> addEdge 0 1 10
+        let graph = empty Directed |> addNode 0 "A" |> addNode 1 "B" |> addEdge 0 1 10
 
         let dag = Model.fromGraph graph |> unwrapDag
         let dag2 = Model.removeEdge 0 1 dag
@@ -189,23 +169,11 @@ module DagModelTests =
 
     [<Fact>]
     let ``dag equality and hashcode based on underlying graph`` () =
-        let graph1 =
-            empty Directed
-            |> addNode 0 "A"
-            |> addNode 1 "B"
-            |> addEdge 0 1 10
+        let graph1 = empty Directed |> addNode 0 "A" |> addNode 1 "B" |> addEdge 0 1 10
 
-        let graph2 =
-            empty Directed
-            |> addNode 0 "A"
-            |> addNode 1 "B"
-            |> addEdge 0 1 10
+        let graph2 = empty Directed |> addNode 0 "A" |> addNode 1 "B" |> addEdge 0 1 10
 
-        let graph3 =
-            empty Directed
-            |> addNode 0 "A"
-            |> addNode 1 "C"
-            |> addEdge 0 1 10
+        let graph3 = empty Directed |> addNode 0 "A" |> addNode 1 "C" |> addEdge 0 1 10
 
         let dag1 = Model.fromGraph graph1 |> unwrapDag
         let dag2 = Model.fromGraph graph2 |> unwrapDag
@@ -413,9 +381,7 @@ module TransitiveClosureTests =
         let closureGraph = Model.toGraph closureDag
 
         // Should have direct edge from 0 to 2
-        let succs =
-            Yog.Model.successors 0 closureGraph
-            |> List.map fst
+        let succs = Yog.Model.successors 0 closureGraph |> List.map fst
 
         Assert.Contains(2, succs)
 
@@ -447,11 +413,7 @@ module TransitiveClosureTests =
 
     [<Fact>]
     let ``transitiveClosure - preserves original edges`` () =
-        let graph =
-            empty Directed
-            |> addNode 0 "A"
-            |> addNode 1 "B"
-            |> addEdge 0 1 10
+        let graph = empty Directed |> addNode 0 "A" |> addNode 1 "B" |> addEdge 0 1 10
 
         let dag = Model.fromGraph graph |> unwrapDag
         let closureDag = Algorithms.transitiveClosure min dag
@@ -576,11 +538,7 @@ module IntegrationTests =
     [<Fact>]
     let ``dag preserves type safety`` () =
         // Once we have a Dag, operations that would create cycles fail
-        let graph =
-            empty Directed
-            |> addNode 0 "A"
-            |> addNode 1 "B"
-            |> addEdge 0 1 1
+        let graph = empty Directed |> addNode 0 "A" |> addNode 1 "B" |> addEdge 0 1 1
 
         let dag = Model.fromGraph graph |> unwrapDag
 
@@ -593,11 +551,7 @@ module IntegrationTests =
 
     [<Fact>]
     let ``dag operations are chainable`` () =
-        let graph =
-            empty Directed
-            |> addNode 0 "A"
-            |> addNode 1 "B"
-            |> addEdge 0 1 1
+        let graph = empty Directed |> addNode 0 "A" |> addNode 1 "B" |> addEdge 0 1 1
 
         let dag = Model.fromGraph graph |> unwrapDag
 
@@ -690,11 +644,7 @@ module TransitiveReductionTests =
 module ShortestPathTests =
     [<Fact>]
     let ``shortestPath - finds direct path`` () =
-        let graph =
-            empty Directed
-            |> addNode 0 ()
-            |> addNode 1 ()
-            |> addEdge 0 1 5
+        let graph = empty Directed |> addNode 0 () |> addNode 1 () |> addEdge 0 1 5
 
         let dag = Model.fromGraph graph |> unwrapDag
         let path = Algorithms.shortestPath 0 1 dag

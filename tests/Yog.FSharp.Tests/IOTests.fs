@@ -12,11 +12,7 @@ open Yog.IO
 
 [<Fact>]
 let ``toDot generates digraph for directed`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 5
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 5
 
     let dot = Dot.render Dot.defaultOptions graph
 
@@ -25,11 +21,7 @@ let ``toDot generates digraph for directed`` () =
 
 [<Fact>]
 let ``toDot generates graph for undirected`` () =
-    let graph =
-        empty Undirected
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 5
+    let graph = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 5
 
     let dot = Dot.render Dot.defaultOptions graph
 
@@ -39,10 +31,7 @@ let ``toDot generates graph for undirected`` () =
 [<Fact>]
 let ``toDot includes all nodes`` () =
     let graph =
-        empty Directed
-        |> addNode 1 "Start"
-        |> addNode 2 "Process"
-        |> addNode 3 "End"
+        empty Directed |> addNode 1 "Start" |> addNode 2 "Process" |> addNode 3 "End"
 
     let dot = Dot.render Dot.defaultOptions graph
 
@@ -67,14 +56,11 @@ let ``toDot includes all edges`` () =
 
 [<Fact>]
 let ``toDot uses custom node labels`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "Alice"
-        |> addNode 2 "Bob"
-        |> addEdge 1 2 1
+    let graph = empty Directed |> addNode 1 "Alice" |> addNode 2 "Bob" |> addEdge 1 2 1
 
     let options =
-        { Dot.defaultOptions with NodeLabel = fun id data -> $"{id}:{data}" }
+        { Dot.defaultOptions with
+            NodeLabel = fun id data -> $"{id}:{data}" }
 
     let dot = Dot.render options graph
 
@@ -83,24 +69,19 @@ let ``toDot uses custom node labels`` () =
 
 [<Fact>]
 let ``toDot uses custom edge labels`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 ""
-        |> addNode 2 ""
-        |> addEdge 1 2 42
+    let graph = empty Directed |> addNode 1 "" |> addNode 2 "" |> addEdge 1 2 42
 
-    let options = { Dot.defaultOptions with EdgeLabel = fun w -> $"weight={w}" }
+    let options =
+        { Dot.defaultOptions with
+            EdgeLabel = fun w -> $"weight={w}" }
+
     let dot = Dot.render options graph
 
     Assert.Contains("[label=\"weight=42\"]", dot)
 
 [<Fact>]
 let ``toDot highlights specified nodes`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 1
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 1
 
     let options =
         { Dot.defaultOptions with
@@ -136,7 +117,10 @@ let ``toDot highlights specified edges`` () =
 let ``toDot uses custom node shape`` () =
     let graph = empty Directed |> addNode 1 "A"
 
-    let options = { Dot.defaultOptions with NodeShape = "box" }
+    let options =
+        { Dot.defaultOptions with
+            NodeShape = "box" }
+
     let dot = Dot.render options graph
 
     Assert.Contains("node [shape=box]", dot)
@@ -155,11 +139,7 @@ let ``toDot empty graph`` () =
 
 [<Fact>]
 let ``toMermaid uses TD for directed`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 5
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 5
 
     let mermaid = Mermaid.render Mermaid.defaultOptions graph
 
@@ -168,11 +148,7 @@ let ``toMermaid uses TD for directed`` () =
 
 [<Fact>]
 let ``toMermaid uses LR for undirected`` () =
-    let graph =
-        empty Undirected
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 5
+    let graph = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 5
 
     let mermaid = Mermaid.render Mermaid.defaultOptions graph
 
@@ -181,10 +157,7 @@ let ``toMermaid uses LR for undirected`` () =
 
 [<Fact>]
 let ``toMermaid includes all nodes`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "Start"
-        |> addNode 2 "End"
+    let graph = empty Directed |> addNode 1 "Start" |> addNode 2 "End"
 
     let mermaid = Mermaid.render Mermaid.defaultOptions graph
 
@@ -193,11 +166,7 @@ let ``toMermaid includes all nodes`` () =
 
 [<Fact>]
 let ``toMermaid includes all edges with weights`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 ""
-        |> addNode 2 ""
-        |> addEdge 1 2 10
+    let graph = empty Directed |> addNode 1 "" |> addNode 2 "" |> addEdge 1 2 10
 
     let mermaid = Mermaid.render Mermaid.defaultOptions graph
 
@@ -207,13 +176,12 @@ let ``toMermaid includes all edges with weights`` () =
 
 [<Fact>]
 let ``toMermaid uses custom node labels`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "Alice"
-        |> addNode 2 "Bob"
-        |> addEdge 1 2 1
+    let graph = empty Directed |> addNode 1 "Alice" |> addNode 2 "Bob" |> addEdge 1 2 1
 
-    let options = { Mermaid.defaultOptions with NodeLabel = fun id data -> data }
+    let options =
+        { Mermaid.defaultOptions with
+            NodeLabel = fun id data -> data }
+
     let mermaid = Mermaid.render options graph
 
     Assert.Contains("1[\"Alice\"]", mermaid)
@@ -221,14 +189,11 @@ let ``toMermaid uses custom node labels`` () =
 
 [<Fact>]
 let ``toMermaid highlights nodes`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 1
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 1
 
     let options =
-        { Mermaid.defaultOptions with HighlightedNodes = Set.ofList [ 1 ] }
+        { Mermaid.defaultOptions with
+            HighlightedNodes = Set.ofList [ 1 ] }
 
     let mermaid = Mermaid.render options graph
 
@@ -237,14 +202,11 @@ let ``toMermaid highlights nodes`` () =
 
 [<Fact>]
 let ``toMermaid highlights edges`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 ""
-        |> addNode 2 ""
-        |> addEdge 1 2 1
+    let graph = empty Directed |> addNode 1 "" |> addNode 2 "" |> addEdge 1 2 1
 
     let options =
-        { Mermaid.defaultOptions with HighlightedEdges = Set.ofList [ (1, 2) ] }
+        { Mermaid.defaultOptions with
+            HighlightedEdges = Set.ofList [ (1, 2) ] }
 
     let mermaid = Mermaid.render options graph
 
@@ -274,10 +236,7 @@ let ``toJson includes graph kind`` () =
 
 [<Fact>]
 let ``toJson includes all nodes`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "Alice"
-        |> addNode 2 "Bob"
+    let graph = empty Directed |> addNode 1 "Alice" |> addNode 2 "Bob"
 
     let json = Json.render graph
 
@@ -288,11 +247,7 @@ let ``toJson includes all nodes`` () =
 
 [<Fact>]
 let ``toJson includes all edges`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 ""
-        |> addNode 2 ""
-        |> addEdge 1 2 42
+    let graph = empty Directed |> addNode 1 "" |> addNode 2 "" |> addEdge 1 2 42
 
     let json = Json.render graph
 
@@ -302,11 +257,7 @@ let ``toJson includes all edges`` () =
 
 [<Fact>]
 let ``toJson produces valid JSON`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 10
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
 
     let json = Json.render graph
 
@@ -325,11 +276,7 @@ let ``toJson empty graph`` () =
 
 [<Fact>]
 let ``toJson undirected only includes one direction`` () =
-    let graph =
-        empty Undirected
-        |> addNode 1 ""
-        |> addNode 2 ""
-        |> addEdge 1 2 5
+    let graph = empty Undirected |> addNode 1 "" |> addNode 2 "" |> addEdge 1 2 5
 
     let json = Json.render graph
 
@@ -341,10 +288,7 @@ let ``toJson undirected only includes one direction`` () =
 [<Fact>]
 let ``toJson handles complex data types`` () =
     let graph =
-        empty Directed
-        |> addNode 1 (1, 2)
-        |> addNode 2 (3, 4)
-        |> addEdge 1 2 (5, 6)
+        empty Directed |> addNode 1 (1, 2) |> addNode 2 (3, 4) |> addEdge 1 2 (5, 6)
 
     let json = Json.render graph
 

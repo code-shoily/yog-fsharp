@@ -58,11 +58,7 @@ let ``self loop in undirected graph`` () =
 [<Fact>]
 let ``adding same edge twice replaces weight`` () =
     let graph =
-        empty Directed
-        |> addNode 0 0
-        |> addNode 1 1
-        |> addEdge 0 1 10
-        |> addEdge 0 1 20 // Replace weight
+        empty Directed |> addNode 0 0 |> addNode 1 1 |> addEdge 0 1 10 |> addEdge 0 1 20 // Replace weight
 
     Assert.Equal(1, edgeCount graph)
 
@@ -71,7 +67,7 @@ let ``adding same edge twice replaces weight`` () =
 
     // Weight should be the latest (20)
     match List.tryHead succs with
-    | Some (_, weight) -> Assert.Equal(20, weight)
+    | Some(_, weight) -> Assert.Equal(20, weight)
     | None -> Assert.True(false, "Should have successor")
 
 // ============================================================================
@@ -98,11 +94,7 @@ let ``undirected edge removal is symmetric - F# version is fixed!`` () =
     // This test PASSES in F# (would fail in Gleam v3.x)
     // The F# version correctly removes BOTH directions
 
-    let graph =
-        empty Undirected
-        |> addNode 0 0
-        |> addNode 1 1
-        |> addEdge 0 1 10
+    let graph = empty Undirected |> addNode 0 0 |> addNode 1 1 |> addEdge 0 1 10
 
     // add_edge created BOTH directions
     Assert.Equal(1, successors 0 graph |> List.length)
@@ -122,11 +114,7 @@ let ``undirected edge removal is symmetric - F# version is fixed!`` () =
 
 [<Fact>]
 let ``filtering all nodes produces empty graph`` () =
-    let graph =
-        empty Directed
-        |> addNode 0 0
-        |> addNode 1 1
-        |> addEdge 0 1 10
+    let graph = empty Directed |> addNode 0 0 |> addNode 1 1 |> addEdge 0 1 10
 
     // Filter out all nodes
     let emptyFiltered = filterNodes (fun _ -> false) graph
@@ -156,11 +144,7 @@ let ``transpose preserves self loop`` () =
 [<Fact>]
 let ``isolated node has no edges`` () =
     let graph =
-        empty Directed
-        |> addNode 0 0
-        |> addNode 1 1
-        |> addNode 2 2
-        |> addEdge 0 1 10
+        empty Directed |> addNode 0 0 |> addNode 1 1 |> addNode 2 2 |> addEdge 0 1 10
 
     // Node 2 is isolated
     Assert.Equal(3, order graph)

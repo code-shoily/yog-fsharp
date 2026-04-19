@@ -1,47 +1,47 @@
 /// A* (A-Star) search algorithm for optimal pathfinding with heuristic guidance.
-/// 
+///
 /// A* is an informed search algorithm that finds the shortest path from a start node
 /// to a goal node using a heuristic function to guide exploration. It combines the
 /// completeness of Dijkstra's algorithm with the efficiency of greedy best-first search.
-/// 
+///
 /// ## Algorithm
-/// 
+///
 /// | Algorithm | Function | Complexity | Best For |
 /// |-----------|----------|------------|----------|
 /// | A* Search | aStar | O((V + E) log V) | Pathfinding with good heuristics |
 /// | Implicit A* | implicitAStar | O((V + E) log V) | Large/infinite graphs generated on-demand |
-/// 
+///
 /// ## Key Concepts
-/// 
+///
 /// - **Evaluation Function**: f(n) = g(n) + h(n)
 ///   - g(n): Actual cost from start to node n
 ///   - h(n): Heuristic estimate from n to goal
 ///   - f(n): Estimated total cost through n
 /// - **Admissible Heuristic**: h(n) ≤ actual cost (never overestimates)
 /// - **Consistent Heuristic**: h(n) ≤ cost(n→n') + h(n') (triangle inequality)
-/// 
+///
 /// ## When to Use A*
-/// 
+///
 /// **Use A* when:**
 /// - You have a specific goal node (not single-source to all)
 /// - You can provide a good heuristic estimate
 /// - The heuristic is admissible (underestimates)
-/// 
+///
 /// **Use Dijkstra when:**
 /// - No good heuristic available (h(n) = 0 reduces A* to Dijkstra)
 /// - You need shortest paths to all nodes from a source
-/// 
+///
 /// ## Heuristic Examples
-/// 
+///
 /// | Domain | Heuristic | Admissible? |
 /// |--------|-----------|-------------|
 /// | Grid (4-way) | Manhattan distance | Yes |
 /// | Grid (8-way) | Chebyshev distance | Yes |
 /// | Geospatial | Haversine/great-circle | Yes |
 /// | Road networks | Precomputed landmarks | Yes |
-/// 
+///
 /// ## Use Cases
-/// 
+///
 /// - Video games: NPC pathfinding on game maps
 /// - GPS navigation: Route planning with distance estimates
 /// - Robotics: Motion planning with obstacle avoidance
@@ -88,10 +88,7 @@ let aStar
         // Check for staleness: if we already found a strictly better path to 'current', ignore this entry
         let mutable bestKnown = zero
 
-        if
-            gScores.TryGetValue(current, &bestKnown)
-            && compare dist bestKnown > 0
-        then
+        if gScores.TryGetValue(current, &bestKnown) && compare dist bestKnown > 0 then
             ()
         elif current = goal then
             result <-
@@ -146,10 +143,7 @@ let implicitAStar
 
         let mutable bestKnown = zero
 
-        if
-            gScores.TryGetValue(current, &bestKnown)
-            && compare dist bestKnown > 0
-        then
+        if gScores.TryGetValue(current, &bestKnown) && compare dist bestKnown > 0 then
             ()
         elif isGoal current then
             result <- Some dist
@@ -201,10 +195,7 @@ let implicitAStarBy
 
         let mutable bestKnown = zero
 
-        if
-            gScores.TryGetValue(currentKey, &bestKnown)
-            && compare dist bestKnown > 0
-        then
+        if gScores.TryGetValue(currentKey, &bestKnown) && compare dist bestKnown > 0 then
             ()
         elif isGoal current then
             result <- Some dist

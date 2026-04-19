@@ -19,9 +19,7 @@ let rec isValidPath (graph: Graph<'n, int>) (path: NodeId list) : bool =
     | []
     | [ _ ] -> true
     | first :: second :: rest ->
-        let edgeExists =
-            successors first graph
-            |> List.exists (fun (id, _) -> id = second)
+        let edgeExists = successors first graph |> List.exists (fun (id, _) -> id = second)
 
         edgeExists && isValidPath graph (second :: rest)
 
@@ -37,8 +35,7 @@ let rec calculatePathWeight (graph: Graph<'n, int>) (path: NodeId list) : int =
             |> Option.map snd
             |> Option.defaultValue 0
 
-        edgeWeight
-        + calculatePathWeight graph (second :: rest)
+        edgeWeight + calculatePathWeight graph (second :: rest)
 
 /// Check if node b is reachable from node a via BFS
 let isReachable (graph: Graph<'n, 'e>) (from: NodeId) (target: NodeId) : bool =

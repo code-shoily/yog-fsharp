@@ -18,19 +18,13 @@ open Yog.Traversal
 
 /// Helper to create a simple graph from edge list
 let makeGraph (edges: (NodeId * NodeId) list) (kind: GraphType) : Graph<unit, int> =
-    let allNodes =
-        edges
-        |> List.collect (fun (u, v) -> [ u; v ])
-        |> List.distinct
+    let allNodes = edges |> List.collect (fun (u, v) -> [ u; v ]) |> List.distinct
 
     let g = empty kind
 
-    let gWithNodes =
-        allNodes
-        |> List.fold (fun acc n -> addNode n () acc) g
+    let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-    edges
-    |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
+    edges |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
 
 // =============================================================================
 // BFS (BREADTH-FIRST SEARCH) TESTS
@@ -120,22 +114,13 @@ module BFSTests =
     [<Fact>]
     let ``BFS - complex graph`` () =
         // More complex structure
-        let edges =
-            [ (0, 1)
-              (0, 2)
-              (1, 3)
-              (2, 3)
-              (3, 4)
-              (3, 5) ]
+        let edges = [ (0, 1); (0, 2); (1, 3); (2, 3); (3, 4); (3, 5) ]
 
         let graph = makeGraph edges Directed
         let result = walk 0 BreadthFirst graph
         Assert.Equal(6, result.Length)
         // All nodes should be visited
-        Assert.True(
-            [ 0; 1; 2; 3; 4; 5 ]
-            |> List.forall (fun n -> result |> List.contains n)
-        )
+        Assert.True([ 0; 1; 2; 3; 4; 5 ] |> List.forall (fun n -> result |> List.contains n))
 
 // =============================================================================
 // DFS (DEPTH-FIRST SEARCH) TESTS
@@ -203,13 +188,7 @@ module DFSTests =
         //    1 2 3
         //   /| |
         //  4 5 6
-        let edges =
-            [ (0, 1)
-              (0, 2)
-              (0, 3)
-              (1, 4)
-              (1, 5)
-              (2, 6) ]
+        let edges = [ (0, 1); (0, 2); (0, 3); (1, 4); (1, 5); (2, 6) ]
 
         let graph = makeGraph edges Directed
         let result = walk 0 DepthFirst graph
@@ -218,12 +197,7 @@ module DFSTests =
 
     [<Fact>]
     let ``DFS - no duplicates with multiple paths`` () =
-        let edges =
-            [ (0, 1)
-              (0, 2)
-              (1, 3)
-              (2, 3)
-              (3, 4) ]
+        let edges = [ (0, 1); (0, 2); (1, 3); (2, 3); (3, 4) ]
 
         let graph = makeGraph edges Directed
         let result = walk 0 DepthFirst graph
@@ -269,13 +243,7 @@ module WalkUntilTests =
 
     [<Fact>]
     let ``walkUntil - stops early in large graph`` () =
-        let edges =
-            [ (0, 1)
-              (0, 2)
-              (1, 3)
-              (2, 4)
-              (3, 5)
-              (4, 6) ]
+        let edges = [ (0, 1); (0, 2); (1, 3); (2, 4); (3, 5); (4, 6) ]
 
         let graph = makeGraph edges Directed
         let result = walkUntil 0 BreadthFirst (fun id -> id = 3) graph
@@ -373,13 +341,7 @@ module TopologicalSortTests =
         //    1 2 3
         //     \|/
         //      4
-        let edges =
-            [ (0, 1)
-              (0, 2)
-              (0, 3)
-              (1, 4)
-              (2, 4)
-              (3, 4) ]
+        let edges = [ (0, 1); (0, 2); (0, 3); (1, 4); (2, 4); (3, 4) ]
 
         let graph = makeGraph edges Directed
         let result = topologicalSort graph
@@ -481,12 +443,7 @@ module CyclicityTests =
         //      ^    |
         //      |    v
         //      4 <- 3
-        let edges =
-            [ (0, 1)
-              (1, 2)
-              (2, 3)
-              (3, 4)
-              (4, 1) ]
+        let edges = [ (0, 1); (1, 2); (2, 3); (3, 4); (4, 1) ]
 
         let graph = makeGraph edges Directed
         Assert.True(isCyclic graph)
@@ -568,10 +525,7 @@ module ImplicitTraversalTests =
     let ``implicitFoldBy - distinct elements by key`` () =
         // State is (value, flag), we dedupe by value so visiting both (1, true) and (1, false) counts only once
         let successors (v, _) =
-            if v < 3 then
-                [ (v + 1, true); (v + 1, false) ]
-            else
-                []
+            if v < 3 then [ (v + 1, true); (v + 1, false) ] else []
 
         let result =
             implicitFoldBy (0, true) BreadthFirst [] successors fst (fun acc (v, f) _ -> Continue, (v, f) :: acc)

@@ -15,26 +15,18 @@ open Yog.Mst
 // =============================================================================
 
 let makeUndirectedWeightedGraph (edges: (NodeId * NodeId * int) list) : Graph<unit, int> =
-    let allNodes =
-        edges
-        |> List.collect (fun (u, v, _) -> [ u; v ])
-        |> List.distinct
+    let allNodes = edges |> List.collect (fun (u, v, _) -> [ u; v ]) |> List.distinct
 
     let g = empty Undirected
 
-    let gWithNodes =
-        allNodes
-        |> List.fold (fun acc n -> addNode n () acc) g
+    let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-    edges
-    |> List.fold (fun acc (u, v, w) -> addEdge u v w acc) gWithNodes
+    edges |> List.fold (fun acc (u, v, w) -> addEdge u v w acc) gWithNodes
 
 let totalWeight (edges: Edge<int> list) : int = edges |> List.sumBy (fun e -> e.Weight)
 
 let edgeSet (edges: Edge<'e> list) : Set<(NodeId * NodeId)> =
-    edges
-    |> List.map (fun e -> (min e.From e.To, max e.From e.To))
-    |> Set.ofList
+    edges |> List.map (fun e -> (min e.From e.To, max e.From e.To)) |> Set.ofList
 
 // =============================================================================
 // KRUSKAL'S ALGORITHM TESTS
@@ -45,10 +37,7 @@ module KruskalTests =
     let ``kruskal - simple triangle`` () =
         // Triangle: 0-1 (1), 1-2 (2), 0-2 (3)
         // MST should pick 0-1 and 1-2, total weight 3
-        let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 1)
-                                          (1, 2, 2)
-                                          (0, 2, 3) ]
+        let graph = makeUndirectedWeightedGraph [ (0, 1, 1); (1, 2, 2); (0, 2, 3) ]
 
         let result = kruskal compare graph
 
@@ -60,11 +49,7 @@ module KruskalTests =
         // Square: 0-1 (1), 1-2 (2), 2-3 (3), 0-3 (4), diagonal 0-2 (5)
         // MST: 0-1, 1-2, 2-3 = 1+2+3 = 6
         let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 1)
-                                          (1, 2, 2)
-                                          (2, 3, 3)
-                                          (0, 3, 4)
-                                          (0, 2, 5) ]
+            makeUndirectedWeightedGraph [ (0, 1, 1); (1, 2, 2); (2, 3, 3); (0, 3, 4); (0, 2, 5) ]
 
         let result = kruskal compare graph
 
@@ -76,12 +61,7 @@ module KruskalTests =
         // All edges, weights: 0-1 (1), 0-2 (2), 0-3 (3), 1-2 (4), 1-3 (5), 2-3 (6)
         // MST picks: 0-1, 0-2, 0-3 = 1+2+3 = 6
         let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 1)
-                                          (0, 2, 2)
-                                          (0, 3, 3)
-                                          (1, 2, 4)
-                                          (1, 3, 5)
-                                          (2, 3, 6) ]
+            makeUndirectedWeightedGraph [ (0, 1, 1); (0, 2, 2); (0, 3, 3); (1, 2, 4); (1, 3, 5); (2, 3, 6) ]
 
         let result = kruskal compare graph
 
@@ -92,10 +72,7 @@ module KruskalTests =
     let ``kruskal - already a tree`` () =
         // Already a tree: 0-1 (5), 1-2 (3), 1-3 (2)
         // MST is the tree itself
-        let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 5)
-                                          (1, 2, 3)
-                                          (1, 3, 2) ]
+        let graph = makeUndirectedWeightedGraph [ (0, 1, 5); (1, 2, 3); (1, 3, 2) ]
 
         let result = kruskal compare graph
 
@@ -135,9 +112,7 @@ module KruskalTests =
     [<Fact>]
     let ``kruskal - disconnected graph gives forest`` () =
         // Two components: {0,1} and {2,3}
-        let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 1)
-                                          (2, 3, 2) ]
+        let graph = makeUndirectedWeightedGraph [ (0, 1, 1); (2, 3, 2) ]
 
         let result = kruskal compare graph
 
@@ -148,10 +123,7 @@ module KruskalTests =
     [<Fact>]
     let ``kruskal - equal weights`` () =
         // All edges have weight 1
-        let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 1)
-                                          (0, 2, 1)
-                                          (1, 2, 1) ]
+        let graph = makeUndirectedWeightedGraph [ (0, 1, 1); (0, 2, 1); (1, 2, 1) ]
 
         let result = kruskal compare graph
 
@@ -161,9 +133,7 @@ module KruskalTests =
     [<Fact>]
     let ``kruskal - large weights`` () =
         let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 1000000)
-                                          (0, 2, 2000000)
-                                          (1, 2, 3000000) ]
+            makeUndirectedWeightedGraph [ (0, 1, 1000000); (0, 2, 2000000); (1, 2, 3000000) ]
 
         let result = kruskal compare graph
 
@@ -179,10 +149,7 @@ module PrimTests =
     let ``prim - simple triangle`` () =
         // Triangle: 0-1 (1), 1-2 (2), 0-2 (3)
         // MST should pick 0-1 and 1-2, total weight 3
-        let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 1)
-                                          (1, 2, 2)
-                                          (0, 2, 3) ]
+        let graph = makeUndirectedWeightedGraph [ (0, 1, 1); (1, 2, 2); (0, 2, 3) ]
 
         let result = prim compare graph
 
@@ -194,11 +161,7 @@ module PrimTests =
         // Square: 0-1 (1), 1-2 (2), 2-3 (3), 0-3 (4), diagonal 0-2 (5)
         // MST: 0-1, 1-2, 2-3 = 1+2+3 = 6
         let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 1)
-                                          (1, 2, 2)
-                                          (2, 3, 3)
-                                          (0, 3, 4)
-                                          (0, 2, 5) ]
+            makeUndirectedWeightedGraph [ (0, 1, 1); (1, 2, 2); (2, 3, 3); (0, 3, 4); (0, 2, 5) ]
 
         let result = prim compare graph
 
@@ -208,12 +171,7 @@ module PrimTests =
     [<Fact>]
     let ``prim - complete graph K4`` () =
         let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 1)
-                                          (0, 2, 2)
-                                          (0, 3, 3)
-                                          (1, 2, 4)
-                                          (1, 3, 5)
-                                          (2, 3, 6) ]
+            makeUndirectedWeightedGraph [ (0, 1, 1); (0, 2, 2); (0, 3, 3); (1, 2, 4); (1, 3, 5); (2, 3, 6) ]
 
         let result = prim compare graph
 
@@ -222,10 +180,7 @@ module PrimTests =
 
     [<Fact>]
     let ``prim - already a tree`` () =
-        let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 5)
-                                          (1, 2, 3)
-                                          (1, 3, 2) ]
+        let graph = makeUndirectedWeightedGraph [ (0, 1, 5); (1, 2, 3); (1, 3, 2) ]
 
         let result = prim compare graph
 
@@ -256,10 +211,7 @@ module PrimTests =
     let ``prim - star graph`` () =
         // Star: center 0 connected to 1,2,3,4 with increasing weights
         let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 1)
-                                          (0, 2, 2)
-                                          (0, 3, 3)
-                                          (0, 4, 4) ]
+            makeUndirectedWeightedGraph [ (0, 1, 1); (0, 2, 2); (0, 3, 3); (0, 4, 4) ]
 
         let result = prim compare graph
 
@@ -270,10 +222,7 @@ module PrimTests =
     let ``prim - path graph`` () =
         // Path: 0-1 (5), 1-2 (4), 2-3 (3), 3-4 (2)
         let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 5)
-                                          (1, 2, 4)
-                                          (2, 3, 3)
-                                          (3, 4, 2) ]
+            makeUndirectedWeightedGraph [ (0, 1, 5); (1, 2, 4); (2, 3, 3); (3, 4, 2) ]
 
         let result = prim compare graph
 
@@ -283,9 +232,7 @@ module PrimTests =
     [<Fact>]
     let ``prim - disconnected graph returns only first component`` () =
         // Two components: {0,1} and {2,3}
-        let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 1)
-                                          (2, 3, 2) ]
+        let graph = makeUndirectedWeightedGraph [ (0, 1, 1); (2, 3, 2) ]
 
         let result = prim compare graph
 
@@ -306,12 +253,7 @@ module ComparisonTests =
     [<Fact>]
     let ``kruskal and prim give same total weight`` () =
         let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 4)
-                                          (0, 2, 3)
-                                          (0, 3, 1)
-                                          (1, 2, 2)
-                                          (1, 3, 5)
-                                          (2, 3, 6) ]
+            makeUndirectedWeightedGraph [ (0, 1, 4); (0, 2, 3); (0, 3, 1); (1, 2, 2); (1, 3, 5); (2, 3, 6) ]
 
         let kruskalResult = kruskal compare graph
         let primResult = prim compare graph
@@ -322,12 +264,7 @@ module ComparisonTests =
     [<Fact>]
     let ``kruskal and prim produce same number of edges`` () =
         let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 10)
-                                          (0, 2, 20)
-                                          (0, 3, 30)
-                                          (1, 2, 5)
-                                          (1, 3, 15)
-                                          (2, 3, 25) ]
+            makeUndirectedWeightedGraph [ (0, 1, 10); (0, 2, 20); (0, 3, 30); (1, 2, 5); (1, 3, 15); (2, 3, 25) ]
 
         let kruskalResult = kruskal compare graph
         let primResult = prim compare graph
@@ -339,10 +276,7 @@ module ComparisonTests =
     let ``both algorithms handle line graph`` () =
         // Simple line: 0-1-2-3-4
         let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 1)
-                                          (1, 2, 2)
-                                          (2, 3, 3)
-                                          (3, 4, 4) ]
+            makeUndirectedWeightedGraph [ (0, 1, 1); (1, 2, 2); (2, 3, 3); (3, 4, 4) ]
 
         let kruskalResult = kruskal compare graph
         let primResult = prim compare graph
@@ -356,10 +290,7 @@ module ComparisonTests =
     [<Fact>]
     let ``both algorithms handle cycle`` () =
         // Cycle: 0-1-2-0
-        let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 1)
-                                          (1, 2, 2)
-                                          (0, 2, 3) ]
+        let graph = makeUndirectedWeightedGraph [ (0, 1, 1); (1, 2, 2); (0, 2, 3) ]
 
         let kruskalResult = kruskal compare graph
         let primResult = prim compare graph
@@ -377,10 +308,7 @@ module ComparisonTests =
 module EdgeCaseTests =
     [<Fact>]
     let ``MST with zero weight edges`` () =
-        let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 0)
-                                          (1, 2, 0)
-                                          (0, 2, 5) ]
+        let graph = makeUndirectedWeightedGraph [ (0, 1, 0); (1, 2, 0); (0, 2, 5) ]
 
         let result = kruskal compare graph
 
@@ -390,10 +318,7 @@ module EdgeCaseTests =
 
     [<Fact>]
     let ``MST with negative weights`` () =
-        let graph =
-            makeUndirectedWeightedGraph [ (0, 1, -5)
-                                          (1, 2, -3)
-                                          (0, 2, 10) ]
+        let graph = makeUndirectedWeightedGraph [ (0, 1, -5); (1, 2, -3); (0, 2, 10) ]
 
         let result = kruskal compare graph
 
@@ -405,12 +330,7 @@ module EdgeCaseTests =
     let ``MST on graph with many equal weight edges`` () =
         // Complete graph with all edges weight 5
         let graph =
-            makeUndirectedWeightedGraph [ (0, 1, 5)
-                                          (0, 2, 5)
-                                          (0, 3, 5)
-                                          (1, 2, 5)
-                                          (1, 3, 5)
-                                          (2, 3, 5) ]
+            makeUndirectedWeightedGraph [ (0, 1, 5); (0, 2, 5); (0, 3, 5); (1, 2, 5); (1, 3, 5); (2, 3, 5) ]
 
         let result = kruskal compare graph
 

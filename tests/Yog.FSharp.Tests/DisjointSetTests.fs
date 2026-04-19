@@ -92,14 +92,7 @@ let ``union is idempotent`` () =
 [<Fact>]
 let ``union multiple elements into one set`` () =
     let dsu =
-        empty
-        |> add 1
-        |> add 2
-        |> add 3
-        |> add 4
-        |> union 1 2
-        |> union 2 3
-        |> union 3 4
+        empty |> add 1 |> add 2 |> add 3 |> add 4 |> union 1 2 |> union 2 3 |> union 3 4
 
     Assert.Equal(4, size dsu)
     Assert.Equal(1, countSets dsu)
@@ -181,13 +174,7 @@ let ``connected is symmetric`` () =
 
 [<Fact>]
 let ``connected is transitive`` () =
-    let dsu =
-        empty
-        |> add 1
-        |> add 2
-        |> add 3
-        |> union 1 2
-        |> union 2 3
+    let dsu = empty |> add 1 |> add 2 |> add 3 |> union 1 2 |> union 2 3
 
     let (_, c13) = connected 1 3 dsu
 
@@ -205,13 +192,7 @@ let ``size counts total elements`` () =
 
 [<Fact>]
 let ``countSets counts disjoint sets`` () =
-    let dsu =
-        empty
-        |> add 1
-        |> add 2
-        |> add 3
-        |> add 4
-        |> union 1 2
+    let dsu = empty |> add 1 |> add 2 |> add 3 |> add 4 |> union 1 2
 
     // Sets: {1, 2}, {3}, {4}
     Assert.Equal(3, countSets dsu)
@@ -248,11 +229,7 @@ let ``fromPairs multiple pairs`` () =
 
 [<Fact>]
 let ``fromPairs chain`` () =
-    let dsu =
-        fromPairs [ (1, 2)
-                    (2, 3)
-                    (3, 4)
-                    (4, 5) ]
+    let dsu = fromPairs [ (1, 2); (2, 3); (3, 4); (4, 5) ]
 
     Assert.Equal(1, countSets dsu)
 
@@ -261,11 +238,7 @@ let ``fromPairs chain`` () =
 
 [<Fact>]
 let ``fromPairs separate chains`` () =
-    let dsu =
-        fromPairs [ (1, 2)
-                    (2, 3)
-                    (4, 5)
-                    (5, 6) ]
+    let dsu = fromPairs [ (1, 2); (2, 3); (4, 5); (5, 6) ]
 
     // Two sets: {1, 2, 3} and {4, 5, 6}
     Assert.Equal(2, countSets dsu)
@@ -299,14 +272,7 @@ let ``toLists singleton sets`` () =
 
 [<Fact>]
 let ``toLists merged sets`` () =
-    let dsu =
-        empty
-        |> add 1
-        |> add 2
-        |> add 3
-        |> add 4
-        |> union 1 2
-        |> union 3 4
+    let dsu = empty |> add 1 |> add 2 |> add 3 |> add 4 |> union 1 2 |> union 3 4
 
     let lists = toLists dsu
 
@@ -379,12 +345,7 @@ let ``operations on empty set`` () =
 
 [<Fact>]
 let ``string elements`` () =
-    let dsu =
-        empty
-        |> add "alice"
-        |> add "bob"
-        |> add "charlie"
-        |> union "alice" "bob"
+    let dsu = empty |> add "alice" |> add "bob" |> add "charlie" |> union "alice" "bob"
 
     Assert.Equal(2, countSets dsu)
 
@@ -393,12 +354,7 @@ let ``string elements`` () =
 
 [<Fact>]
 let ``tuple elements`` () =
-    let dsu =
-        empty
-        |> add (0, 0)
-        |> add (0, 1)
-        |> add (1, 0)
-        |> union (0, 0) (0, 1)
+    let dsu = empty |> add (0, 0) |> add (0, 1) |> add (1, 0) |> union (0, 0) (0, 1)
 
     Assert.Equal(2, countSets dsu)
 

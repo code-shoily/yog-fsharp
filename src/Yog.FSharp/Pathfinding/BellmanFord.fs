@@ -1,46 +1,46 @@
 /// Bellman-Ford algorithm for single-source shortest paths with support for negative edge weights.
-/// 
+///
 /// The Bellman-Ford algorithm finds shortest paths from a source node to all other nodes,
 /// even when edges have negative weights. It can also detect negative cycles reachable
 /// from the source, which make shortest paths undefined.
-/// 
+///
 /// ## Algorithm
-/// 
+///
 /// | Algorithm | Function | Complexity | Best For |
 /// |-----------|----------|------------|----------|
 /// | Bellman-Ford | bellmanFord | O(VE) | Negative weights, cycle detection |
 /// | SPFA (Queue-optimized) | implicitBellmanFord | O(E) average | Sparse graphs with few negative edges |
-/// 
+///
 /// ## Key Concepts
-/// 
+///
 /// - **Relaxation**: Repeatedly improve distance estimates (V-1 passes)
 /// - **Negative Cycle**: Cycle with total negative weight (no shortest path exists)
 /// - **Shortest Path Tree**: Tree of shortest paths from source to all nodes
-/// 
+///
 /// ## Why V-1 Relaxation Passes?
-/// 
+///
 /// In a graph with V nodes, any shortest path has at most V-1 edges.
 /// Each pass of Bellman-Ford relaxes all edges, propagating shortest
 /// path information one hop further each time.
-/// 
+///
 /// ## Comparison with Dijkstra
-/// 
+///
 /// | Feature | Bellman-Ford | Dijkstra |
 /// |---------|--------------|----------|
 /// | Negative weights | ✓ Yes | ✗ No |
 /// | Negative cycle detection | ✓ Yes | ✗ N/A |
 /// | Time complexity | O(VE) | O((V+E) log V) |
 /// | Data structure | Simple loops | Priority queue |
-/// 
+///
 /// ## Use Cases
-/// 
+///
 /// - Currency arbitrage: Detecting negative cycles in exchange rates
 /// - Financial modeling: Cost calculations with credits/penalties
 /// - Chemical reactions: Energy changes with positive and negative values
 /// - Constraint solving: Difference constraints systems
-/// 
+///
 /// ## History
-/// 
+///
 /// Published independently by Richard Bellman (1958) and Lester Ford Jr. (1956).
 /// The algorithm is a classic example of dynamic programming.
 module Yog.Pathfinding.BellmanFord
@@ -99,10 +99,7 @@ let bellmanFord
                     let newDist = add uDist weight
                     let mutable vDist = zero
 
-                    if
-                        not (distances.TryGetValue(v, &vDist))
-                        || compare newDist vDist < 0
-                    then
+                    if not (distances.TryGetValue(v, &vDist)) || compare newDist vDist < 0 then
                         distances.[v] <- newDist
                         predecessors.[v] <- u
                         anyChanged <- true
@@ -115,18 +112,12 @@ let bellmanFord
     for u in allNodesList do
         let mutable uDist = zero
 
-        if
-            not hasNegativeCycle
-            && distances.TryGetValue(u, &uDist)
-        then
+        if not hasNegativeCycle && distances.TryGetValue(u, &uDist) then
             for (v, weight) in successors u graph do
                 let newDist = add uDist weight
                 let mutable vDist = zero
 
-                if
-                    distances.TryGetValue(v, &vDist)
-                    && compare newDist vDist < 0
-                then
+                if distances.TryGetValue(v, &vDist) && compare newDist vDist < 0 then
                     hasNegativeCycle <- true
 
     if hasNegativeCycle then
@@ -198,8 +189,7 @@ let implicitBellmanFord
 
                 let mutable count = 0
 
-                relaxCounts.TryGetValue(nextState, &count)
-                |> ignore
+                relaxCounts.TryGetValue(nextState, &count) |> ignore
 
                 relaxCounts.[nextState] <- count + 1
 

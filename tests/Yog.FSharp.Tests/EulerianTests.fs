@@ -16,34 +16,22 @@ open Yog.Properties.Eulerian
 // =============================================================================
 
 let makeUndirectedGraph (edges: (NodeId * NodeId) list) : Graph<unit, int> =
-    let allNodes =
-        edges
-        |> List.collect (fun (u, v) -> [ u; v ])
-        |> List.distinct
+    let allNodes = edges |> List.collect (fun (u, v) -> [ u; v ]) |> List.distinct
 
     let g = empty Undirected
 
-    let gWithNodes =
-        allNodes
-        |> List.fold (fun acc n -> addNode n () acc) g
+    let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-    edges
-    |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
+    edges |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
 
 let makeDirectedGraph (edges: (NodeId * NodeId) list) : Graph<unit, int> =
-    let allNodes =
-        edges
-        |> List.collect (fun (u, v) -> [ u; v ])
-        |> List.distinct
+    let allNodes = edges |> List.collect (fun (u, v) -> [ u; v ]) |> List.distinct
 
     let g = empty Directed
 
-    let gWithNodes =
-        allNodes
-        |> List.fold (fun acc n -> addNode n () acc) g
+    let gWithNodes = allNodes |> List.fold (fun acc n -> addNode n () acc) g
 
-    edges
-    |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
+    edges |> List.fold (fun acc (u, v) -> addEdge u v 1 acc) gWithNodes
 
 // =============================================================================
 // HAS EULERIAN CIRCUIT TESTS
@@ -71,21 +59,14 @@ module HasEulerianCircuitTests =
     [<Fact>]
     let ``hasEulerianCircuit - triangle undirected`` () =
         // Triangle: all degrees 2 (even)
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         Assert.True(hasEulerianCircuit graph)
 
     [<Fact>]
     let ``hasEulerianCircuit - square undirected`` () =
         // Square: all degrees 2 (even)
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3)
-                                  (3, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3); (3, 0) ]
 
         Assert.True(hasEulerianCircuit graph)
 
@@ -99,22 +80,20 @@ module HasEulerianCircuitTests =
     let ``hasEulerianCircuit - figure eight`` () =
         // Two triangles sharing a node: degrees 2, 2, 4, 2
         let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) // First triangle
-                                  (0, 3)
-                                  (3, 4)
-                                  (4, 0) ] // Second triangle sharing node 0
+            makeUndirectedGraph
+                [ (0, 1)
+                  (1, 2)
+                  (2, 0) // First triangle
+                  (0, 3)
+                  (3, 4)
+                  (4, 0) ] // Second triangle sharing node 0
 
         Assert.True(hasEulerianCircuit graph)
 
     [<Fact>]
     let ``hasEulerianCircuit - directed balanced`` () =
         // Cycle: 0->1->2->0 (in-degree = out-degree for all)
-        let graph =
-            makeDirectedGraph [ (0, 1)
-                                (1, 2)
-                                (2, 0) ]
+        let graph = makeDirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         Assert.True(hasEulerianCircuit graph)
 
@@ -127,13 +106,7 @@ module HasEulerianCircuitTests =
     [<Fact>]
     let ``hasEulerianCircuit - disconnected graph`` () =
         // Two separate triangles
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0)
-                                  (3, 4)
-                                  (4, 5)
-                                  (5, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0); (3, 4); (4, 5); (5, 3) ]
         // Even degrees but not connected
         Assert.False(hasEulerianCircuit graph)
 
@@ -162,20 +135,14 @@ module HasEulerianPathTests =
     [<Fact>]
     let ``hasEulerianPath - path of three edges`` () =
         // 0-1-2-3: nodes 0 and 3 have odd degree
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3) ]
 
         Assert.True(hasEulerianPath graph)
 
     [<Fact>]
     let ``hasEulerianPath - circuit also has path`` () =
         // Triangle (circuit) also has path
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         Assert.True(hasEulerianPath graph)
 
@@ -183,11 +150,7 @@ module HasEulerianPathTests =
     let ``hasEulerianPath - four odd degree nodes`` () =
         // Star with 4 leaves: center degree 4 (even), leaves degree 1 (odd)
         // Actually that's 4 odd degree nodes - no path
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (0, 4) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (0, 4) ]
         // Wait, leaves have degree 1 (odd), center has degree 4 (even)
         // 4 odd degree nodes - no Eulerian path
         Assert.False(hasEulerianPath graph)
@@ -217,10 +180,7 @@ module FindEulerianCircuitTests =
 
     [<Fact>]
     let ``findEulerianCircuit - triangle`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         let result = findEulerianCircuit graph
 
@@ -232,11 +192,7 @@ module FindEulerianCircuitTests =
 
     [<Fact>]
     let ``findEulerianCircuit - square`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3)
-                                  (3, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3); (3, 0) ]
 
         let result = findEulerianCircuit graph
 
@@ -253,10 +209,7 @@ module FindEulerianCircuitTests =
 
     [<Fact>]
     let ``findEulerianCircuit - directed cycle`` () =
-        let graph =
-            makeDirectedGraph [ (0, 1)
-                                (1, 2)
-                                (2, 0) ]
+        let graph = makeDirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         let result = findEulerianCircuit graph
 
@@ -267,13 +220,7 @@ module FindEulerianCircuitTests =
     [<Fact>]
     let ``findEulerianCircuit - figure eight`` () =
         // Two triangles sharing a node
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0)
-                                  (0, 3)
-                                  (3, 4)
-                                  (4, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0); (0, 3); (3, 4); (4, 0) ]
 
         let result = findEulerianCircuit graph
 
@@ -286,16 +233,17 @@ module FindEulerianCircuitTests =
     let ``findEulerianCircuit - complete graph K5`` () =
         // K5: all nodes degree 4 (even)
         let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (0, 4)
-                                  (1, 2)
-                                  (1, 3)
-                                  (1, 4)
-                                  (2, 3)
-                                  (2, 4)
-                                  (3, 4) ]
+            makeUndirectedGraph
+                [ (0, 1)
+                  (0, 2)
+                  (0, 3)
+                  (0, 4)
+                  (1, 2)
+                  (1, 3)
+                  (1, 4)
+                  (2, 3)
+                  (2, 4)
+                  (3, 4) ]
 
         let result = findEulerianCircuit graph
 
@@ -327,10 +275,7 @@ module FindEulerianPathTests =
 
     [<Fact>]
     let ``findEulerianPath - path of three edges`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3) ]
 
         let result = findEulerianPath graph
 
@@ -341,10 +286,7 @@ module FindEulerianPathTests =
     [<Fact>]
     let ``findEulerianPath - also finds circuit`` () =
         // Triangle has circuit, which is also a path
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         let result = findEulerianPath graph
 
@@ -352,10 +294,7 @@ module FindEulerianPathTests =
 
     [<Fact>]
     let ``findEulerianPath - directed path`` () =
-        let graph =
-            makeDirectedGraph [ (0, 1)
-                                (1, 2)
-                                (2, 3) ]
+        let graph = makeDirectedGraph [ (0, 1); (1, 2); (2, 3) ]
 
         let result = findEulerianPath graph
 
@@ -368,11 +307,7 @@ module FindEulerianPathTests =
     [<Fact>]
     let ``findEulerianPath - no path returns None`` () =
         // Star with 4 leaves - no Eulerian path
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3)
-                                  (0, 4) ]
+        let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3); (0, 4) ]
 
         let result = findEulerianPath graph
         // Actually has 4 odd degree nodes - no path
@@ -382,12 +317,13 @@ module FindEulerianPathTests =
     let ``findEulerianPath - bridge configuration`` () =
         // 0-1-2 and 2-3-4 (path through bridge at 2)
         let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) // Triangle
-                                  (2, 3)
-                                  (3, 4)
-                                  (4, 2) ] // Another triangle sharing node 2
+            makeUndirectedGraph
+                [ (0, 1)
+                  (1, 2)
+                  (2, 0) // Triangle
+                  (2, 3)
+                  (3, 4)
+                  (4, 2) ] // Another triangle sharing node 2
         // All degrees even except none - this is actually a circuit
         let result = findEulerianPath graph
         Assert.True(result.IsSome)
@@ -417,10 +353,7 @@ module VerificationTests =
 
     [<Fact>]
     let ``circuit uses all edges exactly once`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ]
 
         let result = findEulerianCircuit graph
 
@@ -430,11 +363,7 @@ module VerificationTests =
 
     [<Fact>]
     let ``circuit is valid walk`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3)
-                                  (3, 0) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3); (3, 0) ]
 
         let result = findEulerianCircuit graph
 
@@ -442,10 +371,7 @@ module VerificationTests =
 
     [<Fact>]
     let ``path is valid walk`` () =
-        let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3) ]
+        let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 3) ]
 
         let result = findEulerianPath graph
 
@@ -466,12 +392,13 @@ module ComplexGraphTests =
     let ``grid graph circuit`` () =
         // 2x2 grid with all degrees even (each node connects to others)
         let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (0, 2)
-                                  (0, 3) // 0 connects to all
-                                  (1, 2)
-                                  (1, 3) // 1 connects to 2,3
-                                  (2, 3) ] // 2 connects to 3
+            makeUndirectedGraph
+                [ (0, 1)
+                  (0, 2)
+                  (0, 3) // 0 connects to all
+                  (1, 2)
+                  (1, 3) // 1 connects to 2,3
+                  (2, 3) ] // 2 connects to 3
         // All nodes have degree 3, which is odd - won't have circuit
         // Let's just verify the function runs without error
         let result = findEulerianCircuit graph
@@ -505,12 +432,13 @@ module ComplexGraphTests =
         // House shape: square with roof
         // Square: 0-1-2-3-0, roof: 1-4-2
         let graph =
-            makeUndirectedGraph [ (0, 1)
-                                  (1, 2)
-                                  (2, 3)
-                                  (3, 0) // Square
-                                  (1, 4)
-                                  (4, 2) ] // Roof
+            makeUndirectedGraph
+                [ (0, 1)
+                  (1, 2)
+                  (2, 3)
+                  (3, 0) // Square
+                  (1, 4)
+                  (4, 2) ] // Roof
         // Degrees: 0->2, 1->3, 2->3, 3->2, 4->2
         // Nodes 1 and 2 have odd degree - has path but not circuit
         Assert.False(hasEulerianCircuit graph)

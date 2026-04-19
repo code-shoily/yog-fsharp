@@ -19,10 +19,10 @@ printfn "-------------------------------"
 
 let test1Graph =
     empty Directed
-    |> addNode 1 10        // Supply (positive)
+    |> addNode 1 10 // Supply (positive)
     |> addNode 2 0
-    |> addNode 3 (-10)     // Demand (negative)
-    |> addEdge 1 2 (5, 2)  // (capacity, cost)
+    |> addNode 3 (-10) // Demand (negative)
+    |> addEdge 1 2 (5, 2) // (capacity, cost)
     |> addEdge 1 3 (10, 5)
     |> addEdge 2 3 (5, 1)
 
@@ -37,6 +37,7 @@ match result1 with
     printfn "✓ Solution found!"
     printfn "  Total Cost: %d (expected: 40)" res.Cost
     printfn "  Flow edges:"
+
     for edge in res.Flow do
         printfn "    %d -> %d: flow %d" edge.Source edge.Target edge.Flow
 
@@ -46,8 +47,7 @@ match result1 with
     else
         printfn "✗ TEST 1 FAILED: Expected cost 40, got %d" res.Cost
 
-| Error err ->
-    printfn "✗ TEST 1 FAILED: Error - %A" err
+| Error err -> printfn "✗ TEST 1 FAILED: Error - %A" err
 
 printfn ""
 
@@ -64,20 +64,20 @@ type EdgeData = { Capacity: int; Cost: int }
 let test2Graph =
     empty Directed
     // Factories (supply)
-    |> addNode 1 { Demand = 50 }   // Factory 1
-    |> addNode 2 { Demand = 50 }   // Factory 2
+    |> addNode 1 { Demand = 50 } // Factory 1
+    |> addNode 2 { Demand = 50 } // Factory 2
     // Stores (demand)
-    |> addNode 3 { Demand = -30 }  // Store 1
-    |> addNode 4 { Demand = -40 }  // Store 2
-    |> addNode 5 { Demand = -30 }  // Store 3
+    |> addNode 3 { Demand = -30 } // Store 1
+    |> addNode 4 { Demand = -40 } // Store 2
+    |> addNode 5 { Demand = -30 } // Store 3
     // Factory 1 routes
-    |> addEdge 1 3 { Capacity = 100; Cost = 10 }   // Cheap to S1
-    |> addEdge 1 4 { Capacity = 100; Cost = 20 }   // Okay to S2
-    |> addEdge 1 5 { Capacity = 100; Cost = 50 }   // Expensive to S3
+    |> addEdge 1 3 { Capacity = 100; Cost = 10 } // Cheap to S1
+    |> addEdge 1 4 { Capacity = 100; Cost = 20 } // Okay to S2
+    |> addEdge 1 5 { Capacity = 100; Cost = 50 } // Expensive to S3
     // Factory 2 routes
-    |> addEdge 2 3 { Capacity = 100; Cost = 60 }   // Expensive to S1
-    |> addEdge 2 4 { Capacity = 100; Cost = 15 }   // Cheap to S2
-    |> addEdge 2 5 { Capacity = 100; Cost = 10 }   // Cheap to S3
+    |> addEdge 2 3 { Capacity = 100; Cost = 60 } // Expensive to S1
+    |> addEdge 2 4 { Capacity = 100; Cost = 15 } // Cheap to S2
+    |> addEdge 2 5 { Capacity = 100; Cost = 10 } // Cheap to S3
 
 let demandOf (n: NodeData) = n.Demand
 let capacityOf (e: EdgeData) = e.Capacity
@@ -92,13 +92,10 @@ match result2 with
 
     // Build flow lookup
     let flowMap =
-        res.Flow
-        |> List.map (fun e -> (e.Source, e.Target), e.Flow)
-        |> Map.ofList
+        res.Flow |> List.map (fun e -> (e.Source, e.Target), e.Flow) |> Map.ofList
 
     let getFlow src tgt =
-        Map.tryFind (src, tgt) flowMap
-        |> Option.defaultValue 0
+        Map.tryFind (src, tgt) flowMap |> Option.defaultValue 0
 
     printfn "  Flow routes:"
     printfn "    Factory 1 -> Store 1: %d (expected: 30)" (getFlow 1 3)
@@ -113,12 +110,12 @@ match result2 with
 
     // Verify expected flows
     let flowsCorrect =
-        (getFlow 1 3) = 30 &&
-        (getFlow 1 4) = 20 &&
-        (getFlow 1 5) = 0 &&
-        (getFlow 2 3) = 0 &&
-        (getFlow 2 4) = 20 &&
-        (getFlow 2 5) = 30
+        (getFlow 1 3) = 30
+        && (getFlow 1 4) = 20
+        && (getFlow 1 5) = 0
+        && (getFlow 2 3) = 0
+        && (getFlow 2 4) = 20
+        && (getFlow 2 5) = 30
 
     if costCorrect && flowsCorrect then
         printfn "✓ TEST 2 PASSED: Cost and all flows match expected values"
@@ -127,8 +124,7 @@ match result2 with
     else
         printfn "✗ TEST 2 FAILED: Expected cost 1300, got %d" res.Cost
 
-| Error err ->
-    printfn "✗ TEST 2 FAILED: Error - %A" err
+| Error err -> printfn "✗ TEST 2 FAILED: Error - %A" err
 
 printfn ""
 
@@ -141,19 +137,16 @@ printfn "--------------------------------------"
 
 let test3Graph =
     empty Directed
-    |> addNode 1 10        // Supply
-    |> addNode 2 (-5)      // Demand doesn't match!
+    |> addNode 1 10 // Supply
+    |> addNode 2 (-5) // Demand doesn't match!
     |> addEdge 1 2 (20, 1)
 
 let result3 = minCostFlow test3Graph getDemand getCapacity getCost
 
 match result3 with
-| Error UnbalancedDemands ->
-    printfn "✓ TEST 3 PASSED: Correctly detected unbalanced demands"
-| Ok _ ->
-    printfn "✗ TEST 3 FAILED: Should have detected unbalanced demands"
-| Error err ->
-    printfn "✗ TEST 3 FAILED: Wrong error type - %A" err
+| Error UnbalancedDemands -> printfn "✓ TEST 3 PASSED: Correctly detected unbalanced demands"
+| Ok _ -> printfn "✗ TEST 3 FAILED: Should have detected unbalanced demands"
+| Error err -> printfn "✗ TEST 3 FAILED: Wrong error type - %A" err
 
 printfn ""
 
@@ -166,8 +159,8 @@ printfn "--------------------------------"
 
 let test4Graph =
     empty Directed
-    |> addNode 0 (-10)     // Demand
-    |> addNode 1 10        // Supply
+    |> addNode 0 (-10) // Demand
+    |> addNode 1 10 // Supply
     |> addEdge 1 0 (20, 5)
 
 let result4 = minCostFlow test4Graph getDemand getCapacity getCost
@@ -182,8 +175,7 @@ match result4 with
     else
         printfn "✗ TEST 4 FAILED: Expected cost 50, got %d" res.Cost
 
-| Error err ->
-    printfn "✗ TEST 4 FAILED: Error - %A" err
+| Error err -> printfn "✗ TEST 4 FAILED: Error - %A" err
 
 printfn ""
 printfn "=== All Tests Complete ==="

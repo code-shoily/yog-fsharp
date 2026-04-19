@@ -35,11 +35,7 @@ let ``addNode adds single node`` () =
 
 [<Fact>]
 let ``addNode adds multiple nodes`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addNode 3 "C"
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addNode 3 "C"
 
     Assert.Equal(3, order graph)
     Assert.True(Map.containsKey 1 graph.Nodes)
@@ -48,10 +44,7 @@ let ``addNode adds multiple nodes`` () =
 
 [<Fact>]
 let ``addNode updates existing node`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "Original"
-        |> addNode 1 "Updated"
+    let graph = empty Directed |> addNode 1 "Original" |> addNode 1 "Updated"
 
     Assert.Equal(1, order graph)
     Assert.Equal("Updated", graph.Nodes.[1])
@@ -99,11 +92,7 @@ let ``removeNode handles nonexistent node`` () =
 
 [<Fact>]
 let ``allNodes returns all node IDs`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addNode 3 "C"
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addNode 3 "C"
 
     let nodes = allNodes graph |> Set.ofList
 
@@ -129,11 +118,7 @@ let ``nodeCount equals order`` () =
 
 [<Fact>]
 let ``addEdge adds directed edge`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 10
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
 
     Assert.Equal(1, edgeCount graph)
     Assert.Equal<(NodeId * int) list>([ 2, 10 ], successors 1 graph)
@@ -143,13 +128,17 @@ let ``addEdge adds directed edge`` () =
 [<Fact>]
 let ``addEdge throws ArgumentException if src or dst are missing`` () =
     let graph = empty Directed |> addNode 1 "A"
-    
+
     // Missing dst
-    let ex1 = Assert.Throws<System.ArgumentException>(fun () -> addEdge 1 2 10 graph |> ignore)
+    let ex1 =
+        Assert.Throws<System.ArgumentException>(fun () -> addEdge 1 2 10 graph |> ignore)
+
     Assert.Contains("Destination node 2 does not exist", ex1.Message)
 
     // Missing src
-    let ex2 = Assert.Throws<System.ArgumentException>(fun () -> addEdge 2 1 10 graph |> ignore)
+    let ex2 =
+        Assert.Throws<System.ArgumentException>(fun () -> addEdge 2 1 10 graph |> ignore)
+
     Assert.Contains("Source node 2 does not exist", ex2.Message)
 
 [<Fact>]
@@ -180,11 +169,7 @@ let ``addEdge creates multiple outgoing edges`` () =
 
 [<Fact>]
 let ``removeEdge removes directed edge`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 10
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
 
     let removed = removeEdge 1 2 graph
 
@@ -234,11 +219,7 @@ let ``edgeCount returns correct edge count for directed`` () =
 
 [<Fact>]
 let ``addEdge creates symmetric edges for undirected`` () =
-    let graph =
-        empty Undirected
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 10
+    let graph = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
 
     Assert.Equal(1, edgeCount graph)
     Assert.Equal<(NodeId * int) list>([ 2, 10 ], successors 1 graph)
@@ -246,11 +227,7 @@ let ``addEdge creates symmetric edges for undirected`` () =
 
 [<Fact>]
 let ``removeEdge removes both directions for undirected`` () =
-    let graph =
-        empty Undirected
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 10
+    let graph = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
 
     let removed = removeEdge 1 2 graph
 
@@ -368,21 +345,13 @@ let ``addEdgeEnsuredWith uses callback for missing nodes`` () =
 
 [<Fact>]
 let ``successors returns empty for node with no outgoing edges`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 2 1 10 // Edge goes TO 1, not FROM 1
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 2 1 10 // Edge goes TO 1, not FROM 1
 
     Assert.Empty(successors 1 graph)
 
 [<Fact>]
 let ``predecessors returns empty for node with no incoming edges`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 10
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
 
     Assert.Empty(predecessors 1 graph)
 

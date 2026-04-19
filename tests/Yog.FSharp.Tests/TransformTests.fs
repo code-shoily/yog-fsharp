@@ -19,11 +19,7 @@ let ``transpose empty graph`` () =
 
 [<Fact>]
 let ``transpose single edge`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 10
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
 
     let transposed = transpose graph
 
@@ -72,11 +68,7 @@ let ``transpose cycle`` () =
 
 [<Fact>]
 let ``transpose is involutive (transpose twice is identity)`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 10
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
 
     let doubleTransposed = graph |> transpose |> transpose
 
@@ -85,10 +77,7 @@ let ``transpose is involutive (transpose twice is identity)`` () =
 [<Fact>]
 let ``transpose preserves nodes`` () =
     let graph =
-        empty Directed
-        |> addNode 1 "Node A"
-        |> addNode 2 "Node B"
-        |> addEdge 1 2 10
+        empty Directed |> addNode 1 "Node A" |> addNode 2 "Node B" |> addEdge 1 2 10
 
     let transposed = transpose graph
 
@@ -108,10 +97,7 @@ let ``mapNodes empty graph`` () =
 [<Fact>]
 let ``mapNodes transforms all nodes`` () =
     let graph =
-        empty Directed
-        |> addNode 1 "alice"
-        |> addNode 2 "bob"
-        |> addNode 3 "carol"
+        empty Directed |> addNode 1 "alice" |> addNode 2 "bob" |> addNode 3 "carol"
 
     let mapped = mapNodes (fun (s: string) -> s.ToUpper()) graph
 
@@ -153,11 +139,7 @@ let ``mapEdges empty graph`` () =
 
 [<Fact>]
 let ``mapEdges transforms all weights`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 10
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
 
     let mapped = mapEdges (fun w -> w * 2) graph
 
@@ -188,10 +170,7 @@ let ``mapEdges preserves structure`` () =
 [<Fact>]
 let ``filterNodes keeps matching nodes`` () =
     let graph =
-        empty Directed
-        |> addNode 1 "apple"
-        |> addNode 2 "banana"
-        |> addNode 3 "apricot"
+        empty Directed |> addNode 1 "apple" |> addNode 2 "banana" |> addNode 3 "apricot"
 
     let filtered = filterNodes (fun (s: string) -> s.StartsWith("a")) graph
 
@@ -320,15 +299,9 @@ let ``complement creates missing edges`` () =
     // Complement: 1-3 and 2-3 connected, 1-2 not
     Assert.Equal(2, edgeCount comp)
 
-    Assert.True(
-        successors 1 comp
-        |> List.exists (fun (id, _) -> id = 3)
-    )
+    Assert.True(successors 1 comp |> List.exists (fun (id, _) -> id = 3))
 
-    Assert.True(
-        successors 2 comp
-        |> List.exists (fun (id, _) -> id = 3)
-    )
+    Assert.True(successors 2 comp |> List.exists (fun (id, _) -> id = 3))
 
 [<Fact>]
 let ``complement has no self-loops`` () =
@@ -337,15 +310,9 @@ let ``complement has no self-loops`` () =
     let comp = complement 1 graph
 
     // Should not have edge from node to itself
-    Assert.True(
-        successors 1 comp
-        |> List.forall (fun (id, _) -> id <> 1)
-    )
+    Assert.True(successors 1 comp |> List.forall (fun (id, _) -> id <> 1))
 
-    Assert.True(
-        successors 2 comp
-        |> List.forall (fun (id, _) -> id <> 2)
-    )
+    Assert.True(successors 2 comp |> List.forall (fun (id, _) -> id <> 2))
 
 [<Fact>]
 let ``complement of complete graph is empty`` () =
@@ -368,15 +335,9 @@ let ``complement of complete graph is empty`` () =
 
 [<Fact>]
 let ``merge combines nodes from both graphs`` () =
-    let baseGraph =
-        empty Directed
-        |> addNode 1 "BaseA"
-        |> addNode 2 "BaseB"
+    let baseGraph = empty Directed |> addNode 1 "BaseA" |> addNode 2 "BaseB"
 
-    let other =
-        empty Directed
-        |> addNode 2 "OtherB"
-        |> addNode 3 "OtherC"
+    let other = empty Directed |> addNode 2 "OtherB" |> addNode 3 "OtherC"
 
     let merged = merge baseGraph other
 
@@ -388,11 +349,7 @@ let ``merge combines nodes from both graphs`` () =
 [<Fact>]
 let ``merge combines edges from both graphs`` () =
     let baseGraph =
-        empty Directed
-        |> addNode 1 ""
-        |> addNode 2 ""
-        |> addNode 3 ""
-        |> addEdge 1 2 10
+        empty Directed |> addNode 1 "" |> addNode 2 "" |> addNode 3 "" |> addEdge 1 2 10
 
     let other =
         empty Directed
@@ -527,19 +484,12 @@ let ``contract combines parallel edges`` () =
 
 [<Fact>]
 let ``contract removes self-loops`` () =
-    let graph =
-        empty Undirected
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 5
+    let graph = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 5
 
     let contracted = contract 1 2 (+) graph // Merge 2 into 1
 
     // No self-loop should be created
-    Assert.True(
-        successors 1 contracted
-        |> List.forall (fun (id, _) -> id <> 1)
-    )
+    Assert.True(successors 1 contracted |> List.forall (fun (id, _) -> id <> 1))
 
 // ============================================================================
 // TO DIRECTED / TO UNDIRECTED
@@ -547,11 +497,7 @@ let ``contract removes self-loops`` () =
 
 [<Fact>]
 let ``toDirected changes kind`` () =
-    let graph =
-        empty Undirected
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 10
+    let graph = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
 
     let directed = toDirected graph
 
@@ -559,11 +505,7 @@ let ``toDirected changes kind`` () =
 
 [<Fact>]
 let ``toDirected preserves edges`` () =
-    let graph =
-        empty Undirected
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 10
+    let graph = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
 
     let directed = toDirected graph
 
@@ -573,11 +515,7 @@ let ``toDirected preserves edges`` () =
 
 [<Fact>]
 let ``toUndirected makes edges symmetric`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 10
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
 
     let undirected = toUndirected max graph
 
