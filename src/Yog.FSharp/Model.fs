@@ -41,9 +41,9 @@ type Graph<'nodeData, 'edgeData> =
 /// Creates a new empty graph of the specified type.
 ///
 /// **Example:**
-/// ```fsharp
-/// let graph = Model.empty Directed
-/// ```
+///
+///     let graph = Model.empty Directed
+///
 /// </summary>
 /// <param name="graphType">The type of the graph.</param>
 /// <returns>A new empty graph.</returns>
@@ -58,11 +58,11 @@ let empty graphType : Graph<'n, 'e> =
 /// If a node with this ID already exists, its data will be replaced.
 ///
 /// **Example:**
-/// ```fsharp
-/// graph
-/// |> addNode 1 "Node A"
-/// |> addNode 2 "Node B"
-/// ```
+///
+///     graph
+///     |> addNode 1 "Node A"
+///     |> addNode 2 "Node B"
+///
 /// </summary>
 /// <param name="id">The unique identifier for the node.</param>
 /// <param name="data">The data to store at the node.</param>
@@ -91,10 +91,10 @@ let private doAddDirectedEdge src dst weight (graph: Graph<'n, 'e>) =
 /// For undirected graphs, adds edges in both directions.
 ///
 /// **Example:**
-/// ```fsharp
-/// graph
-/// |> addEdge 1 2 10
-/// ```
+///
+///     graph
+///     |> addEdge 1 2 10
+///
 /// </summary>
 /// <remarks>
 /// <strong>Note:</strong> If <c>src</c> or <c>dst</c> have not been added via <c>addNode</c>,
@@ -136,18 +136,18 @@ let private ensureNode id data (graph: Graph<'n, 'e>) =
 /// that already exist are left unchanged.
 ///
 /// **Example:**
-/// ```fsharp
-/// // Nodes 1 and 2 are created automatically with data "unknown"
-/// empty Directed
-/// |> addEdgeEnsured 1 2 10 "unknown" "unknown"
-/// ```
-/// ```fsharp
-/// // Existing nodes keep their data; only missing ones get the default
-/// empty Directed
-/// |> addNode 1 "Alice"
-/// |> addEdgeEnsured 1 2 5 "anon" "anon"
-/// // Node 1 is still "Alice", node 2 is "anon"
-/// ```
+///
+///     // Nodes 1 and 2 are created automatically with data "unknown"
+///     empty Directed
+///     |> addEdgeEnsured 1 2 10 "unknown" "unknown"
+///
+///
+///     // Existing nodes keep their data; only missing ones get the default
+///     empty Directed
+///     |> addNode 1 "Alice"
+///     |> addEdgeEnsured 1 2 5 "anon" "anon"
+///     // Node 1 is still "Alice", node 2 is "anon"
+///
 /// </summary>
 /// <param name="src">The source node ID.</param>
 /// <param name="dst">The destination node ID.</param>
@@ -302,18 +302,19 @@ let successorIds (id: NodeId) (graph: Graph<'n, 'e>) : list<NodeId> = successors
 /// Removes a node and all its connected edges (incoming and outgoing).
 ///
 /// **Example:**
-/// ```fsharp
-/// let graph =
-///   empty Directed
-///   |> addNode 1 "A"
-///   |> addNode 2 "B"
-///   |> addNode 3 "C"
-///   |> addEdge 1 2 10
-///   |> addEdge 2 3 20
 ///
-/// let graph = removeNode 2 graph
-/// // Node 2 is removed, along with edges 1->2 and 2->3
-/// ```
+///     let graph =
+///       empty Directed
+///       |> addNode 1 "A"
+///       |> addNode 2 "B"
+///       |> addNode 3 "C"
+///       |> addEdge 1 2 10
+///       |> addEdge 2 3 20
+///
+     
+///     let graph = removeNode 2 graph
+///     // Node 2 is removed, along with edges 1->2 and 2->3
+///
 /// </summary>
 /// <remarks>
 /// <strong>Time Complexity:</strong> O(deg(v)) - proportional to the number of edges
@@ -386,16 +387,16 @@ let private doRemoveDirectedEdge src dst (graph: Graph<'n, 'e>) =
 /// For undirected graphs, removes edges in both directions.
 ///
 /// **Example:**
-/// ```fsharp
-/// // Directed graph - removes single directed edge
-/// let graph =
-///   empty Directed
-///   |> addNode 1 "A"
-///   |> addNode 2 "B"
-///   |> addEdge 1 2 10
-///   |> removeEdge 1 2
-/// // Edge 1->2 is removed
-/// ```
+///
+///     // Directed graph - removes single directed edge
+///     let graph =
+///       empty Directed
+///       |> addNode 1 "A"
+///       |> addNode 2 "B"
+///       |> addEdge 1 2 10
+///       |> removeEdge 1 2
+///     // Edge 1->2 is removed
+///
 /// </summary>
 /// <remarks>
 /// <strong>Time Complexity:</strong> O(1)
@@ -440,15 +441,15 @@ let private doAddDirectedCombine src dst weight combine (graph: Graph<'n, 'e>) =
 /// return the combined weight.
 ///
 /// **Example:**
-/// ```fsharp
-/// let graph =
-///   empty Directed
-///   |> addNode 1 "A"
-///   |> addNode 2 "B"
-///   |> addEdge 1 2 10
-///   |> addEdgeWithCombine 1 2 5 (+)
-/// // Edge 1->2 now has weight 15 (10 + 5)
-/// ```
+///
+///     let graph =
+///       empty Directed
+///       |> addNode 1 "A"
+///       |> addNode 2 "B"
+///       |> addEdge 1 2 10
+///       |> addEdgeWithCombine 1 2 5 (+)
+///     // Edge 1->2 now has weight 15 (10 + 5)
+///
 /// </summary>
 /// <remarks>
 /// <strong>Time Complexity:</strong> O(1)
