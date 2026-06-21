@@ -6,6 +6,10 @@ open System.Text.Json
 open Yog.Model
 open Yog.IO
 open Yog.Render
+open Yog
+open Yog.Multi
+open Yog.Pathfinding.Utils
+open Yog.Flow.MaxFlow
 
 // ============================================================================
 // DOT RENDERING
@@ -385,3 +389,105 @@ let ``Matrix parse and serialize`` () =
         Assert.Contains("0 5 0", serialized)
     | Error msg ->
         Assert.Fail(msg)
+
+// ============================================================================
+// HIGHLIGHT RENDERING TESTS
+// ============================================================================
+
+[<Fact>]
+let ``pathToOptions highlights nodes and edges correctly`` () =
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addNode 3 "C" |> addEdge 1 2 1 |> addEdge 2 3 1
+    let path = { Nodes = [ 1; 2; 3 ]; TotalWeight = 2 }
+    
+    // Mermaid
+    let mermaidOpts = Mermaid.pathToOptions path Mermaid.defaultOptions
+    let mermaidStr = Mermaid.render mermaidOpts graph
+    Assert.Contains("classDef highlight", mermaidStr)
+    Assert.Contains("classDef highlightEdge", mermaidStr)
+    Assert.Contains("1[\"1\"]:::highlight", mermaidStr)
+    Assert.Contains("1 -->|\"1\"| 2:::highlightEdge", mermaidStr)
+
+    // DOT
+    let dotOpts = Dot.pathToOptions path Dot.defaultOptions
+    let dotStr = Dot.render dotOpts graph
+    Assert.Contains("1 [label=\"1\" fillcolor=\"red\", style=filled]", dotStr)
+    Assert.Contains("1 -> 2 [label=\"1\" color=\"red\", penwidth=2]", dotStr)
+
+[<Fact>]
+let ``pathToMultiOptions highlights nodes and edge endpoints correctly`` () =
+    let graph = Yog.Multi.Model.empty Directed |> Yog.Multi.Model.addNode 1 "A" |> Yog.Multi.Model.addNode 2 "B"
+    let graph = Yog.Multi.Model.addEdge 1 2 5 graph |> fst
+    let path = { Nodes = [ 1; 2 ]; TotalWeight = 5 }
+
+    // Mermaid
+    let mermaidOpts = Mermaid.pathToMultiOptions path Mermaid.defaultMultiOptions
+    let mermaidStr = Mermaid.renderMulti mermaidOpts graph
+    Assert.Contains("1[\"1\"]:::highlight", mermaidStr)
+    Assert.Contains("2[\"2\"]:::highlight", mermaidStr)
+    Assert.Contains("1 -->|\"5\"| 2:::highlightEdge", mermaidStr)
+
+    // DOT
+    let dotOpts = Dot.pathToMultiOptions path Dot.defaultMultiOptions
+    let dotStr = Dot.renderMulti dotOpts graph
+    Assert.Contains("1 [label=\"1\" fillcolor=\"red\", style=filled]", dotStr)
+    Assert.Contains("1 -> 2 [label=\"5\" color=\"red\", penwidth=2]", dotStr)
+
+[<Fact>]
+let ``mstToOptions highlights spanning tree correctly`` () =
+    let graph = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 5
+    let mstResult : MstResult<int> =
+        { Edges = [ { From = 1; To = 2; Weight = 5 } ]
+          TotalWeight = 5
+          NodeCount = 2
+          EdgeCount = 1
+          Algorithm = Kruskal
+          Root = None }
+                      
+    // Mermaid
+    let mermaidOpts = Mermaid.mstToOptions mstResult Mermaid.defaultOptions
+    let mermaidStr = Mermaid.render mermaidOpts graph
+    Assert.Contains("1[\"1\"]:::highlight", mermaidStr)
+    Assert.Contains("1 ---|\"5\"| 2:::highlightEdge", mermaidStr)
+
+    // DOT
+    let dotOpts = Dot.mstToOptions mstResult Dot.defaultOptions
+    let dotStr = Dot.render dotOpts graph
+    Assert.Contains("1 [label=\"1\" fillcolor=\"red\", style=filled]", dotStr)
+    Assert.Contains("1 -- 2 [label=\"5\" color=\"red\", penwidth=2]", dotStr)
+
+[<Fact>]
+let ``cutToOptions highlights source and sink partition correctly`` () =
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 5
+    let minCutResult = { SourceSide = Set.ofList [ 1 ]; SinkSide = Set.ofList [ 2 ] }
+    
+    // Mermaid
+    let mermaidOpts = Mermaid.cutToOptions minCutResult Mermaid.defaultOptions
+    let mermaidStr = Mermaid.render mermaidOpts graph
+    Assert.Contains("classDef highlightSource fill:#a8d8ea,stroke:#0288d1,stroke-width:3px", mermaidStr)
+    Assert.Contains("classDef highlightSink fill:#f08080,stroke:#c62828,stroke-width:3px", mermaidStr)
+    Assert.Contains("1[\"1\"]:::highlightSource", mermaidStr)
+    Assert.Contains("2[\"2\"]:::highlightSink", mermaidStr)
+
+    // DOT
+    let dotOpts = Dot.cutToOptions minCutResult Dot.defaultOptions
+    let dotStr = Dot.render dotOpts graph
+    Assert.Contains("1 [label=\"1\" fillcolor=\"#a8d8ea\", style=filled, color=\"#0288d1\"]", dotStr)
+    Assert.Contains("2 [label=\"2\" fillcolor=\"#f08080\", style=filled, color=\"#c62828\"]", dotStr)
+
+[<Fact>]
+let ``matchingToOptions highlights matching edges correctly`` () =
+    let graph = empty Undirected |> addNode 1 "" |> addNode 2 "" |> addEdge 1 2 1
+    let matching = Map.ofList [ (1, 2); (2, 1) ]
+    
+    // Mermaid
+    let mermaidOpts = Mermaid.matchingToOptions matching Mermaid.defaultOptions
+    let mermaidStr = Mermaid.render mermaidOpts graph
+    Assert.Contains("1[\"1\"]:::highlight", mermaidStr)
+    Assert.Contains("2[\"2\"]:::highlight", mermaidStr)
+    Assert.Contains("1 ---|\"1\"| 2:::highlightEdge", mermaidStr)
+
+    // DOT
+    let dotOpts = Dot.matchingToOptions matching Dot.defaultOptions
+    let dotStr = Dot.render dotOpts graph
+    Assert.Contains("1 [label=\"1\" fillcolor=\"red\", style=filled]", dotStr)
+    Assert.Contains("1 -- 2 [label=\"1\" color=\"red\", penwidth=2]", dotStr)

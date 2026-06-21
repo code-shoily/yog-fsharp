@@ -2,8 +2,11 @@ namespace Yog.Render
 
 open System.IO
 open System.Text
+open Yog
 open Yog.Model
 open Yog.Multi
+open Yog.Pathfinding.Utils
+open Yog.Flow.MaxFlow
 
 module Dot =
 
@@ -18,6 +21,10 @@ module Dot =
             HighlightedNodes: Set<NodeId>
             /// Set of edges to highlight as (from, to) pairs
             HighlightedEdges: Set<NodeId * NodeId>
+            /// Set of source side nodes to highlight (e.g. min-cut)
+            HighlightedSourceNodes: Set<NodeId>
+            /// Set of sink side nodes to highlight (e.g. min-cut)
+            HighlightedSinkNodes: Set<NodeId>
             /// Node shape (e.g., "circle", "box", "ellipse")
             NodeShape: string
             /// Highlight color for nodes/edges
@@ -37,6 +44,10 @@ module Dot =
             HighlightedEdges: Set<EdgeId>
             /// Set of edge endpoints to highlight
             HighlightedNodePairs: Set<NodeId * NodeId>
+            /// Set of source side nodes to highlight (e.g. min-cut)
+            HighlightedSourceNodes: Set<NodeId>
+            /// Set of sink side nodes to highlight (e.g. min-cut)
+            HighlightedSinkNodes: Set<NodeId>
             /// Node shape (e.g., "circle", "box", "ellipse")
             NodeShape: string
             /// Highlight color for nodes/edges
@@ -49,6 +60,8 @@ module Dot =
           EdgeLabel = fun weight -> string weight
           HighlightedNodes = Set.empty
           HighlightedEdges = Set.empty
+          HighlightedSourceNodes = Set.empty
+          HighlightedSinkNodes = Set.empty
           NodeShape = "ellipse"
           HighlightColor = "red" }
 
@@ -59,6 +72,8 @@ module Dot =
           HighlightedNodes = Set.empty
           HighlightedEdges = Set.empty
           HighlightedNodePairs = Set.empty
+          HighlightedSourceNodes = Set.empty
+          HighlightedSinkNodes = Set.empty
           NodeShape = "ellipse"
           HighlightColor = "red" }
 
@@ -77,6 +92,10 @@ module Dot =
             let highlight =
                 if Set.contains id options.HighlightedNodes then
                     $" fillcolor=\"{options.HighlightColor}\", style=filled"
+                elif Set.contains id options.HighlightedSourceNodes then
+                    " fillcolor=\"#a8d8ea\", style=filled, color=\"#0288d1\""
+                elif Set.contains id options.HighlightedSinkNodes then
+                    " fillcolor=\"#f08080\", style=filled, color=\"#c62828\""
                 else ""
             sb.AppendLine($"  {id} [label=\"{label}\"{highlight}];") |> ignore
 
@@ -109,6 +128,10 @@ module Dot =
             let highlight =
                 if Set.contains id options.HighlightedNodes then
                     $" fillcolor=\"{options.HighlightColor}\", style=filled"
+                elif Set.contains id options.HighlightedSourceNodes then
+                    " fillcolor=\"#a8d8ea\", style=filled, color=\"#0288d1\""
+                elif Set.contains id options.HighlightedSinkNodes then
+                    " fillcolor=\"#f08080\", style=filled, color=\"#c62828\""
                 else ""
             sb.AppendLine($"  {id} [label=\"{label}\"{highlight}];") |> ignore
 
@@ -135,3 +158,71 @@ module Dot =
     /// Renders a multigraph to a DOT file.
     let writeFileMulti (path: string) (options: MultiOptions<'n, 'e>) (graph: MultiGraph<'n, 'e>) : unit =
         File.WriteAllText(path, renderMulti options graph)
+
+    /// Creates DOT options that highlight a path.
+    let pathToOptions (path: Path<'e>) (baseOptions: Options<'n, 'e>) : Options<'n, 'e> =
+        let nodes = Set.ofList path.Nodes
+        let edges = List.pairwise path.Nodes |> Set.ofList
+        { baseOptions with
+            HighlightedNodes = nodes
+            HighlightedEdges = edges }
+
+    /// Creates DOT options that highlight a path in a multigraph.
+    let pathToMultiOptions (path: Path<'e>) (baseOptions: MultiOptions<'n, 'e>) : MultiOptions<'n, 'e> =
+        let nodes = Set.ofList path.Nodes
+        let edges = List.pairwise path.Nodes |> Set.ofList
+        { baseOptions with
+            HighlightedNodes = nodes
+            HighlightedNodePairs = edges }
+
+    /// Creates DOT options that highlight an MST result.
+    let mstToOptions (result: MstResult<'e>) (baseOptions: Options<'n, 'e>) : Options<'n, 'e> =
+        let edges = result.Edges |> List.map (fun e -> (e.From, e.To)) |> Set.ofList
+        let nodes = result.Edges |> List.collect (fun e -> [e.From; e.To]) |> Set.ofList
+        { baseOptions with
+            HighlightedNodes = nodes
+            HighlightedEdges = edges }
+
+    /// Creates DOT options that highlight an MST result in a multigraph.
+    let mstToMultiOptions (result: MstResult<'e>) (baseOptions: MultiOptions<'n, 'e>) : MultiOptions<'n, 'e> =
+        let edges = result.Edges |> List.map (fun e -> (e.From, e.To)) |> Set.ofList
+        let nodes = result.Edges |> List.collect (fun e -> [e.From; e.To]) |> Set.ofList
+        { baseOptions with
+            HighlightedNodes = nodes
+            HighlightedNodePairs = edges }
+
+    /// Creates DOT options that color the source and sink sides of a min-cut.
+    let cutToOptions (result: MinCut) (baseOptions: Options<'n, 'e>) : Options<'n, 'e> =
+        { baseOptions with
+            HighlightedSourceNodes = result.SourceSide
+            HighlightedSinkNodes = result.SinkSide }
+
+    /// Creates DOT options that color the source and sink sides of a min-cut in a multigraph.
+    let cutToMultiOptions (result: MinCut) (baseOptions: MultiOptions<'n, 'e>) : MultiOptions<'n, 'e> =
+        { baseOptions with
+            HighlightedSourceNodes = result.SourceSide
+            HighlightedSinkNodes = result.SinkSide }
+
+    /// Creates DOT options that highlight matched edges from a matching result.
+    let matchingToOptions (matching: Map<NodeId, NodeId>) (baseOptions: Options<'n, 'e>) : Options<'n, 'e> =
+        let edges = 
+            matching 
+            |> Map.toList 
+            |> List.map (fun (u, v) -> if u <= v then (u, v) else (v, u)) 
+            |> Set.ofList
+        let nodes = matching |> Map.keys |> Set.ofSeq
+        { baseOptions with
+            HighlightedNodes = nodes
+            HighlightedEdges = edges }
+
+    /// Creates DOT options that highlight matched edges in a multigraph.
+    let matchingToMultiOptions (matching: Map<NodeId, NodeId>) (baseOptions: MultiOptions<'n, 'e>) : MultiOptions<'n, 'e> =
+        let edges = 
+            matching 
+            |> Map.toList 
+            |> List.map (fun (u, v) -> if u <= v then (u, v) else (v, u)) 
+            |> Set.ofList
+        let nodes = matching |> Map.keys |> Set.ofSeq
+        { baseOptions with
+            HighlightedNodes = nodes
+            HighlightedNodePairs = edges }

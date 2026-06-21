@@ -2,8 +2,11 @@ namespace Yog.Render
 
 open System.IO
 open System.Text
+open Yog
 open Yog.Model
 open Yog.Multi
+open Yog.Pathfinding.Utils
+open Yog.Flow.MaxFlow
 
 module Mermaid =
 
@@ -18,6 +21,10 @@ module Mermaid =
             HighlightedNodes: Set<NodeId>
             /// Set of edges to highlight as (from, to) pairs
             HighlightedEdges: Set<NodeId * NodeId>
+            /// Set of source side nodes to highlight (e.g. min-cut)
+            HighlightedSourceNodes: Set<NodeId>
+            /// Set of sink side nodes to highlight (e.g. min-cut)
+            HighlightedSinkNodes: Set<NodeId>
             /// Direction of layout (e.g., "TD", "LR")
             Direction: string
         }
@@ -35,6 +42,10 @@ module Mermaid =
             HighlightedEdges: Set<EdgeId>
             /// Set of edge endpoints to highlight
             HighlightedNodePairs: Set<NodeId * NodeId>
+            /// Set of source side nodes to highlight (e.g. min-cut)
+            HighlightedSourceNodes: Set<NodeId>
+            /// Set of sink side nodes to highlight (e.g. min-cut)
+            HighlightedSinkNodes: Set<NodeId>
             /// Direction of layout (e.g., "TD", "LR")
             Direction: string
         }
@@ -45,6 +56,8 @@ module Mermaid =
           EdgeLabel = fun weight -> string weight
           HighlightedNodes = Set.empty
           HighlightedEdges = Set.empty
+          HighlightedSourceNodes = Set.empty
+          HighlightedSinkNodes = Set.empty
           Direction = "TD" }
 
     /// Default configuration for MultiGraph Mermaid output.
@@ -54,6 +67,8 @@ module Mermaid =
           HighlightedNodes = Set.empty
           HighlightedEdges = Set.empty
           HighlightedNodePairs = Set.empty
+          HighlightedSourceNodes = Set.empty
+          HighlightedSinkNodes = Set.empty
           Direction = "TD" }
 
     /// Converts a graph to Mermaid diagram syntax.
@@ -63,14 +78,25 @@ module Mermaid =
         let header = $"graph {options.Direction}"
         sb.AppendLine(header) |> ignore
         
-        if not (Set.isEmpty options.HighlightedNodes && Set.isEmpty options.HighlightedEdges) then
+        let hasHighlights =
+            not (Set.isEmpty options.HighlightedNodes && 
+                 Set.isEmpty options.HighlightedEdges &&
+                 Set.isEmpty options.HighlightedSourceNodes &&
+                 Set.isEmpty options.HighlightedSinkNodes)
+        if hasHighlights then
             sb.AppendLine("  classDef highlight fill:#ffeb3b,stroke:#f57c00,stroke-width:3px") |> ignore
             sb.AppendLine("  classDef highlightEdge stroke:#f57c00,stroke-width:3px") |> ignore
+            sb.AppendLine("  classDef highlightSource fill:#a8d8ea,stroke:#0288d1,stroke-width:3px") |> ignore
+            sb.AppendLine("  classDef highlightSink fill:#f08080,stroke:#c62828,stroke-width:3px") |> ignore
 
         for kvp in graph.Nodes do
             let id = kvp.Key
             let label = options.NodeLabel id kvp.Value
-            let style = if Set.contains id options.HighlightedNodes then ":::highlight" else ""
+            let style = 
+                if Set.contains id options.HighlightedNodes then ":::highlight" 
+                elif Set.contains id options.HighlightedSourceNodes then ":::highlightSource"
+                elif Set.contains id options.HighlightedSinkNodes then ":::highlightSink"
+                else ""
             sb.AppendLine($"  {id}[\"{label}\"]{style}") |> ignore
 
         for KeyValue(src, targets) in graph.OutEdges do
@@ -90,14 +116,25 @@ module Mermaid =
         let header = $"graph {options.Direction}"
         sb.AppendLine(header) |> ignore
         
-        if not (Set.isEmpty options.HighlightedNodes && (Set.isEmpty options.HighlightedEdges && Set.isEmpty options.HighlightedNodePairs)) then
+        let hasHighlights =
+            not (Set.isEmpty options.HighlightedNodes && 
+                 (Set.isEmpty options.HighlightedEdges && Set.isEmpty options.HighlightedNodePairs) &&
+                 Set.isEmpty options.HighlightedSourceNodes &&
+                 Set.isEmpty options.HighlightedSinkNodes)
+        if hasHighlights then
             sb.AppendLine("  classDef highlight fill:#ffeb3b,stroke:#f57c00,stroke-width:3px") |> ignore
             sb.AppendLine("  classDef highlightEdge stroke:#f57c00,stroke-width:3px") |> ignore
+            sb.AppendLine("  classDef highlightSource fill:#a8d8ea,stroke:#0288d1,stroke-width:3px") |> ignore
+            sb.AppendLine("  classDef highlightSink fill:#f08080,stroke:#c62828,stroke-width:3px") |> ignore
 
         for kvp in graph.Nodes do
             let id = kvp.Key
             let label = options.NodeLabel id kvp.Value
-            let style = if Set.contains id options.HighlightedNodes then ":::highlight" else ""
+            let style = 
+                if Set.contains id options.HighlightedNodes then ":::highlight" 
+                elif Set.contains id options.HighlightedSourceNodes then ":::highlightSource"
+                elif Set.contains id options.HighlightedSinkNodes then ":::highlightSink"
+                else ""
             sb.AppendLine($"  {id}[\"{label}\"]{style}") |> ignore
 
         for kvp in graph.Edges do
@@ -119,3 +156,71 @@ module Mermaid =
     /// Renders a multigraph to a Mermaid file.
     let writeFileMulti (path: string) (options: MultiOptions<'n, 'e>) (graph: MultiGraph<'n, 'e>) : unit =
         File.WriteAllText(path, renderMulti options graph)
+
+    /// Creates Mermaid options that highlight a path.
+    let pathToOptions (path: Path<'e>) (baseOptions: Options<'n, 'e>) : Options<'n, 'e> =
+        let nodes = Set.ofList path.Nodes
+        let edges = List.pairwise path.Nodes |> Set.ofList
+        { baseOptions with
+            HighlightedNodes = nodes
+            HighlightedEdges = edges }
+
+    /// Creates Mermaid options that highlight a path in a multigraph.
+    let pathToMultiOptions (path: Path<'e>) (baseOptions: MultiOptions<'n, 'e>) : MultiOptions<'n, 'e> =
+        let nodes = Set.ofList path.Nodes
+        let edges = List.pairwise path.Nodes |> Set.ofList
+        { baseOptions with
+            HighlightedNodes = nodes
+            HighlightedNodePairs = edges }
+
+    /// Creates Mermaid options that highlight an MST result.
+    let mstToOptions (result: MstResult<'e>) (baseOptions: Options<'n, 'e>) : Options<'n, 'e> =
+        let edges = result.Edges |> List.map (fun e -> (e.From, e.To)) |> Set.ofList
+        let nodes = result.Edges |> List.collect (fun e -> [e.From; e.To]) |> Set.ofList
+        { baseOptions with
+            HighlightedNodes = nodes
+            HighlightedEdges = edges }
+
+    /// Creates Mermaid options that highlight an MST result in a multigraph.
+    let mstToMultiOptions (result: MstResult<'e>) (baseOptions: MultiOptions<'n, 'e>) : MultiOptions<'n, 'e> =
+        let edges = result.Edges |> List.map (fun e -> (e.From, e.To)) |> Set.ofList
+        let nodes = result.Edges |> List.collect (fun e -> [e.From; e.To]) |> Set.ofList
+        { baseOptions with
+            HighlightedNodes = nodes
+            HighlightedNodePairs = edges }
+
+    /// Creates Mermaid options that color the source and sink sides of a min-cut.
+    let cutToOptions (result: MinCut) (baseOptions: Options<'n, 'e>) : Options<'n, 'e> =
+        { baseOptions with
+            HighlightedSourceNodes = result.SourceSide
+            HighlightedSinkNodes = result.SinkSide }
+
+    /// Creates Mermaid options that color the source and sink sides of a min-cut in a multigraph.
+    let cutToMultiOptions (result: MinCut) (baseOptions: MultiOptions<'n, 'e>) : MultiOptions<'n, 'e> =
+        { baseOptions with
+            HighlightedSourceNodes = result.SourceSide
+            HighlightedSinkNodes = result.SinkSide }
+
+    /// Creates Mermaid options that highlight matched edges from a matching result.
+    let matchingToOptions (matching: Map<NodeId, NodeId>) (baseOptions: Options<'n, 'e>) : Options<'n, 'e> =
+        let edges = 
+            matching 
+            |> Map.toList 
+            |> List.map (fun (u, v) -> if u <= v then (u, v) else (v, u)) 
+            |> Set.ofList
+        let nodes = matching |> Map.keys |> Set.ofSeq
+        { baseOptions with
+            HighlightedNodes = nodes
+            HighlightedEdges = edges }
+
+    /// Creates Mermaid options that highlight matched edges in a multigraph.
+    let matchingToMultiOptions (matching: Map<NodeId, NodeId>) (baseOptions: MultiOptions<'n, 'e>) : MultiOptions<'n, 'e> =
+        let edges = 
+            matching 
+            |> Map.toList 
+            |> List.map (fun (u, v) -> if u <= v then (u, v) else (v, u)) 
+            |> Set.ofList
+        let nodes = matching |> Map.keys |> Set.ofSeq
+        { baseOptions with
+            HighlightedNodes = nodes
+            HighlightedNodePairs = edges }
