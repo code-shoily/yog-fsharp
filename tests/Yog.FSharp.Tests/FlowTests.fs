@@ -291,52 +291,68 @@ module GlobalMinCutTests =
 // =============================================================================
 
 module MaxFlowPropertyTests =
-    open FsCheck.Xunit
+    open Hedgehog
+    open Hedgehog.FSharp
 
-    [<Property>]
-    let ``max flow is non-negative`` (capacity: int) =
-        let cap = abs capacity % 10000 + 1
+    [<Fact>]
+    let ``max flow is non-negative`` () =
+        property {
+            let! capacity = Gen.int32 (Range.linear -10000 10000)
+            let cap = abs capacity % 10000 + 1
 
-        let graph = empty Directed |> addNode 0 () |> addNode 1 () |> addEdge 0 1 cap
+            let graph = empty Directed |> addNode 0 () |> addNode 1 () |> addEdge 0 1 cap
 
-        let result = edmondsKarpInt 0 1 graph
-        result.MaxFlow >= 0
+            let result = edmondsKarpInt 0 1 graph
+            return result.MaxFlow >= 0
+        }
+        |> Property.checkBool
 
-    [<Property>]
-    let ``max flow cannot exceed sum of outgoing capacities from source`` (c1: int) (c2: int) (c3: int) =
-        // Use three positive capacities
-        let caps = [ abs c1 % 100 + 1; abs c2 % 100 + 1; abs c3 % 100 + 1 ]
+    [<Fact>]
+    let ``max flow cannot exceed sum of outgoing capacities from source`` () =
+        property {
+            let! c1 = Gen.int32 (Range.linear -10000 10000)
+            let! c2 = Gen.int32 (Range.linear -10000 10000)
+            let! c3 = Gen.int32 (Range.linear -10000 10000)
+            // Use three positive capacities
+            let caps = [ abs c1 % 100 + 1; abs c2 % 100 + 1; abs c3 % 100 + 1 ]
 
-        let graph =
-            let g = empty Directed |> addNode 0 () |> addNode 100 ()
+            let graph =
+                let g = empty Directed |> addNode 0 () |> addNode 100 ()
 
-            let gWithTargets =
-                [ 1 .. caps.Length ] |> List.fold (fun acc i -> addNode i () acc) g
+                let gWithTargets =
+                    [ 1 .. caps.Length ] |> List.fold (fun acc i -> addNode i () acc) g
 
-            caps
-            |> List.mapi (fun i cap -> (i + 1, cap))
-            |> List.fold (fun acc (target, cap) -> addEdge 0 target cap acc) gWithTargets
-            |> fun g -> addEdge 1 100 10000 g // Big edge to sink
+                caps
+                |> List.mapi (fun i cap -> (i + 1, cap))
+                |> List.fold (fun acc (target, cap) -> addEdge 0 target cap acc) gWithTargets
+                |> fun g -> addEdge 1 100 10000 g // Big edge to sink
 
-        let result = edmondsKarpInt 0 100 graph
-        let totalOutCap = caps |> List.sum
-        result.MaxFlow <= totalOutCap
+            let result = edmondsKarpInt 0 100 graph
+            let totalOutCap = caps |> List.sum
+            return result.MaxFlow <= totalOutCap
+        }
+        |> Property.checkBool
 
-    [<Property>]
-    let ``max flow equals min cut capacity`` (c1: int) (c2: int) =
-        let cap1, cap2 = abs c1 % 1000 + 1, abs c2 % 1000 + 1
+    [<Fact>]
+    let ``max flow equals min cut capacity`` () =
+        property {
+            let! c1 = Gen.int32 (Range.linear -10000 10000)
+            let! c2 = Gen.int32 (Range.linear -10000 10000)
+            let cap1, cap2 = abs c1 % 1000 + 1, abs c2 % 1000 + 1
 
-        let graph =
-            empty Directed
-            |> addNode 0 ()
-            |> addNode 1 ()
-            |> addNode 2 ()
-            |> addEdge 0 1 cap1
-            |> addEdge 1 2 cap2
+            let graph =
+                empty Directed
+                |> addNode 0 ()
+                |> addNode 1 ()
+                |> addNode 2 ()
+                |> addEdge 0 1 cap1
+                |> addEdge 1 2 cap2
 
-        let result = edmondsKarpInt 0 2 graph
-        // Bottleneck is min of the two capacities
-        result.MaxFlow = min cap1 cap2
+            let result = edmondsKarpInt 0 2 graph
+            // Bottleneck is min of the two capacities
+            return result.MaxFlow = min cap1 cap2
+        }
+        |> Property.checkBool
 
 module MaxFlowAlgorithmAgreementTests =
     open MaxFlowTests

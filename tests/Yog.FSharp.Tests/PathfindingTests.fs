@@ -1111,67 +1111,86 @@ module DistanceMatrixTests =
 // =============================================================================
 
 module PathfindingPropertyTests =
-    open FsCheck
-    open FsCheck.Xunit
+    open Hedgehog
+    open Hedgehog.FSharp
     open Yog.Pathfinding.Utils
 
-    [<Property>]
-    let ``Dijkstra distance is non-negative for non-negative weights`` (PositiveInt w1) (PositiveInt w2) =
-        let weights = [ w1 % 100 + 1; w2 % 100 + 1 ]
-        let edges = weights |> List.mapi (fun i w -> (i, i + 1, w))
-        let graph = DijkstraTests.makeWeightedGraph edges
-        let result = shortestPathInt 0 (weights.Length) graph
+    [<Fact>]
+    let ``Dijkstra distance is non-negative for non-negative weights`` () =
+        property {
+            let! w1 = Gen.int32 (Range.linear 1 100)
+            let! w2 = Gen.int32 (Range.linear 1 100)
+            let weights = [ w1 % 100 + 1; w2 % 100 + 1 ]
+            let edges = weights |> List.mapi (fun i w -> (i, i + 1, w))
+            let graph = DijkstraTests.makeWeightedGraph edges
+            let result = shortestPathInt 0 (weights.Length) graph
 
-        match result with
-        | Some path -> path.TotalWeight >= 0
-        | None -> true // No path case
+            match result with
+            | Some path -> return path.TotalWeight >= 0
+            | None -> return true // No path case
+        }
+        |> Property.checkBool
 
-    [<Property>]
-    let ``A* with zero heuristic finds shortest path`` (PositiveInt w1) (PositiveInt w2) =
-        let w1', w2' = w1 % 100 + 1, w2 % 100 + 1
-        // Two paths: direct with w1+w2+1 (longer), or via node 1
-        let graph =
-            DijkstraTests.makeWeightedGraph [ (0, 1, w1'); (1, 2, w2'); (0, 2, w1' + w2' + 1) ]
+    [<Fact>]
+    let ``A* with zero heuristic finds shortest path`` () =
+        property {
+            let! w1 = Gen.int32 (Range.linear 1 100)
+            let! w2 = Gen.int32 (Range.linear 1 100)
+            let w1', w2' = w1 % 100 + 1, w2 % 100 + 1
+            // Two paths: direct with w1+w2+1 (longer), or via node 1
+            let graph =
+                DijkstraTests.makeWeightedGraph [ (0, 1, w1'); (1, 2, w2'); (0, 2, w1' + w2' + 1) ]
 
-        let aStarResult = aStarInt (fun _ _ -> 0) 0 2 graph
-        let dijkstraResult = shortestPathInt 0 2 graph
+            let aStarResult = aStarInt (fun _ _ -> 0) 0 2 graph
+            let dijkstraResult = shortestPathInt 0 2 graph
 
-        match aStarResult, dijkstraResult with
-        | Some a, Some d -> a.TotalWeight = d.TotalWeight
-        | None, None -> true
-        | _ -> false
+            match aStarResult, dijkstraResult with
+            | Some a, Some d -> return a.TotalWeight = d.TotalWeight
+            | None, None -> return true
+            | _ -> return false
+        }
+        |> Property.checkBool
 
-    [<Property>]
-    let ``BellmanFord agrees with Dijkstra on non-negative weights`` (PositiveInt w1) (PositiveInt w2) =
-        let w1', w2' = w1 % 50 + 1, w2 % 50 + 1
-        let edges = [ (0, 1, w1'); (1, 2, w2') ]
-        let graph = DijkstraTests.makeWeightedGraph edges
-        let bfResult = bellmanFordInt 0 2 graph
-        let dResult = shortestPathInt 0 2 graph
+    [<Fact>]
+    let ``BellmanFord agrees with Dijkstra on non-negative weights`` () =
+        property {
+            let! w1 = Gen.int32 (Range.linear 1 100)
+            let! w2 = Gen.int32 (Range.linear 1 100)
+            let w1', w2' = w1 % 50 + 1, w2 % 50 + 1
+            let edges = [ (0, 1, w1'); (1, 2, w2') ]
+            let graph = DijkstraTests.makeWeightedGraph edges
+            let bfResult = bellmanFordInt 0 2 graph
+            let dResult = shortestPathInt 0 2 graph
 
-        match bfResult, dResult with
-        | ShortestPath bf, Some d -> bf.TotalWeight = d.TotalWeight
-        | NoPath, None -> true
-        | _ -> false
+            match bfResult, dResult with
+            | ShortestPath bf, Some d -> return bf.TotalWeight = d.TotalWeight
+            | NoPath, None -> return true
+            | _ -> return false
+        }
+        |> Property.checkBool
 
-    [<Property>]
-    let ``FloydWarshall satisfies triangle inequality`` (PositiveInt a) (PositiveInt b) (PositiveInt c) =
-        let a', b', c' = a % 50 + 1, b % 50 + 1, c % 50 + 1
-        // Create triangle with edge weights a, b, c
-        let graph = DijkstraTests.makeWeightedGraph [ (0, 1, a'); (1, 2, b'); (0, 2, c') ]
+    [<Fact>]
+    let ``FloydWarshall satisfies triangle inequality`` () =
+        property {
+            let! a = Gen.int32 (Range.linear 1 100)
+            let! b = Gen.int32 (Range.linear 1 100)
+            let! c = Gen.int32 (Range.linear 1 100)
+            let a', b', c' = a % 50 + 1, b % 50 + 1, c % 50 + 1
+            // Create triangle with edge weights a, b, c
+            let graph = DijkstraTests.makeWeightedGraph [ (0, 1, a'); (1, 2, b'); (0, 2, c') ]
 
-        let result = floydWarshallInt graph
+            let result = floydWarshallInt graph
 
-        match result with
-        | Ok dists ->
-            let d01 = dists |> Map.tryFind (0, 1) |> Option.defaultValue 10000
-
-            let d12 = dists |> Map.tryFind (1, 2) |> Option.defaultValue 10000
-
-            let d02 = dists |> Map.tryFind (0, 2) |> Option.defaultValue 10000
-            // d(0,2) <= d(0,1) + d(1,2)
-            d02 <= d01 + d12
-        | Error _ -> true // Negative cycle case
+            match result with
+            | Ok dists ->
+                let d01 = dists |> Map.tryFind (0, 1) |> Option.defaultValue 10000
+                let d12 = dists |> Map.tryFind (1, 2) |> Option.defaultValue 10000
+                let d02 = dists |> Map.tryFind (0, 2) |> Option.defaultValue 10000
+                // d(0,2) <= d(0,1) + d(1,2)
+                return d02 <= d01 + d12
+            | Error _ -> return true // Negative cycle case
+        }
+        |> Property.checkBool
 
 // =============================================================================
 // LCA TESTS
