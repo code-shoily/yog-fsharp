@@ -25,7 +25,7 @@
 
 A comprehensive graph algorithm library for F#, providing functional APIs for graph construction, analysis, and visualization.
 
-📖 **[Full Documentation & API Reference](https://code-shoily.github.io/yog-fsharp)** | 🌟 **[Original Gleam Version](https://github.com/code-shoily/yog)** | 📊 **[Gleam vs F# Comparison](https://code-shoily.github.io/yog-fsharp/GLEAM_FSHARP_COMPARISON.html)**
+📖 **[Full Documentation & API Reference](https://code-shoily.github.io/yog-fsharp)** | 🌟 **[Original Gleam Version](https://github.com/code-shoily/yog)** | 📋 **[Complete Algorithm Catalog](ALGORITHMS.md)** | 🧪 **[Algorithmic Invariants Catalog](PROPERTIES.md)**
 
 ## Installation
 
@@ -75,7 +75,6 @@ match shortestPathInt 1 3 graph with
 ### Flow & Optimization
 - **Edmonds-Karp**: Maximum flow algorithm
 - **Stoer-Wagner**: Global minimum cut
-- **Network Simplex**: Minimum cost flow optimization ⚠️ **EXPERIMENTAL** - Incomplete implementation
 - **Kruskal's MST**: Minimum spanning tree with Union-Find
 
 ### Graph Traversal
@@ -90,6 +89,9 @@ match shortestPathInt 1 3 graph with
 - **Eulerian**: Eulerian path/circuit detection and finding (Hierholzer's)
 - **Bipartite**: Bipartite detection, maximum matching, stable marriage (Gale-Shapley)
 - **Cliques**: Maximum clique detection (Bron-Kerbosch)
+- **Planarity**: Exact Left-Right planarity checks, combinatorial planar embedding, and Kuratowski witness ($K_5$/$K_{3,3}$ subdivision) identification
+- **WL Hashing**: Weisfeiler-Lehman graph hashing for isomorphism and structure verification
+- **Tree Decomposition**: Struct representation and validation (vertex coverage, edge coverage, running intersection)
 
 ### Graph Transformations
 - **Transpose**: O(1) reverse of all edges
@@ -141,7 +143,6 @@ match shortestPathInt 1 3 graph with
 | **Bellman-Ford** | Negative weights OR cycle detection needed | O(VE) |
 | **Floyd-Warshall** | All-pairs shortest paths, distance matrices | O(V³) |
 | **Edmonds-Karp** | Maximum flow, bipartite matching | O(VE²) |
-| **Network Simplex** ⚠️ **EXPERIMENTAL** | Global minimum cost flow optimization | O(E) pivots |
 | **BFS/DFS** | Unweighted graphs, exploring reachability | O(V+E) |
 | **Kruskal's MST** | Finding minimum spanning tree | O(E log E) |
 | **Stoer-Wagner** | Global minimum cut, graph partitioning | O(V³) |
@@ -150,6 +151,8 @@ match shortestPathInt 1 3 graph with
 | **Topological Sort** | Ordering tasks with dependencies | O(V+E) |
 | **Gale-Shapley** | Stable matching, college admissions | O(n²) |
 | **Implicit Search** | Pathfinding/Traversal on on-demand graphs | O((V+E) log V) |
+| **LR Planarity Test** | Determining if undirected graph is planar | O(V²) |
+| **WL Hashing** | Generating graph signature to verify isomorphism | O(k(V+E)) |
 
 ## Usage Examples
 

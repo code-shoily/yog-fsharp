@@ -31,6 +31,7 @@
         <Compile Include="EulerianTests.fs"/>
         <Compile Include="ColoringTests.fs"/>
         <Compile Include="DagTests.fs"/>
+        <Compile Include="PlanarityTests.fs"/>
 
         <Compile Include="BuilderTests.fs"/>
         <Compile Include="RenderTests.fs"/>
