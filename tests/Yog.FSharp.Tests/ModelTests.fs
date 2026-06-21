@@ -437,3 +437,169 @@ let ``neighbors does not duplicate bidirectional edges`` () =
 
     // Should appear only once, even though there's an edge in each direction
     Assert.Equal(1, List.length nbrs)
+
+// ============================================================================
+// NEW PARITY HELPERS TESTS
+// ============================================================================
+
+[<Fact>]
+let ``hasNode and hasEdge queries work correctly`` () =
+    let graph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addEdge 1 2 10
+
+    Assert.True(hasNode 1 graph)
+    Assert.False(hasNode 3 graph)
+    Assert.True(hasEdge 1 2 graph)
+    Assert.False(hasEdge 2 1 graph)
+
+[<Fact>]
+let ``node and nodes data access works correctly`` () =
+    let graph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+
+    Assert.Equal(Some "A", node 1 graph)
+    Assert.Equal(None, node 3 graph)
+    
+    let allNodesMap = nodes graph
+    Assert.Equal(2, allNodesMap.Count)
+    Assert.Equal("A", allNodesMap.[1])
+
+[<Fact>]
+let ``edgeData returns correct values`` () =
+    let graph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addEdge 1 2 10
+
+    Assert.Equal(Some 10, edgeData 1 2 graph)
+    Assert.Equal(None, edgeData 2 1 graph)
+
+[<Fact>]
+let ``neighborIds works correctly`` () =
+    let graph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addNode 3 "C"
+        |> addEdge 1 2 10
+        |> addEdge 3 1 20
+
+    let ids = neighborIds 1 graph |> List.sort
+    Assert.Equal<NodeId list>([ 2; 3 ], ids)
+
+[<Fact>]
+let ``allEdges returns correct edge list`` () =
+    let dirGraph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addEdge 1 2 10
+
+    let undirGraph =
+        empty Undirected
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addEdge 1 2 10
+
+    Assert.Equal< (NodeId * NodeId * int) list >([ (1, 2, 10) ], allEdges dirGraph)
+    Assert.Equal< (NodeId * NodeId * int) list >([ (1, 2, 10) ], allEdges undirGraph)
+
+[<Fact>]
+let ``fromEdges constructs graph correctly`` () =
+    let graph = fromEdges Directed [ (1, 2, 10); (2, 3, 20) ]
+    Assert.Equal(3, order graph)
+    Assert.Equal(2, edgeCount graph)
+    Assert.True(hasEdge 1 2 graph)
+
+[<Fact>]
+let ``fromUnweightedEdges constructs graph correctly`` () =
+    let graph = fromUnweightedEdges Undirected [ (1, 2); (2, 3) ]
+    Assert.Equal(3, order graph)
+    Assert.Equal(2, edgeCount graph)
+    Assert.True(hasEdge 1 2 graph)
+
+[<Fact>]
+let ``fromAdjacencyList constructs graph correctly`` () =
+    let graph = fromAdjacencyList Directed [ (1, [ (2, 10); (3, 20) ]); (2, [ (3, 30) ]) ]
+    Assert.Equal(3, order graph)
+    Assert.Equal(3, edgeCount graph)
+    Assert.True(hasEdge 1 3 graph)
+
+[<Fact>]
+let ``tryAddEdge returns Ok or Error appropriately`` () =
+    let graph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+
+    match tryAddEdge 1 2 10 graph with
+    | Ok g -> Assert.True(hasEdge 1 2 g)
+    | Error _ -> Assert.True(false, "Should successfully add edge")
+
+    match tryAddEdge 1 3 10 graph with
+    | Ok _ -> Assert.True(false, "Should fail since node 3 is missing")
+    | Error err -> Assert.Contains("3", err)
+
+[<Fact>]
+let ``tryAddEdgeWithCombine works correctly`` () =
+    let graph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addEdge 1 2 10
+
+    match tryAddEdgeWithCombine 1 2 5 (+) graph with
+    | Ok g -> Assert.Equal(Some 15, edgeData 1 2 g)
+    | Error _ -> Assert.True(false, "Should successfully combine")
+
+[<Fact>]
+let ``addEdges and bulk simple/unweighted works`` () =
+    let graph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addNode 3 "C"
+        |> addEdges [ (1, 2, 10); (2, 3, 20) ]
+
+    Assert.Equal(2, edgeCount graph)
+
+    let simpleGraph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addNode 3 "C"
+        |> addSimpleEdges [ (1, 2); (2, 3) ]
+
+    Assert.Equal(Some 1, edgeData 1 2 simpleGraph)
+
+    let unweightedGraph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addNode 3 "C"
+        |> addUnweightedEdges [ (1, 2); (2, 3) ]
+
+    Assert.Equal(Some (), edgeData 1 2 unweightedGraph)
+
+[<Fact>]
+let ``tryAddEdges bulk safe monadic functions work`` () =
+    let graph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addNode 3 "C"
+
+    match tryAddEdges [ (1, 2, 10); (2, 3, 20) ] graph with
+    | Ok g -> Assert.Equal(2, edgeCount g)
+    | Error _ -> Assert.True(false, "Should succeed")
+
+    match tryAddEdges [ (1, 2, 10); (2, 4, 20) ] graph with
+    | Ok _ -> Assert.True(false, "Should fail because 4 does not exist")
+    | Error err -> Assert.Contains("4", err)
+

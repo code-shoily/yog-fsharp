@@ -429,3 +429,157 @@ let addEdgeWithCombine (src: NodeId) (dst: NodeId) (weight: 'e) (combine: 'e -> 
     match g.Kind with
     | Directed -> g
     | Undirected -> doAddDirectedCombine dst src weight combine g
+
+/// Checks if the graph contains a node with the given ID.
+/// **Time Complexity:** O(1)
+let hasNode (id: NodeId) (graph: Graph<'n, 'e>) : bool = graph.Nodes |> Map.containsKey id
+
+/// Checks if the graph contains an edge between `src` and `dst`.
+/// **Time Complexity:** O(1)
+let hasEdge (src: NodeId) (dst: NodeId) (graph: Graph<'n, 'e>) : bool =
+    graph.OutEdges
+    |> Map.tryFind src
+    |> Option.map (Map.containsKey dst)
+    |> Option.defaultValue false
+
+/// Returns all nodes data in the graph as a Map.
+let nodes (graph: Graph<'n, 'e>) : Map<NodeId, 'n> = graph.Nodes
+
+/// Gets the data associated with a node as an Option.
+let node (id: NodeId) (graph: Graph<'n, 'e>) : 'n option = graph.Nodes |> Map.tryFind id
+
+/// Gets the weight/data of an edge between two nodes as an Option.
+let edgeData (src: NodeId) (dst: NodeId) (graph: Graph<'n, 'e>) : 'e option =
+    graph.OutEdges |> Map.tryFind src |> Option.bind (Map.tryFind dst)
+
+/// Returns all neighbor node IDs (without weights).
+let neighborIds (id: NodeId) (graph: Graph<'n, 'e>) : NodeId list = neighbors id graph |> List.map fst
+
+/// Returns all edges in the graph as triplets `(from, to, weight)`.
+///
+/// For directed graphs, returns all edges.
+/// For undirected graphs, returns each edge only once where `from <= to`.
+let allEdges (graph: Graph<'n, 'e>) : (NodeId * NodeId * 'e) list =
+    match graph.Kind with
+    | Directed ->
+        graph.OutEdges
+        |> Map.toList
+        |> List.collect (fun (fromId, dests) ->
+            dests |> Map.toList |> List.map (fun (toId, weight) -> (fromId, toId, weight)))
+    | Undirected ->
+        graph.OutEdges
+        |> Map.toList
+        |> List.collect (fun (fromId, dests) ->
+            dests
+            |> Map.toList
+            |> List.filter (fun (toId, _) -> fromId <= toId)
+            |> List.map (fun (toId, weight) -> (fromId, toId, weight)))
+
+/// Creates a graph from a list of edges (src * dst * weight).
+let fromEdges (kind: GraphType) (edges: (NodeId * NodeId * 'e) list) : Graph<unit, 'e> =
+    edges
+    |> List.fold (fun g (src, dst, weight) -> addEdgeEnsured src dst weight () () g) (empty kind)
+
+/// Creates a graph from a list of unweighted edges (src * dst).
+let fromUnweightedEdges (kind: GraphType) (edges: (NodeId * NodeId) list) : Graph<unit, unit> =
+    edges
+    |> List.fold (fun g (src, dst) -> addEdgeEnsured src dst () () () g) (empty kind)
+
+/// Creates a graph from an adjacency list (src * (dst * weight) list).
+let fromAdjacencyList (kind: GraphType) (adjList: (NodeId * (NodeId * 'e) list) list) : Graph<unit, 'e> =
+    adjList
+    |> List.fold
+        (fun g (src, edges) ->
+            let gWithNode = ensureNode src () g
+
+            edges
+            |> List.fold (fun acc (dst, weight) -> addEdgeEnsured src dst weight () () acc) gWithNode)
+        (empty kind)
+
+/// Tries to add an edge to the graph. Returns a Result.
+/// Does not throw exceptions if endpoints are missing.
+let tryAddEdge (src: NodeId) (dst: NodeId) (weight: 'e) (graph: Graph<'n, 'e>) : Result<Graph<'n, 'e>, string> =
+    let hasSrc = graph.Nodes |> Map.containsKey src
+    let hasDst = graph.Nodes |> Map.containsKey dst
+
+    match hasSrc, hasDst with
+    | true, true ->
+        let g = doAddDirectedEdge src dst weight graph
+
+        match g.Kind with
+        | Directed -> Ok g
+        | Undirected -> Ok(doAddDirectedEdge dst src weight g)
+    | false, false -> Error(sprintf "Nodes %d and %d do not exist in the graph." src dst)
+    | false, _ -> Error(sprintf "Source node %d does not exist in the graph." src)
+    | _, false -> Error(sprintf "Destination node %d does not exist in the graph." dst)
+
+/// Tries to add an edge, but if an edge already exists, combines the weights using `combine`.
+/// Returns a Result instead of throwing exceptions.
+let tryAddEdgeWithCombine
+    (src: NodeId)
+    (dst: NodeId)
+    (weight: 'e)
+    (combine: 'e -> 'e -> 'e)
+    (graph: Graph<'n, 'e>)
+    : Result<Graph<'n, 'e>, string> =
+    let hasSrc = graph.Nodes |> Map.containsKey src
+    let hasDst = graph.Nodes |> Map.containsKey dst
+
+    match hasSrc, hasDst with
+    | true, true ->
+        let g = doAddDirectedCombine src dst weight combine graph
+
+        match g.Kind with
+        | Directed -> Ok g
+        | Undirected -> Ok(doAddDirectedCombine dst src weight combine g)
+    | false, false -> Error(sprintf "Nodes %d and %d do not exist in the graph." src dst)
+    | false, _ -> Error(sprintf "Source node %d does not exist in the graph." src)
+    | _, false -> Error(sprintf "Destination node %d does not exist in the graph." dst)
+
+/// Adds multiple edges to the graph. Throws exception on missing endpoints.
+let addEdges (edges: (NodeId * NodeId * 'e) list) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
+    edges |> List.fold (fun g (src, dst, weight) -> addEdge src dst weight g) graph
+
+/// Adds multiple simple edges (weight = 1). Throws exception on missing endpoints.
+let addSimpleEdges (edges: (NodeId * NodeId) list) (graph: Graph<'n, int>) : Graph<'n, int> =
+    edges |> List.fold (fun g (src, dst) -> addEdge src dst 1 g) graph
+
+/// Adds multiple unweighted edges (weight = ()). Throws exception on missing endpoints.
+let addUnweightedEdges (edges: (NodeId * NodeId) list) (graph: Graph<'n, unit>) : Graph<'n, unit> =
+    edges |> List.fold (fun g (src, dst) -> addEdge src dst () g) graph
+
+/// Tries to add multiple edges to the graph. Returns a Result, failing fast on first error.
+let tryAddEdges (edges: (NodeId * NodeId * 'e) list) (graph: Graph<'n, 'e>) : Result<Graph<'n, 'e>, string> =
+    let rec loop list acc =
+        match list with
+        | [] -> Ok acc
+        | (src, dst, w) :: tail ->
+            match tryAddEdge src dst w acc with
+            | Ok next -> loop tail next
+            | Error err -> Error err
+
+    loop edges graph
+
+/// Tries to add multiple simple edges (weight = 1). Returns a Result, failing fast on first error.
+let tryAddSimpleEdges (edges: (NodeId * NodeId) list) (graph: Graph<'n, int>) : Result<Graph<'n, int>, string> =
+    let rec loop list acc =
+        match list with
+        | [] -> Ok acc
+        | (src, dst) :: tail ->
+            match tryAddEdge src dst 1 acc with
+            | Ok next -> loop tail next
+            | Error err -> Error err
+
+    loop edges graph
+
+/// Tries to add multiple unweighted edges (weight = ()). Returns a Result, failing fast on first error.
+let tryAddUnweightedEdges (edges: (NodeId * NodeId) list) (graph: Graph<'n, unit>) : Result<Graph<'n, unit>, string> =
+    let rec loop list acc =
+        match list with
+        | [] -> Ok acc
+        | (src, dst) :: tail ->
+            match tryAddEdge src dst () acc with
+            | Ok next -> loop tail next
+            | Error err -> Error err
+
+    loop edges graph
