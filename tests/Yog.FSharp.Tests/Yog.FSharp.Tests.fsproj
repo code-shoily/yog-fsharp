@@ -9,6 +9,7 @@
         <Compile Include="PropertyTests.fs" />
         <Compile Include="AggressivePropertyTests.fs" />
         <Compile Include="AlgorithmPropertyTests.fs" />
+        <Compile Include="PbtParityTests.fs" />
         <Compile Include="ModelTests.fs" />
         <Compile Include="TransformTests.fs" />
         <Compile Include="OperationTests.fs" />
