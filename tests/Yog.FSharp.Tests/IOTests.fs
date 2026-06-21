@@ -328,3 +328,60 @@ let ``defaultMermaidOptions uses ID as label`` () =
     let opts = Mermaid.defaultOptions<string, int>
     let label = opts.NodeLabel 42 "data"
     Assert.Equal("42", label)
+
+// ============================================================================
+// TGF SERIALIZATION
+// ============================================================================
+
+[<Fact>]
+let ``Tgf serialize and parse undirected`` () =
+    let graph = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 "edge"
+    let options = { Tgf.defaultOptions with NodeLabel = id; EdgeLabel = Some }
+    let tgfStr = Tgf.serialize options graph
+    let parsedResult = Tgf.parse Undirected id (fun opt -> opt |> Option.defaultValue "") tgfStr
+    match parsedResult with
+    | Ok parsedGraph ->
+        Assert.Equal(2, order parsedGraph)
+        Assert.True(hasEdge 1 2 parsedGraph)
+        Assert.Equal("edge", edgeData 1 2 parsedGraph |> Option.get)
+    | Error msg ->
+        Assert.Fail(msg)
+
+// ============================================================================
+// LIST SERIALIZATION
+// ============================================================================
+
+[<Fact>]
+let ``AdjacencyList parse and serialize`` () =
+    let text = "1: 2,5.0 3,10.0\n2: 3,2.0\n3:\n"
+    match List.parse Directed true ":" text with
+    | Ok graph ->
+        Assert.Equal(3, order graph)
+        Assert.Equal(5.0, edgeData 1 2 graph |> Option.get)
+        Assert.Equal(10.0, edgeData 1 3 graph |> Option.get)
+        Assert.Equal(2.0, edgeData 2 3 graph |> Option.get)
+        let serialized = List.serialize true ":" graph
+        Assert.Contains("1: 2,5.000000 3,10.000000", serialized)
+    | Error msg ->
+        Assert.Fail(msg)
+
+// ============================================================================
+// MATRIX SERIALIZATION
+// ============================================================================
+
+[<Fact>]
+let ``Matrix parse and serialize`` () =
+    let matrix = [
+        [0.0; 5.0; 0.0]
+        [5.0; 0.0; 7.0]
+        [0.0; 7.0; 0.0]
+    ]
+    match Matrix.fromMatrix Undirected matrix with
+    | Ok graph ->
+        Assert.Equal(3, order graph)
+        Assert.Equal(5.0, edgeData 0 1 graph |> Option.get)
+        Assert.Equal(7.0, edgeData 1 2 graph |> Option.get)
+        let serialized = Matrix.serialize " " graph
+        Assert.Contains("0 5 0", serialized)
+    | Error msg ->
+        Assert.Fail(msg)
