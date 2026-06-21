@@ -230,80 +230,76 @@ module Grid =
         let (r2, c2) = idToCoord toId cols
         abs (r1 - r2) + abs (c1 - c2)
 
+    /// Calculates the Chebyshev distance between two node IDs.
+    let chebyshevDistance fromId toId cols =
+        let (r1, c1) = idToCoord fromId cols
+        let (r2, c2) = idToCoord toId cols
+        max (abs (r1 - r2)) (abs (c1 - c2))
+
+    /// Calculates the Octile distance between two node IDs.
+    let octileDistance fromId toId cols =
+        let (r1, c1) = idToCoord fromId cols
+        let (r2, c2) = idToCoord toId cols
+        let dx = abs (r1 - r2)
+        let dy = abs (c1 - c2)
+        let minD = min dx dy
+        let maxD = max dx dy
+        float minD * 1.414213562373095 + float (maxD - minD)
+
     /// Allows movement between any cells except the specified wall value.
-    ///
-    /// Useful for maze-style grids where "#" or similar marks a wall.
-    /// Both the source and destination cells must not be the wall value.
-    ///
-    /// ## Example
-    ///
-    ///     // Maze where "#" is impassable
-    ///     let maze = array2D [["."; "#"; "."]
-    ///                         ["."; "."; "."]
-    ///                         ["#"; "#"; "."]]
-    ///
-    ///     let grid = fromArray2D maze Directed rook (avoiding "#")
-    ///     // Edges only connect non-wall cells
-    ///
     let avoiding wallValue =
         fun from to' -> from <> wallValue && to' <> wallValue
 
     /// Allows movement only between cells matching the specified value.
-    ///
-    /// The inverse of `avoiding` — instead of blacklisting one value,
-    /// this whitelists exactly one value. Both the source and destination
-    /// cells must match the valid value.
-    ///
-    /// ## Example
-    ///
-    ///     // Grid with varied terrain — only "." is walkable
-    ///     let terrain = array2D [["."; "~"; "^"]
-    ///                            ["."; "."; "^"]
-    ///                            ["~"; "."; "."]]
-    ///
-    ///     let grid = fromArray2D terrain Directed rook (walkable ".")
-    ///     // Only "." → "." edges exist
-    ///
     let walkable validValue =
         fun from to' -> from = validValue && to' = validValue
 
     /// Always allows movement between adjacent cells.
-    ///
-    /// Every neighbor pair gets an edge regardless of cell data.
-    /// Useful for fully connected grids or when the cell data is purely
-    /// informational (e.g., storing coordinates or labels).
-    ///
-    /// ## Example
-    ///
-    ///     let labels = array2D [["A"; "B"]
-    ///                           ["C"; "D"]]
-    ///
-    ///     let grid = fromArray2D labels Undirected rook always
-    ///     // All adjacent cells are connected
-    ///
     let always = fun _ _ -> true
 
+    /// Allows movement only between cells matching any of the specified values.
+    let including (validValues: 'CellData list) =
+        let validSet = Set.ofList validValues
+        fun from to' -> Set.contains from validSet && Set.contains to' validSet
+
+    /// Helper to convert F# list of lists to Array2D.
+    let private array2DFromList (lst: list<list<'n>>) =
+        let rows = lst.Length
+        let cols = if rows = 0 then 0 else lst.[0].Length
+        if cols = 0 then Array2D.zeroCreate 0 0
+        else
+            let arr = Array2D.zeroCreate rows cols
+            lst |> List.iteri (fun r row ->
+                row |> List.iteri (fun c item ->
+                    arr.[r, c] <- item
+                )
+            )
+            arr
+
+    /// Creates a grid-graph from a 2D list using 4-directional (rook) movement.
+    let from2DList (gridData: list<list<'n>>) kind canMove =
+        let data = array2DFromList gridData
+        fromArray2D data kind rook canMove
+
+    /// Creates a grid-graph from a 2D list using custom movement topology.
+    let from2DListWithTopology (gridData: list<list<'n>>) kind topology canMove =
+        let data = array2DFromList gridData
+        fromArray2D data kind topology canMove
+
+    /// Finds a node in the grid where the cell data matches a predicate.
+    let findNode predicate grid =
+        let maxId = grid.Rows * grid.Cols - 1
+        seq { 0 .. maxId }
+        |> Seq.tryPick (fun id ->
+            match Map.tryFind id grid.Graph.Nodes with
+            | Some data when predicate data -> Some id
+            | _ -> None
+        )
+
     /// Converts the grid to a standard Graph.
-    ///
-    /// The resulting graph can be used with all yog algorithms.
-    ///
-    /// ## Example
-    ///
-    ///     let graph = toGraph grid
-    ///     // Now use with pathfinding, traversal, etc.
-    ///
     let toGraph grid = grid.Graph
 
     /// Gets the cell data at the specified grid coordinate.
-    ///
-    /// Returns Some(cell_data) if the coordinate is valid, None otherwise.
-    ///
-    /// ## Example
-    ///
-    ///     match getCell 1 2 grid with
-    ///     | Some cell -> // Use cell data
-    ///     | None -> // Out of bounds
-    ///
     let getCell row col grid =
         if row >= 0 && row < grid.Rows && col >= 0 && col < grid.Cols then
             Some(Map.find (coordToId row col grid.Cols) grid.Graph.Nodes)

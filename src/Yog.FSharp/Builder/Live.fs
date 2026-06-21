@@ -68,16 +68,16 @@ type LiveBuilder<'n, 'e when 'n: comparison> =
 /// - `RemoveNode`: Remove a node and all its edges
 module Live =
 
-    /// Creates a new empty live builder.
-    ///
-    /// ## Example
-    ///
-    ///     let builder = Live.create<string, int>()
-    ///
     let create<'n, 'e when 'n: comparison> () : LiveBuilder<'n, 'e> =
         { Registry = Map.empty
           NextId = 0
           Pending = [] }
+
+    /// Creates a new empty directed live builder.
+    let directed<'n, 'e when 'n: comparison> () : LiveBuilder<'n, 'e> = create ()
+
+    /// Creates a new empty undirected live builder.
+    let undirected<'n, 'e when 'n: comparison> () : LiveBuilder<'n, 'e> = create ()
 
     /// Internal: Gets or creates a node ID for a label, queuing an AddNode transition if new.
     let private ensureNode label builder =
@@ -114,9 +114,10 @@ module Live =
     /// Queues a simple edge with weight 1.
     let addSimpleEdge fromLabel toLabel builder = addEdge fromLabel toLabel 1 builder
 
+    /// Queues an unweighted edge (unit data).
+    let addUnweightedEdge fromLabel toLabel builder = addEdge fromLabel toLabel () builder
+
     /// Queues an edge removal.
-    ///
-    /// Silently ignored if either label doesn't exist.
     let removeEdge fromLabel toLabel builder =
         match Map.tryFind fromLabel builder.Registry, Map.tryFind toLabel builder.Registry with
         | Some src, Some dst ->
@@ -127,8 +128,6 @@ module Live =
         | _ -> builder
 
     /// Queues a node removal and removes it from the label registry.
-    ///
-    /// Silently ignored if the label doesn't exist.
     let removeNode label builder =
         match Map.tryFind label builder.Registry with
         | Some id ->
@@ -140,22 +139,6 @@ module Live =
         | None -> builder
 
     /// Synchronizes pending changes to the provided graph.
-    ///
-    /// Returns the updated builder (with cleared queue) and the updated graph.
-    ///
-    /// ## Parameters
-    /// - `builder`: The LiveBuilder with pending changes
-    /// - `graph`: The target graph to apply changes to
-    ///
-    /// ## Returns
-    /// Tuple of (builder with cleared pending, updated graph)
-    ///
-    /// ## Example
-    ///
-    ///     let builder, updatedGraph =
-    ///         myBuilder
-    ///         |> Live.sync existingGraph
-    ///
     let sync (builder: LiveBuilder<'n, 'e>) (graph: Graph<'n, 'e>) =
         if List.isEmpty builder.Pending then
             builder, graph
@@ -175,35 +158,25 @@ module Live =
             { builder with Pending = [] }, updatedGraph
 
     /// Discards all pending changes without applying them.
-    ///
-    /// ## Example
-    ///
-    ///     let cleanBuilder = Live.purgePending builder
-    ///
     let purgePending builder = { builder with Pending = [] }
 
+    /// Discards all pending transitions (alias for purgePending / checkpoint).
+    let checkpoint builder = { builder with Pending = [] }
+
     /// Looks up the NodeId for a label.
-    ///
-    /// ## Returns
-    /// `Some id` if the label is registered, `None` otherwise.
     let getId label builder = Map.tryFind label builder.Registry
 
     /// Returns all registered labels.
     let allLabels builder =
         builder.Registry |> Map.toList |> List.map fst
 
+    /// Returns the number of registered nodes.
+    let nodeCount builder = builder.Registry.Count
+
     /// Total count of pending changes.
     let pendingCount builder = List.length builder.Pending
 
     /// Migrate from a static LabeledBuilder to a LiveBuilder.
-    ///
-    /// Preserves all labels and IDs but starts with an empty pending queue.
-    ///
-    /// ## Example
-    ///
-    ///     let labeled = Labeled.directed<string, int>() |> Labeled.addEdge "A" "B" 1
-    ///     let live = Live.fromLabeled labeled
-    ///
     let fromLabeled (labeled: LabeledBuilder<'n, 'e>) : LiveBuilder<'n, 'e> =
         { Registry = labeled.LabelToId
           NextId = labeled.NextId

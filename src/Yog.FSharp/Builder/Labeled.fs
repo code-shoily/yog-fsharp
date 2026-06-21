@@ -147,26 +147,29 @@ module Labeled =
     let addSimpleEdge (fromLabel: 'Label) (toLabel: 'Label) (builder: LabeledBuilder<'Label, int>) =
         addEdge fromLabel toLabel 1 builder
 
+    /// Adds an unweighted edge between two labels (unit edge data).
+    let addUnweightedEdge (fromLabel: 'Label) (toLabel: 'Label) (builder: LabeledBuilder<'Label, unit>) =
+        addEdge fromLabel toLabel () builder
+
     /// Looks up the internal node ID for a given label.
-    ///
-    /// ## Returns
-    /// `Some id` if the label exists, `None` otherwise.
     let getId (label: 'Label) (builder: LabeledBuilder<'Label, 'E>) = Map.tryFind label builder.LabelToId
 
     /// Converts the builder to a standard detached Graph.
-    ///
-    /// The returned graph uses internal integer IDs but preserves labels as node data.
     let toGraph (builder: LabeledBuilder<'Label, 'E>) = builder.Graph
 
     /// Creates a builder from a list of edge triples (source, target, weight).
-    ///
-    /// ## Example
-    ///
-    ///     let edges = [("A", "B", 1); ("B", "C", 2)]
-    ///     let builder = Labeled.fromList Directed edges
-    ///
     let fromList kind (edges: ('L * 'L * 'E) list) =
         edges |> List.fold (fun b (src, dst, w) -> addEdge src dst w b) (create kind)
+
+    /// Creates a builder from a list of edge pairs (source, target) with unit weight.
+    let fromUnweightedList kind (edges: ('L * 'L) list) =
+        edges |> List.fold (fun b (src, dst) -> addUnweightedEdge src dst b) (create kind)
+
+    /// Returns the label-to-ID registry.
+    let toRegistry (builder: LabeledBuilder<'Label, 'E>) = builder.LabelToId
+
+    /// Returns the next available node ID.
+    let nextId (builder: LabeledBuilder<'Label, 'E>) = builder.NextId
 
     /// Returns all labels currently in the registry.
     let allLabels (builder: LabeledBuilder<'L, 'E>) =
@@ -181,17 +184,11 @@ module Labeled =
             | None -> None)
 
     /// Gets successors using labels.
-    ///
-    /// ## Returns
-    /// `Some list` of (label, weight) if the node exists, `None` otherwise.
     let successors (label: 'Label) (builder: LabeledBuilder<'Label, 'E>) =
         getId label builder
         |> Option.map (fun id -> successors id builder.Graph |> mapIdsToLabels <| builder.Graph)
 
     /// Gets predecessors using labels.
-    ///
-    /// ## Returns
-    /// `Some list` of (label, weight) if the node exists, `None` otherwise.
     let predecessors (label: 'Label) (builder: LabeledBuilder<'Label, 'E>) =
         getId label builder
         |> Option.map (fun id -> predecessors id builder.Graph |> mapIdsToLabels <| builder.Graph)

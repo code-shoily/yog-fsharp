@@ -235,7 +235,7 @@ module LiveBuilderBasicTests =
         Assert.Equal(0, Live.pendingCount purged)
 
     [<Fact>]
-    let ``Live.getId, allLabels - works with pending but un-synced state since registry updates sync-free`` () =
+    let ``Live.allLabels - works with pending but un-synced state since registry updates sync-free`` () =
         let builder = Live.create<string, int> () |> Live.addEdge "A" "B" 1
 
         Assert.True((Live.getId "A" builder).IsSome)
@@ -250,3 +250,60 @@ module LiveBuilderBasicTests =
         let live: LiveBuilder<string, int> = Live.fromLabeled labeled
         Assert.Equal(0, Live.pendingCount live)
         Assert.True((Live.getId "A" live).IsSome)
+
+// =============================================================================
+// TOROIDAL BUILDER TESTS
+// =============================================================================
+
+module ToroidalBuilderTests =
+    [<Fact>]
+    let ``ToroidalGrid.from2DList - wraps coordinates`` () =
+        let data = [ [ 1; 2; 3 ]; [ 4; 5; 6 ]; [ 7; 8; 9 ] ]
+        let grid = Toroidal.from2DList data Directed Toroidal.always
+
+        Assert.Equal(3, grid.Rows)
+        Assert.Equal(3, grid.Cols)
+
+        // On 3x3 toroidal grid, node at (0, 0) has ID 0
+        // Its cardinal successors (Rook) are (0,1), (0,2) [wrapped left], (1,0), (2,0) [wrapped up]
+        let succs = successors 0 (Toroidal.toGraph grid) |> List.map fst |> Set.ofList
+        let expected = Set.ofList [ 1; 2; 3; 6 ]
+        Assert.Equal<int Set>(expected, succs)
+
+    [<Fact>]
+    let ``Toroidal distance calculations`` () =
+        // 10x10 grid
+        let start = Toroidal.coordToId 1 1 10
+        let goal = Toroidal.coordToId 9 9 10
+
+        let manhattan = Toroidal.toroidalManhattanDistance start goal 10 10
+        Assert.Equal(4, manhattan) // min(8,2) + min(8,2) = 4
+
+        let chebyshev = Toroidal.toroidalChebyshevDistance start goal 10 10
+        Assert.Equal(2, chebyshev) // max(min(8,2), min(8,2)) = 2
+
+        let octile = Toroidal.toroidalOctileDistance start goal 10 10
+        Assert.True(abs (octile - 2.82842712474619) < 1e-6)
+
+    [<Fact>]
+    let ``Grid additional distance calculations`` () =
+        let start = Grid.coordToId 1 1 10
+        let goal = Grid.coordToId 9 9 10
+
+        let chebyshev = Grid.chebyshevDistance start goal 10
+        Assert.Equal(8, chebyshev) // max(8, 8)
+
+        let octile = Grid.octileDistance start goal 10
+        Assert.True(abs (octile - 11.31370849898476) < 1e-6) // 8 * sqrt(2) + 0
+
+    [<Fact>]
+    let ``Grid and Toroidal findNode and including`` () =
+        let data = [ [ "A"; "B" ]; [ "C"; "D" ] ]
+        let grid = Grid.from2DList data Directed Grid.always
+        let found = Grid.findNode (fun x -> x = "C") grid
+        Assert.True(found.IsSome)
+        Assert.Equal(2, found.Value)
+
+        let incl = Grid.including [ "A"; "B" ]
+        Assert.True(incl "A" "B")
+        Assert.False(incl "A" "C")

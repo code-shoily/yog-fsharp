@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -25,8 +25,11 @@
         <Compile Include="BipartiteTests.fs"/>
         <Compile Include="CliqueTests.fs"/>
         <Compile Include="EulerianTests.fs"/>
+        <Compile Include="ColoringTests.fs"/>
         <Compile Include="DagTests.fs"/>
+
         <Compile Include="BuilderTests.fs"/>
+        <Compile Include="RenderTests.fs"/>
     </ItemGroup>
 
     <ItemGroup>

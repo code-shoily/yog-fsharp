@@ -54,18 +54,23 @@
         <Compile Include="Properties\Clique.fs" />
         <Compile Include="Properties\Cyclicity.fs" />
         <Compile Include="Properties\Eulerian.fs" />
-        <Compile Include="IO\Dot.fs" />
-        <Compile Include="IO\Mermaid.fs" />
+        <Compile Include="Properties\Coloring.fs" />
         <Compile Include="IO\Json.fs" />
+
         <Compile Include="IO\GraphML.fs" />
         <Compile Include="IO\Gdf.fs" />
-        <Compile Include="Generators.fs" />
+        <Compile Include="Generators/Classic.fs" />
+        <Compile Include="Generators/Random.fs" />
         <Compile Include="Builder\Labeled.fs" />
         <Compile Include="Builder\Live.fs" />
         <Compile Include="Builder\Grid.fs" />
+        <Compile Include="Builder\Toroidal.fs" />
         <Compile Include="Dag\Model.fs" />
         <Compile Include="Dag\Algorithms.fs" />
         <Compile Include="MultiGraph.fs" />
+        <Compile Include="Render\Dot.fs" />
+        <Compile Include="Render\Mermaid.fs" />
+        <Compile Include="Render\Ascii.fs" />
     </ItemGroup>
 
 </Project>

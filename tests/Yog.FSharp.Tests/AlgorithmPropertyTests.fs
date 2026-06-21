@@ -2,6 +2,7 @@ module Yog.FSharp.Tests.AlgorithmPropertyTests
 
 
 open Xunit
+open Yog
 open Yog.Model
 open Yog.Connectivity
 open Yog.Centrality
@@ -246,16 +247,18 @@ let ``SCC components partition the graph`` () =
 let ``bridge removal disconnects graph`` () =
     // Graph with a known bridge
     let graph =
-        empty Directed
+        empty Undirected
         |> addNode 0 0
         |> addNode 1 1
         |> addNode 2 2
         |> addEdge 0 1 1
-        |> addEdge 1 0 1
         // Bridge from 1 to 2
         |> addEdge 1 2 1
 
-    let result = analyze graph
+    let result =
+        match analyze graph with
+        | Ok res -> res
+        | Error msg -> failwith msg
 
     // Should find the bridge
     Assert.NotEmpty(result.Bridges)
