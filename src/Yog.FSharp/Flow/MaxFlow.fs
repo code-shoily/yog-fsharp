@@ -124,6 +124,263 @@ type MinCut =
 /// - **Network reliability**: Find minimum edges to cut to disconnect network
 /// - **Bipartite matching**: Model as flow with capacity 1 edges
 /// - **Image segmentation**: Min cut separates foreground from background
+type FlowAlgorithm =
+    | EdmondsKarp
+    | Dinic
+    | PushRelabel
+
+let private bfsLevel (adjList: Dictionary<NodeId, HashSet<NodeId>>) (residuals: Dictionary<NodeId * NodeId, 'e>) (source: NodeId) (sink: NodeId) (zero: 'e) (compare: 'e -> 'e -> int) : Dictionary<NodeId, int> option =
+    let levels = Dictionary<NodeId, int>()
+    let q = Queue<NodeId>()
+    q.Enqueue(source)
+    levels.[source] <- 0
+    let mutable reachedSink = false
+    while q.Count > 0 && not reachedSink do
+        let u = q.Dequeue()
+        let uLevel = levels.[u]
+        let mutable neighbors = null
+        if adjList.TryGetValue(u, &neighbors) then
+            for v in neighbors do
+                if not (levels.ContainsKey v) then
+                    let cap = residuals.[(u, v)]
+                    if compare cap zero > 0 then
+                        levels.[v] <- uLevel + 1
+                        q.Enqueue(v)
+                        if v = sink then reachedSink <- true
+    if levels.ContainsKey sink then Some levels else None
+
+let rec private dfsSend (u: NodeId) (sink: NodeId) (budget: 'e) (levels: Dictionary<NodeId, int>) (ptr: Dictionary<NodeId, int>) (adjList: Dictionary<NodeId, HashSet<NodeId>>) (residuals: Dictionary<NodeId * NodeId, 'e>) (zero: 'e) (add: 'e -> 'e -> 'e) (subtract: 'e -> 'e -> 'e) (compare: 'e -> 'e -> int) (minVal: 'e -> 'e -> 'e) : 'e =
+    if u = sink || compare budget zero = 0 then
+        budget
+    else
+        let neighbors = 
+            match adjList.TryGetValue(u) with
+            | true, ns -> ns |> Seq.toArray
+            | false, _ -> [||]
+        
+        let mutable pushed = zero
+        let mutable i = if ptr.ContainsKey u then ptr.[u] else 0
+
+        while i < neighbors.Length && compare pushed zero = 0 do
+            let v = neighbors.[i]
+            let cap = residuals.[(u, v)]
+            if levels.ContainsKey v && levels.[v] = levels.[u] + 1 && compare cap zero > 0 then
+                let nextBudget = minVal budget cap
+                let tr = dfsSend v sink nextBudget levels ptr adjList residuals zero add subtract compare minVal
+                if compare tr zero > 0 then
+                    residuals.[(u, v)] <- subtract residuals.[(u, v)] tr
+                    residuals.[(v, u)] <- add residuals.[(v, u)] tr
+                    pushed <- tr
+            
+            if compare pushed zero = 0 then
+                i <- i + 1
+                ptr.[u] <- i
+            else
+                ptr.[u] <- i
+
+        pushed
+
+/// Finds the maximum flow using Dinic's algorithm.
+let dinic
+    (zero: 'e)
+    (add: 'e -> 'e -> 'e)
+    (subtract: 'e -> 'e -> 'e)
+    (compare: 'e -> 'e -> int)
+    (minVal: 'e -> 'e -> 'e)
+    (source: NodeId)
+    (sink: NodeId)
+    (graph: Graph<'n, 'e>)
+    : MaxFlowResult<'e> =
+    if source = sink then
+        { MaxFlow = zero
+          ResidualGraph = Yog.Model.empty Directed
+          Source = source
+          Sink = sink }
+    else
+        let residuals = Dictionary<NodeId * NodeId, 'e>()
+        let adjList = Dictionary<NodeId, HashSet<NodeId>>()
+
+        let addEdge u v cap =
+            residuals.[(u, v)] <- cap
+            let mutable uNeighbors = null
+            if not (adjList.TryGetValue(u, &uNeighbors)) then
+                uNeighbors <- HashSet<NodeId>()
+                adjList.[u] <- uNeighbors
+            uNeighbors.Add(v) |> ignore
+
+            let mutable vNeighbors = null
+            if not (adjList.TryGetValue(v, &vNeighbors)) then
+                vNeighbors <- HashSet<NodeId>()
+                adjList.[v] <- vNeighbors
+            vNeighbors.Add(u) |> ignore
+
+            if not (residuals.ContainsKey((v, u))) then
+                residuals.[(v, u)] <- zero
+
+        for u in allNodes graph do
+            for (v, cap) in successors u graph do
+                addEdge u v cap
+
+        let mutable totalFlow = zero
+        let mutable continueLoop = true
+
+        while continueLoop do
+            match bfsLevel adjList residuals source sink zero compare with
+            | None -> continueLoop <- false
+            | Some levels ->
+                let ptr = Dictionary<NodeId, int>()
+                let mutable finished = false
+                while not finished do
+                    let mutable sourceCapSum = zero
+                    for (_, cap) in successors source graph do
+                        sourceCapSum <- add sourceCapSum cap
+                    
+                    let tr = dfsSend source sink sourceCapSum levels ptr adjList residuals zero add subtract compare minVal
+                    if compare tr zero > 0 then
+                        totalFlow <- add totalFlow tr
+                    else
+                        finished <- true
+
+        let mutGraph = Yog.Model.empty Directed
+        let graphWithNodes =
+            allNodes graph |> List.fold (fun acc n -> addNode n () acc) mutGraph
+
+        let finalGraph =
+            residuals
+            |> Seq.fold
+                (fun acc kvp ->
+                    let (u, v) = kvp.Key
+                    let cap = kvp.Value
+                    Yog.Model.addEdge u v cap acc)
+                graphWithNodes
+
+        { MaxFlow = totalFlow
+          ResidualGraph = finalGraph
+          Source = source
+          Sink = sink }
+
+/// Finds the maximum flow using the Push-Relabel (Goldberg-Tarjan) algorithm.
+let pushRelabel
+    (zero: 'e)
+    (add: 'e -> 'e -> 'e)
+    (subtract: 'e -> 'e -> 'e)
+    (compare: 'e -> 'e -> int)
+    (minVal: 'e -> 'e -> 'e)
+    (source: NodeId)
+    (sink: NodeId)
+    (graph: Graph<'n, 'e>)
+    : MaxFlowResult<'e> =
+    if source = sink then
+        { MaxFlow = zero
+          ResidualGraph = Yog.Model.empty Directed
+          Source = source
+          Sink = sink }
+    else
+        let nodesList = allNodes graph
+        let n = nodesList.Length
+
+        let residuals = Dictionary<NodeId * NodeId, 'e>()
+        let adjList = Dictionary<NodeId, HashSet<NodeId>>()
+
+        let addEdge u v cap =
+            residuals.[(u, v)] <- cap
+            let mutable uNeighbors = null
+            if not (adjList.TryGetValue(u, &uNeighbors)) then
+                uNeighbors <- HashSet<NodeId>()
+                adjList.[u] <- uNeighbors
+            uNeighbors.Add(v) |> ignore
+
+            let mutable vNeighbors = null
+            if not (adjList.TryGetValue(v, &vNeighbors)) then
+                vNeighbors <- HashSet<NodeId>()
+                adjList.[v] <- vNeighbors
+            vNeighbors.Add(u) |> ignore
+
+            if not (residuals.ContainsKey((v, u))) then
+                residuals.[(v, u)] <- zero
+
+        for u in nodesList do
+            for (v, cap) in successors u graph do
+                addEdge u v cap
+
+        let height = Dictionary<NodeId, int>()
+        let excess = Dictionary<NodeId, 'e>()
+        for u in nodesList do
+            height.[u] <- 0
+            excess.[u] <- zero
+
+        height.[source] <- n
+
+        let activeQueue = Queue<NodeId>()
+        let inQueue = HashSet<NodeId>()
+
+        let mutable sourceNeighbors = null
+        if adjList.TryGetValue(source, &sourceNeighbors) then
+            for v in sourceNeighbors do
+                let cap = residuals.[(source, v)]
+                if compare cap zero > 0 then
+                    residuals.[(source, v)] <- zero
+                    residuals.[(v, source)] <- add residuals.[(v, source)] cap
+                    excess.[v] <- add excess.[v] cap
+                    excess.[source] <- subtract excess.[source] cap
+                    if v <> source && v <> sink && inQueue.Add(v) then
+                        activeQueue.Enqueue(v)
+
+        while activeQueue.Count > 0 do
+            let u = activeQueue.Dequeue()
+            inQueue.Remove(u) |> ignore
+
+            let mutable neighbors = null
+            if adjList.TryGetValue(u, &neighbors) then
+                let neighborArray = neighbors |> Seq.toArray
+                let mutable neighborIdx = 0
+                
+                while compare excess.[u] zero > 0 && neighborIdx < neighborArray.Length do
+                    let v = neighborArray.[neighborIdx]
+                    let cap = residuals.[(u, v)]
+                    if compare cap zero > 0 && height.[u] = height.[v] + 1 then
+                        let flow = minVal excess.[u] cap
+                        residuals.[(u, v)] <- subtract residuals.[(u, v)] flow
+                        residuals.[(v, u)] <- add residuals.[(v, u)] flow
+                        excess.[u] <- subtract excess.[u] flow
+                        excess.[v] <- add excess.[v] flow
+                        if v <> source && v <> sink && inQueue.Add(v) then
+                            activeQueue.Enqueue(v)
+                    neighborIdx <- neighborIdx + 1
+
+                if compare excess.[u] zero > 0 then
+                    let mutable minHeight = System.Int32.MaxValue
+                    for v in neighbors do
+                        let cap = residuals.[(u, v)]
+                        if compare cap zero > 0 then
+                            minHeight <- min minHeight height.[v]
+                    
+                    if minHeight <> System.Int32.MaxValue then
+                        height.[u] <- minHeight + 1
+                    
+                    if inQueue.Add(u) then
+                        activeQueue.Enqueue(u)
+
+        let mutGraph = Yog.Model.empty Directed
+        let graphWithNodes =
+            allNodes graph |> List.fold (fun acc n -> addNode n () acc) mutGraph
+
+        let finalGraph =
+            residuals
+            |> Seq.fold
+                (fun acc kvp ->
+                    let (u, v) = kvp.Key
+                    let cap = kvp.Value
+                    Yog.Model.addEdge u v cap acc)
+                graphWithNodes
+
+        { MaxFlow = excess.[sink]
+          ResidualGraph = finalGraph
+          Source = source
+          Sink = sink }
+
+/// Finds the maximum flow using the specified algorithm.
+/// Finds the maximum flow using Edmonds-Karp algorithm.
 let edmondsKarp
     (zero: 'e)
     (add: 'e -> 'e -> 'e)
@@ -265,6 +522,23 @@ let edmondsKarp
           Source = source
           Sink = sink }
 
+/// Finds the maximum flow using the specified algorithm.
+let maxFlow
+    (zero: 'e)
+    (add: 'e -> 'e -> 'e)
+    (subtract: 'e -> 'e -> 'e)
+    (compare: 'e -> 'e -> int)
+    (minVal: 'e -> 'e -> 'e)
+    (source: NodeId)
+    (sink: NodeId)
+    (algorithm: FlowAlgorithm)
+    (graph: Graph<'n, 'e>)
+    : MaxFlowResult<'e> =
+    match algorithm with
+    | EdmondsKarp -> edmondsKarp zero add subtract compare minVal source sink graph
+    | Dinic -> dinic zero add subtract compare minVal source sink graph
+    | PushRelabel -> pushRelabel zero add subtract compare minVal source sink graph
+
 /// Extracts the minimum cut from a max flow result.
 ///
 /// Uses the max-flow min-cut theorem, identifying nodes reachable from source
@@ -338,3 +612,31 @@ let minCut (zero: 'e) (compare: 'e -> 'e -> int) (result: MaxFlowResult<'e>) : M
 ///
 let edmondsKarpInt (source: NodeId) (sink: NodeId) (graph: Graph<'n, int>) : MaxFlowResult<int> =
     edmondsKarp 0 (+) (-) compare min source sink graph
+
+/// Finds maximum flow with integer capacities using Dinic's algorithm.
+let dinicInt (source: NodeId) (sink: NodeId) (graph: Graph<'n, int>) : MaxFlowResult<int> =
+    dinic 0 (+) (-) compare min source sink graph
+
+/// Finds maximum flow with integer capacities using Push-Relabel algorithm.
+let pushRelabelInt (source: NodeId) (sink: NodeId) (graph: Graph<'n, int>) : MaxFlowResult<int> =
+    pushRelabel 0 (+) (-) compare min source sink graph
+
+/// Finds maximum flow with integer capacities using the specified algorithm.
+let maxFlowInt (source: NodeId) (sink: NodeId) (algorithm: FlowAlgorithm) (graph: Graph<'n, int>) : MaxFlowResult<int> =
+    maxFlow 0 (+) (-) compare min source sink algorithm graph
+
+/// Finds maximum flow with float capacities using Edmonds-Karp algorithm.
+let edmondsKarpFloat (source: NodeId) (sink: NodeId) (graph: Graph<'n, float>) : MaxFlowResult<float> =
+    edmondsKarp 0.0 (+) (-) compare min source sink graph
+
+/// Finds maximum flow with float capacities using Dinic's algorithm.
+let dinicFloat (source: NodeId) (sink: NodeId) (graph: Graph<'n, float>) : MaxFlowResult<float> =
+    dinic 0.0 (+) (-) compare min source sink graph
+
+/// Finds maximum flow with float capacities using Push-Relabel algorithm.
+let pushRelabelFloat (source: NodeId) (sink: NodeId) (graph: Graph<'n, float>) : MaxFlowResult<float> =
+    pushRelabel 0.0 (+) (-) compare min source sink graph
+
+/// Finds maximum flow with float capacities using the specified algorithm.
+let maxFlowFloat (source: NodeId) (sink: NodeId) (algorithm: FlowAlgorithm) (graph: Graph<'n, float>) : MaxFlowResult<float> =
+    maxFlow 0.0 (+) (-) compare min source sink algorithm graph

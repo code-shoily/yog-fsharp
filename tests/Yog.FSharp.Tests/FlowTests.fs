@@ -337,3 +337,30 @@ module MaxFlowPropertyTests =
         let result = edmondsKarpInt 0 2 graph
         // Bottleneck is min of the two capacities
         result.MaxFlow = min cap1 cap2
+
+module MaxFlowAlgorithmAgreementTests =
+    open MaxFlowTests
+
+    [<Fact>]
+    let ``Dinic - simple flow network`` () =
+        let graph = makeFlowNetwork [ (0, 1, 10); (1, 2, 5) ]
+        let result = dinicInt 0 2 graph
+        Assert.Equal(5, result.MaxFlow)
+
+    [<Fact>]
+    let ``PushRelabel - simple flow network`` () =
+        let graph = makeFlowNetwork [ (0, 1, 10); (1, 2, 5) ]
+        let result = pushRelabelInt 0 2 graph
+        Assert.Equal(5, result.MaxFlow)
+
+    [<Fact>]
+    let ``Dinic, PushRelabel, and EdmondsKarp agree on diamond network`` () =
+        let graph =
+            makeFlowNetwork [ (0, 1, 10); (0, 2, 10); (1, 3, 10); (2, 3, 10); (1, 2, 5) ]
+        let ek = edmondsKarpInt 0 3 graph
+        let dn = dinicInt 0 3 graph
+        let pr = pushRelabelInt 0 3 graph
+        Assert.Equal(20, ek.MaxFlow)
+        Assert.Equal(20, dn.MaxFlow)
+        Assert.Equal(20, pr.MaxFlow)
+
