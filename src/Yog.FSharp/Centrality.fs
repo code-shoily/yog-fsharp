@@ -487,3 +487,79 @@ let defaultPageRankOptions =
     { Damping = 0.85
       MaxIterations = 100
       Tolerance = 0.0001 }
+
+/// Result of HITS centrality algorithm.
+type HitsResult =
+    { Hubs: Centrality
+      Authorities: Centrality }
+
+/// Calculates HITS (Hubs and Authorities) centrality for all nodes.
+let hits (maxIterations: int option) (tolerance: float option) (graph: Graph<'n, 'e>) : HitsResult =
+    let maxIter = defaultArg maxIterations 100
+    let tol = defaultArg tolerance 1.0e-6
+    let nodes = allNodes graph
+    let n = nodes.Length
+    
+    if n = 0 then
+        { Hubs = Map.empty; Authorities = Map.empty }
+    else
+        let initial = 1.0 / sqrt (float n)
+        let mutable auth = nodes |> List.map (fun node -> node, initial) |> Map.ofList
+        let mutable hub = nodes |> List.map (fun node -> node, initial) |> Map.ofList
+        
+        let inMap =
+            match graph.Kind with
+            | Undirected ->
+                nodes |> List.map (fun node -> node, successorIds node graph) |> Map.ofList
+            | Directed ->
+                nodes |> List.map (fun node -> node, predecessorIds node graph) |> Map.ofList
+                
+        let outMap =
+            nodes |> List.map (fun node -> node, successorIds node graph) |> Map.ofList
+            
+        let mutable iter = 0
+        let mutable converged = false
+        
+        let l2Norm (scores: Map<NodeId, float>) =
+            let sumSq = scores |> Map.fold (fun acc _ v -> acc + v * v) 0.0
+            sqrt sumSq
+            
+        let normDiffSameKeys (m1: Map<NodeId, float>) (m2: Map<NodeId, float>) =
+            let sumSq = m1 |> Map.fold (fun acc k v1 ->
+                let v2 = Map.find k m2
+                acc + (v1 - v2) * (v1 - v2)) 0.0
+            sqrt sumSq
+
+        while iter < maxIter && not converged do
+            let mutable newAuth = Map.empty
+            for node in nodes do
+                let preds = Map.find node inMap
+                let score = preds |> List.fold (fun sum pred -> sum + (Map.tryFind pred hub |> Option.defaultValue 0.0)) 0.0
+                newAuth <- Map.add node score newAuth
+                
+            let mutable newHub = Map.empty
+            for node in nodes do
+                let succs = Map.find node outMap
+                let score = succs |> List.fold (fun sum succ -> sum + (Map.tryFind succ newAuth |> Option.defaultValue 0.0)) 0.0
+                newHub <- Map.add node score newHub
+                
+            let normAuth = l2Norm newAuth
+            let normHub = l2Norm newHub
+            
+            let normalizedAuth =
+                if normAuth > 0.0 then newAuth |> Map.map (fun _ v -> v / normAuth) else newAuth
+            let normalizedHub =
+                if normHub > 0.0 then newHub |> Map.map (fun _ v -> v / normHub) else newHub
+                
+            let authDiff = normDiffSameKeys auth normalizedAuth
+            let hubDiff = normDiffSameKeys hub normalizedHub
+            
+            auth <- normalizedAuth
+            hub <- normalizedHub
+            
+            if authDiff < tol && hubDiff < tol then
+                converged <- true
+            iter <- iter + 1
+            
+        { Hubs = hub; Authorities = auth }
+

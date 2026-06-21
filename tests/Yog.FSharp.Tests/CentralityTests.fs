@@ -521,3 +521,13 @@ module AlphaCentralityTests =
 
         // Single node with no neighbors goes to 0
         Assert.Equal(0.0, result.[0])
+
+module HitsTests =
+    [<Fact>]
+    let ``hits - simple directed graph`` () =
+        let graph = makeDirectedGraph [ (0, 1); (2, 1) ]
+        let result = hits None None graph
+        // Node 1 is authority pointed to by 0 and 2. 0 and 2 are hubs.
+        Assert.True(Map.find 1 result.Authorities > Map.find 0 result.Authorities)
+        Assert.True(Map.find 0 result.Hubs > Map.find 1 result.Hubs)
+
