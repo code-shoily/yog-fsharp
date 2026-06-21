@@ -1,178 +1,380 @@
-/// Minimum Spanning Tree (MST) algorithms for finding optimal network connections.
-///
-/// A [Minimum Spanning Tree](https://en.wikipedia.org/wiki/Minimum_spanning_tree) connects all nodes
-/// in a weighted undirected graph with the minimum possible total edge weight. MSTs have
-/// applications in network design, clustering, and optimization problems.
-///
-/// ## Available Algorithms
-///
-/// | Algorithm | Function | Best For |
-/// |-----------|----------|----------|
-/// | [Kruskal's](https://en.wikipedia.org/wiki/Kruskal%27s_algorithm) | `kruskal/2` | Sparse graphs, edge lists |
-///
-/// ## Properties of MSTs
-///
-/// - Connects all nodes with exactly `V - 1` edges (for a graph with V nodes)
-/// - Contains no cycles
-/// - Minimizes the sum of edge weights
-/// - May not be unique if multiple edges have the same weight
-///
-/// ## Example Use Cases
-///
-/// - **Network Design**: Minimizing cable length to connect buildings
-/// - **Cluster Analysis**: Hierarchical clustering via MST
-/// - **Approximation**: Traveling Salesman Problem approximations
-/// - **Image Segmentation**: Computer vision applications
-///
-/// ## References
-///
-/// - [Wikipedia: Minimum Spanning Tree](https://en.wikipedia.org/wiki/Minimum_spanning_tree)
-/// - [CP-Algorithms: MST](https://cp-algorithms.com/graph/mst_kruskal.html)
-module Yog.Mst
+namespace Yog
 
 open System.Collections.Generic
 open Yog.Model
 
-/// Represents an edge in the minimum spanning tree.
+/// Algorithm used to compute the spanning tree result.
+type Algorithm =
+    | Kruskal
+    | Prim
+    | Boruvka
+    | ChuLiuEdmonds
+    | Wilson
+
+/// Represents an edge in the spanning tree.
 type Edge<'e> =
     { From: NodeId; To: NodeId; Weight: 'e }
 
-/// Finds the Minimum Spanning Tree (MST) using Kruskal's algorithm.
-///
-/// Returns a list of edges that form the MST. The total weight of these edges
-/// is minimized while ensuring all nodes are connected.
-///
-/// **Time Complexity:** O(E log E) where E is the number of edges
-///
-/// ## Algorithm
-///
-/// 1. Sort all edges by weight in ascending order
-/// 2. Iterate through sorted edges, adding each edge that doesn't form a cycle
-/// 3. Use Union-Find to efficiently detect cycles
-///
-/// ## Example
-///
-///     let mstEdges = kruskal compare graph
-///     // => [{ From = 1; To = 2; Weight = 5 }; { From = 2; To = 3; Weight = 3 }; ...]
-///
-/// ## Use Cases
-///
-/// - Network design (minimum cost to connect all nodes)
-/// - Approximation algorithms for NP-hard problems
-/// - Cluster analysis (single-linkage clustering)
-///
-/// ## Comparison with Prim's Algorithm
-///
-/// - **Kruskal's:** Processes edges globally, works well for sparse graphs
-/// - **Prim's:** Grows from a starting node, works well for dense graphs
-///
-/// Both produce optimal MSTs; choose based on graph density and implementation convenience.
-let kruskal (compare: 'e -> 'e -> int) (graph: Graph<'n, 'e>) : Edge<'e> list =
-    let edges =
-        graph.OutEdges
-        |> Map.fold
-            (fun acc src targets ->
-                targets
-                |> Map.fold
-                    (fun innerAcc dst weight ->
-                        if graph.Kind = Undirected && src > dst then
-                            innerAcc
-                        else
-                            { From = src
-                              To = dst
-                              Weight = weight }
-                            :: innerAcc)
-                    acc)
-            []
-        |> List.sortWith (fun a b -> compare a.Weight b.Weight)
+/// Result of a Spanning Tree computation.
+type MstResult<'e> =
+    { Edges: Edge<'e> list
+      TotalWeight: 'e
+      NodeCount: int
+      EdgeCount: int
+      Algorithm: Algorithm
+      Root: NodeId option }
 
-    let rec doKruskal edgesList dsu acc =
-        match edgesList with
-        | [] -> List.rev acc
-        | edge :: rest ->
-            let dsu1, rootFrom = DisjointSet.find edge.From dsu
-            let dsu2, rootTo = DisjointSet.find edge.To dsu1
+module Mst =
 
-            if rootFrom = rootTo then
-                doKruskal rest dsu2 acc
-            else
-                let nextDsu = DisjointSet.union edge.From edge.To dsu2
-                doKruskal rest nextDsu (edge :: acc)
+    /// Helper to build the final MstResult
+    let private makeResult (edges: Edge<'e> list) (algorithm: Algorithm) (nodeCount: int) (root: NodeId option) (add: 'e -> 'e -> 'e) (zero: 'e) : MstResult<'e> =
+        let totalWeight = (zero, edges) ||> List.fold (fun acc edge -> add acc edge.Weight)
+        { Edges = edges
+          TotalWeight = totalWeight
+          NodeCount = nodeCount
+          EdgeCount = List.length edges
+          Algorithm = algorithm
+          Root = root }
 
-    doKruskal edges DisjointSet.empty []
+    /// Finds the Minimum Spanning Tree (MST) using Kruskal's algorithm.
+    let kruskal (compare: 'e -> 'e -> int) (add: 'e -> 'e -> 'e) (zero: 'e) (graph: Graph<'n, 'e>) : Result<MstResult<'e>, string> =
+        match graph.Kind with
+        | Directed -> Error "kruskal requires an undirected graph"
+        | Undirected ->
+            let edges =
+                graph.OutEdges
+                |> Map.fold (fun acc src targets ->
+                    targets |> Map.fold (fun innerAcc dst weight ->
+                        if src <= dst then { From = src; To = dst; Weight = weight } :: innerAcc
+                        else innerAcc
+                    ) acc
+                ) []
+                |> List.sortWith (fun a b -> compare a.Weight b.Weight)
 
-/// Finds the Minimum Spanning Tree (MST) using Prim's algorithm.
-///
-/// Returns a list of edges that form the MST. Unlike Kruskal's which processes
-/// all edges globally, Prim's grows the MST from a starting node by repeatedly
-/// adding the minimum-weight edge that connects a visited node to an unvisited node.
-///
-/// **Time Complexity:** O(E log V) where E is the number of edges and V is the number of vertices
-///
-/// **Disconnected Graphs:** For disconnected graphs, Prim's only returns edges
-/// for the connected component containing the starting node (the first node in the graph).
-/// Use Kruskal's if you need a minimum spanning forest that covers all components.
-///
-/// ## Algorithm
-///
-/// 1. Start from an arbitrary node (first node in the graph)
-/// 2. Use a priority queue to track minimum-weight edges from visited to unvisited nodes
-/// 3. Repeatedly extract the minimum edge, add it to the MST, and update the frontier
-///
-/// ## Example
-///
-///     let mstEdges = prim compare graph
-///     // => [{ From = 1; To = 2; Weight = 5 }; { From = 2; To = 3; Weight = 3 }; ...]
-///
-/// ## Use Cases
-///
-/// - Dense graphs where E ≈ V² (better cache locality than Kruskal's)
-/// - Incremental MST construction (can start from a specific node)
-/// - When you need the MST rooted at a specific node
-///
-/// ## Comparison with Kruskal's Algorithm
-///
-/// - **Prim's:** Grows from a node, uses priority queue, O(E log V), single component only
-/// - **Kruskal's:** Processes edges by weight, uses Union-Find, O(E log E), handles all components
-///
-/// For dense connected graphs, Prim's is often faster. For sparse graphs or graphs with
-/// multiple components, Kruskal's is preferred.
-let prim (compare: 'e -> 'e -> int) (graph: Graph<'n, 'e>) : Edge<'e> list =
-    match allNodes graph with
-    | [] -> []
-    | start :: _ ->
-        let comparer =
-            { new IComparer<'e> with
-                member _.Compare(a, b) = compare a b }
+            let rec doKruskal edgesList dsu acc =
+                match edgesList with
+                | [] -> List.rev acc
+                | edge :: rest ->
+                    let dsu1, rootFrom = DisjointSet.find edge.From dsu
+                    let dsu2, rootTo = DisjointSet.find edge.To dsu1
 
-        let pq = PriorityQueue<Edge<'e>, 'e>(comparer)
-        let visited = HashSet<NodeId>()
+                    if rootFrom = rootTo then
+                        doKruskal rest dsu2 acc
+                    else
+                        let nextDsu = DisjointSet.union edge.From edge.To dsu2
+                        doKruskal rest nextDsu (edge :: acc)
 
-        visited.Add(start) |> ignore
+            let mstEdges = doKruskal edges DisjointSet.empty []
+            Ok (makeResult mstEdges Kruskal (order graph) None add zero)
 
-        for (dst, weight) in successors start graph do
-            pq.Enqueue(
-                { From = start
-                  To = dst
-                  Weight = weight },
-                weight
-            )
+    /// Finds the Minimum Spanning Tree (MST) using Prim's algorithm.
+    let prim (compare: 'e -> 'e -> int) (add: 'e -> 'e -> 'e) (zero: 'e) (graph: Graph<'n, 'e>) : Result<MstResult<'e>, string> =
+        match graph.Kind with
+        | Directed -> Error "prim requires an undirected graph"
+        | Undirected ->
+            match allNodes graph with
+            | [] -> Ok (makeResult [] Prim 0 None add zero)
+            | start :: _ ->
+                let comparer =
+                    { new IComparer<'e> with
+                        member _.Compare(a, b) = compare a b }
 
-        let mutable mstEdges = []
+                let pq = PriorityQueue<Edge<'e>, 'e>(comparer)
+                let visited = HashSet<NodeId>()
 
-        while pq.Count > 0 do
-            let edge = pq.Dequeue()
+                visited.Add(start) |> ignore
 
-            if visited.Add(edge.To) then
-                mstEdges <- edge :: mstEdges
+                for (dst, weight) in successors start graph do
+                    pq.Enqueue({ From = start; To = dst; Weight = weight }, weight)
 
-                for (dst, weight) in successors edge.To graph do
-                    if not (visited.Contains(dst)) then
-                        pq.Enqueue(
-                            { From = edge.To
-                              To = dst
-                              Weight = weight },
-                            weight
+                let mutable mstEdges = []
+
+                while pq.Count > 0 do
+                    let edge = pq.Dequeue()
+
+                    if visited.Add(edge.To) then
+                        mstEdges <- edge :: mstEdges
+
+                        for (dst, weight) in successors edge.To graph do
+                            if not (visited.Contains(dst)) then
+                                pq.Enqueue({ From = edge.To; To = dst; Weight = weight }, weight)
+
+                Ok (makeResult (List.rev mstEdges) Prim (order graph) None add zero)
+
+    /// Finds the Minimum Spanning Tree (MST) using Borůvka's algorithm.
+    let boruvka (compare: 'e -> 'e -> int) (add: 'e -> 'e -> 'e) (zero: 'e) (graph: Graph<'n, 'e>) : Result<MstResult<'e>, string> =
+        match graph.Kind with
+        | Directed -> Error "boruvka requires an undirected graph"
+        | Undirected ->
+            let nodes = allNodes graph
+            let dsu = nodes |> List.fold (fun acc node -> DisjointSet.add node acc) DisjointSet.empty
+            let allEdgesList =
+                graph.OutEdges
+                |> Map.fold (fun acc src targets ->
+                    targets |> Map.fold (fun innerAcc dst weight ->
+                        if src <= dst then { From = src; To = dst; Weight = weight } :: innerAcc
+                        else innerAcc
+                    ) acc
+                ) []
+
+            let rec loop currentDsu currentMst =
+                if DisjointSet.countSets currentDsu <= 1 then
+                    List.rev currentMst
+                else
+                    let cheapest =
+                        (Map.empty, allEdgesList)
+                        ||> List.fold (fun accMap edge ->
+                            let dsu1, rootU = DisjointSet.find edge.From currentDsu
+                            let _, rootV = DisjointSet.find edge.To dsu1
+                            if rootU = rootV then accMap
+                            else
+                                let updateBest root map =
+                                    match Map.tryFind root map with
+                                    | None -> Map.add root edge map
+                                    | Some existing ->
+                                        if compare edge.Weight existing.Weight < 0 then Map.add root edge map
+                                        else map
+                                accMap |> updateBest rootU |> updateBest rootV
                         )
 
-        List.rev mstEdges
+                    if cheapest.IsEmpty then
+                        List.rev currentMst
+                    else
+                        let edgesToAdd =
+                            cheapest
+                            |> Map.toList
+                            |> List.map snd
+                            |> List.fold (fun (resList, visitedSet) edge ->
+                                let key = if edge.From > edge.To then (edge.To, edge.From) else (edge.From, edge.To)
+                                if Set.contains key visitedSet then (resList, visitedSet)
+                                else (edge :: resList, Set.add key visitedSet)
+                            ) ([], Set.empty)
+                            |> fst
+
+                        let nextDsu, nextMst =
+                            ((currentDsu, currentMst), edgesToAdd)
+                            ||> List.fold (fun (dsuAcc, mstAcc) edge ->
+                                (DisjointSet.union edge.From edge.To dsuAcc, edge :: mstAcc)
+                            )
+
+                        let oldCount = DisjointSet.countSets currentDsu
+                        let newCount = DisjointSet.countSets nextDsu
+                        if newCount = oldCount then List.rev currentMst
+                        else loop nextDsu nextMst
+
+            let mstEdges = loop dsu []
+            Ok (makeResult mstEdges Boruvka (List.length nodes) None add zero)
+
+    type EdmondsGraph<'e> =
+        { Nodes: NodeId list
+          Edges: Edge<'e> list }
+
+    type CycleInfo<'e> =
+        { SuperNode: NodeId
+          Cycle: NodeId list
+          Mapping: Map<NodeId * NodeId, Edge<'e>> }
+
+    let rec private doEdmonds (graph: EdmondsGraph<'e>) (root: NodeId) (compare: 'e -> 'e -> int) (subtract: 'e -> 'e -> 'e) (superCounter: int) : Result<Edge<'e> list, string> =
+        let nodes = graph.Nodes
+        let bestIn =
+            (Map.empty, nodes)
+            ||> List.fold (fun acc nodeId ->
+                if nodeId = root then acc
+                else
+                    let incoming = graph.Edges |> List.filter (fun e -> e.To = nodeId)
+                    match incoming with
+                    | [] -> acc
+                    | first :: rest ->
+                        let best =
+                            (first, rest)
+                            ||> List.fold (fun bestOpt e ->
+                                if compare e.Weight bestOpt.Weight < 0 then e else bestOpt
+                            )
+                        Map.add nodeId best acc
+            )
+
+        let unreachable = nodes |> List.exists (fun v -> v <> root && not (Map.containsKey v bestIn))
+        if unreachable then
+            Error "No arborescence exists"
+        else
+            let rec findCycleDfs (node: NodeId) (visited: Map<NodeId, string>) (path: NodeId list) : NodeId list option =
+                match Map.tryFind node visited with
+                | Some "visiting" ->
+                    let cycle = node :: (path |> List.takeWhile (fun x -> x <> node))
+                    Some (List.rev cycle)
+                | Some _ -> None
+                | None ->
+                    match Map.tryFind node bestIn with
+                    | None -> None
+                    | Some edge ->
+                        findCycleDfs edge.From (Map.add node "visiting" visited) (node :: path)
+
+            let cycleOpt =
+                nodes
+                |> List.tryPick (fun startNode -> findCycleDfs startNode Map.empty [])
+
+            match cycleOpt with
+            | None -> Ok (bestIn |> Map.toList |> List.map snd)
+            | Some cycleNodes ->
+                let superNode = superCounter
+                let nextCounter = superCounter - 1
+                
+                let cycleSet = Set.ofList cycleNodes
+                let newNodes = nodes |> List.filter (fun n -> not (Set.contains n cycleSet))
+                let newNodesWithSuper = superNode :: newNodes
+
+                let candidates =
+                    graph.Edges
+                    |> List.choose (fun edge ->
+                        let uIn = Set.contains edge.From cycleSet
+                        let vIn = Set.contains edge.To cycleSet
+                        match uIn, vIn with
+                        | true, true -> None
+                        | true, false -> Some ({ From = superNode; To = edge.To; Weight = edge.Weight }, edge)
+                        | false, true ->
+                            let bestInV = Map.find edge.To bestIn
+                            let newWeight = subtract edge.Weight bestInV.Weight
+                            Some ({ From = edge.From; To = superNode; Weight = newWeight }, edge)
+                        | false, false -> Some (edge, edge)
+                    )
+
+                let deduped =
+                    (Map.empty, candidates)
+                    ||> List.fold (fun acc (cEdge, origEdge) ->
+                        let key = (cEdge.From, cEdge.To)
+                        match Map.tryFind key acc with
+                        | Some (existing, _) ->
+                            if compare cEdge.Weight existing.Weight < 0 then Map.add key (cEdge, origEdge) acc
+                            else acc
+                        | None -> Map.add key (cEdge, origEdge) acc
+                    )
+
+                let newEdges = deduped |> Map.toList |> List.map (fun (_, (c, _)) -> c)
+                let mapping = deduped |> Map.map (fun _ (_, o) -> o)
+
+                let contractedGraph = { Nodes = newNodesWithSuper; Edges = newEdges }
+                let cycleInfo = { SuperNode = superNode; Cycle = cycleNodes; Mapping = mapping }
+
+                match doEdmonds contractedGraph root compare subtract nextCounter with
+                | Error msg -> Error msg
+                | Ok contractedEdges ->
+                    let entryEdgeContracted = contractedEdges |> List.tryFind (fun e -> e.To = superNode)
+                    let entryOrig =
+                        match entryEdgeContracted with
+                        | Some e -> Map.tryFind (e.From, superNode) mapping
+                        | None -> None
+
+                    let nodeToBypass =
+                        match entryOrig with
+                        | Some orig -> orig.To
+                        | None -> -1
+
+                    let finalEdges =
+                        contractedEdges
+                        |> List.collect (fun e ->
+                            if e.To = superNode then
+                                match entryOrig with
+                                | Some orig -> [ orig ]
+                                | None -> []
+                            elif e.From = superNode then
+                                match Map.tryFind (superNode, e.To) mapping with
+                                | Some orig -> [ orig ]
+                                | None -> []
+                            else [ e ]
+                        )
+
+                    let cycleEdges =
+                        cycleNodes
+                        |> List.choose (fun node ->
+                            match Map.tryFind node bestIn with
+                            | Some edge when edge.To <> nodeToBypass -> Some edge
+                            | _ -> None
+                        )
+
+                    Ok (finalEdges @ cycleEdges)
+
+    /// Finds the Minimum Spanning Arborescence (MSA) of a directed graph.
+    let edmonds (compare: 'e -> 'e -> int) (add: 'e -> 'e -> 'e) (subtract: 'e -> 'e -> 'e) (zero: 'e) (root: NodeId) (graph: Graph<'n, 'e>) : Result<MstResult<'e>, string> =
+        match graph.Kind with
+        | Undirected -> Error "Edmonds' algorithm requires a directed graph"
+        | Directed ->
+            let nodes = allNodes graph
+            let edges =
+                graph.OutEdges
+                |> Map.fold (fun acc src targets ->
+                    targets |> Map.fold (fun innerAcc dst weight ->
+                        { From = src; To = dst; Weight = weight } :: innerAcc
+                    ) acc
+                ) []
+            let minId = nodes |> List.fold min 0
+            match doEdmonds { Nodes = nodes; Edges = edges } root compare subtract (minId - 1) with
+            | Ok mstEdges -> Ok (makeResult mstEdges ChuLiuEdmonds (List.length nodes) (Some root) add zero)
+            | Error msg -> Error msg
+
+    let rec private doWilsonLoop (graph: Graph<'n, 'e>) (unvisited: Set<NodeId>) (tree: Set<NodeId>) (accEdges: Edge<'e> list) (rng: System.Random) (add: 'e -> 'e -> 'e) (zero: 'e) : Result<Edge<'e> list, string> =
+        if unvisited.IsEmpty then
+            Ok (List.rev accEdges)
+        else
+            let unvisitedList = Set.toList unvisited
+            let startNode = unvisitedList.[rng.Next(unvisitedList.Length)]
+
+            let rec performLerw current pathMap =
+                if Set.contains current tree then
+                    Ok pathMap
+                else
+                    let successorsList = successorIds current graph
+                    match successorsList with
+                    | [] -> Error "wilson requires a connected graph"
+                    | neighbors ->
+                        let nextNode = neighbors.[rng.Next(neighbors.Length)]
+                        performLerw nextNode (Map.add current nextNode pathMap)
+
+            match performLerw startNode Map.empty with
+            | Error msg -> Error msg
+            | Ok pathMap ->
+                let rec addPathToTree current tAcc unvAcc pEdges =
+                    if Set.contains current tAcc then
+                        (tAcc, unvAcc, pEdges)
+                    else
+                        let nextNode = Map.find current pathMap
+                        let weight = edgeData current nextNode graph |> Option.get
+                        let edge = { From = current; To = nextNode; Weight = weight }
+                        let newT = Set.add current tAcc
+                        let newUnv = Set.remove current unvAcc
+                        addPathToTree nextNode newT newUnv (edge :: pEdges)
+
+                let newTree, newUnvisited, pathEdges = addPathToTree startNode tree unvisited []
+                doWilsonLoop graph newUnvisited newTree (accEdges @ pathEdges) rng add zero
+
+    /// Generates a Uniform Spanning Tree (UST) using Wilson's algorithm.
+    let wilson (add: 'e -> 'e -> 'e) (zero: 'e) (seed: int option) (graph: Graph<'n, 'e>) : Result<MstResult<'e>, string> =
+        match graph.Kind with
+        | Directed -> Error "wilson requires an undirected graph"
+        | Undirected ->
+            let nodes = allNodes graph
+            match nodes with
+            | [] -> Ok (makeResult [] Wilson 0 None add zero)
+            | first :: _ ->
+                let tree = Set.singleton first
+                let unvisited = Set.difference (Set.ofList nodes) tree
+                let rng =
+                    match seed with
+                    | Some s -> System.Random(s)
+                    | None -> System.Random()
+                match doWilsonLoop graph unvisited tree [] rng add zero with
+                | Error msg -> Error msg
+                | Ok edges -> Ok (makeResult edges Wilson (List.length nodes) None add zero)
+
+    // Int convenience wrappers
+    let kruskalInt (graph: Graph<'n, int>) = kruskal compare (+) 0 graph
+    let primInt (graph: Graph<'n, int>) = prim compare (+) 0 graph
+    let boruvkaInt (graph: Graph<'n, int>) = boruvka compare (+) 0 graph
+    let edmondsInt (root: NodeId) (graph: Graph<'n, int>) = edmonds compare (+) (-) 0 root graph
+    let wilsonInt (seed: int option) (graph: Graph<'n, int>) = wilson (+) 0 seed graph
+
+    // Float convenience wrappers
+    let kruskalFloat (graph: Graph<'n, float>) = kruskal compare (+) 0.0 graph
+    let primFloat (graph: Graph<'n, float>) = prim compare (+) 0.0 graph
+    let boruvkaFloat (graph: Graph<'n, float>) = boruvka compare (+) 0.0 graph
+    let edmondsFloat (root: NodeId) (graph: Graph<'n, float>) = edmonds compare (+) (-) 0.0 root graph
+    let wilsonFloat (seed: int option) (graph: Graph<'n, float>) = wilson (+) 0.0 seed graph
