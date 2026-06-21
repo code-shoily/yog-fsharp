@@ -1,4 +1,4 @@
-/// Tests for Flow algorithms (MaxFlow, MinCut, NetworkSimplex).
+/// Tests for Flow algorithms (MaxFlow, MinCut).
 ///
 /// Covers:
 /// - Edmonds-Karp max flow
@@ -178,37 +178,7 @@ module MinCutTests =
 
         Assert.Equal(flowResult.MaxFlow, cutCapacity)
 
-// =============================================================================
-// MIN COST FLOW TESTS
-// =============================================================================
 
-module MinCostFlowTests =
-    open Yog.Flow.NetworkSimplex
-
-    [<Fact>]
-    let ``minCostFlow - simple test`` () =
-        // 0: demand -10 (sink), 1: demand 10 (source)
-        // edge 1 -> 0 with cap 20, cost 5
-        let graph = empty Directed |> addNode 0 -10 |> addNode 1 10 |> addEdge 1 0 (20, 5)
-
-        // The function should return Ok or Error; just call it and don't crash
-        let res = minCostFlow graph id fst snd
-        // If it returns Ok, we verify the cost is correct
-        match res with
-        | Ok flow -> Assert.Equal(50, flow.Cost) // 10 flow * 5 cost
-        | Error _ ->
-            // Implementation may be incomplete - just verify it ran without exception
-            Assert.True(true, "minCostFlow returned Error (may be stub implementation)")
-
-    [<Fact>]
-    let ``minCostFlow - unbalanced demands`` () =
-        let graph = empty Directed |> addNode 0 -10 |> addNode 1 5 |> addEdge 1 0 (20, 5)
-
-        let res = minCostFlow graph id fst snd
-
-        match res with
-        | Error UnbalancedDemands -> Assert.True(true)
-        | _ -> Assert.True(false, "Should detect unbalanced demands")
 
 
 // =============================================================================

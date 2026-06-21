@@ -49,7 +49,6 @@
         <Compile Include="Pathfinding\DistanceMatrix.fs" />
         <Compile Include="Flow\MaxFlow.fs" />
         <Compile Include="Flow\MinCut.fs" />
-        <Compile Include="Flow\NetworkSimplex.fs" />
         <Compile Include="Centrality.fs" />
         <Compile Include="Properties\Bipartite.fs" />
         <Compile Include="Properties\Clique.fs" />
