@@ -1172,3 +1172,210 @@ module PathfindingPropertyTests =
             // d(0,2) <= d(0,1) + d(1,2)
             d02 <= d01 + d12
         | Error _ -> true // Negative cycle case
+
+// =============================================================================
+// LCA TESTS
+// =============================================================================
+
+module LcaTests =
+    open Yog.Pathfinding
+    open Yog.Pathfinding.Lca
+
+    [<Fact>]
+    let ``LCA - finds correct ancestors and distances on a tree`` () =
+        let graph =
+            empty Directed
+            |> addNode 0 ()
+            |> addNode 1 ()
+            |> addNode 2 ()
+            |> addNode 3 ()
+            |> addNode 4 ()
+            |> addEdge 0 1 1
+            |> addEdge 0 2 1
+            |> addEdge 1 3 1
+            |> addEdge 1 4 1
+
+        match preprocess 0 graph with
+        | Ok state ->
+            Assert.Equal(Some 1, lca state 3 4)
+            Assert.Equal(Some 0, lca state 3 2)
+            Assert.Equal(Some 0, lca state 1 2)
+            Assert.Equal(Some 1, lca state 1 3)
+            Assert.Equal(Some 2, treeDistance state 3 4)
+            Assert.Equal(Some 3, treeDistance state 3 2)
+        | Error e -> Assert.True(false, sprintf "Lca preprocess failed: %A" e)
+
+    [<Fact>]
+    let ``LCA - fails on non-tree graphs`` () =
+        let graph =
+            empty Directed
+            |> addNode 0 ()
+            |> addNode 1 ()
+            |> addNode 2 ()
+            |> addEdge 0 1 1
+            |> addEdge 1 2 1
+            |> addEdge 2 0 1 // Cycle
+
+        match preprocess 0 graph with
+        | Error LcaError.NotATree -> Assert.True(true)
+        | _ -> Assert.True(false, "Should fail on cyclic graph")
+
+// =============================================================================
+// BIDIRECTIONAL SEARCH TESTS
+// =============================================================================
+
+module BidirectionalTests =
+    open Yog.Pathfinding.Bidirectional
+
+    [<Fact>]
+    let ``Bidirectional - unweighted BFS finds shortest path`` () =
+        let graph =
+            empty Undirected
+            |> addNode 1 ()
+            |> addNode 2 ()
+            |> addNode 3 ()
+            |> addEdge 1 2 1
+            |> addEdge 2 3 1
+
+        match shortestPathUnweighted 1 3 graph with
+        | Some path ->
+            Assert.Equal<NodeId list>([1; 2; 3], path.Nodes)
+            Assert.Equal(2, path.TotalWeight)
+        | None -> Assert.True(false, "Path should exist")
+
+    [<Fact>]
+    let ``Bidirectional - weighted Dijkstra finds shortest path`` () =
+        let graph =
+            empty Undirected
+            |> addNode 1 ()
+            |> addNode 2 ()
+            |> addNode 3 ()
+            |> addEdge 1 2 5
+            |> addEdge 2 3 10
+
+        match shortestPathInt 1 3 graph with
+        | Some path ->
+            Assert.Equal<NodeId list>([1; 2; 3], path.Nodes)
+            Assert.Equal(15, path.TotalWeight)
+        | None -> Assert.True(false, "Path should exist")
+
+// =============================================================================
+// JOHNSON'S ALL-PAIRS SHORTEST PATH TESTS
+// =============================================================================
+
+module JohnsonTests =
+    open Yog.Pathfinding.Johnson
+
+    [<Fact>]
+    let ``Johnson - computes all pairs on graph with negative weights`` () =
+        let graph =
+            empty Directed
+            |> addNode 1 ()
+            |> addNode 2 ()
+            |> addNode 3 ()
+            |> addEdge 1 2 4
+            |> addEdge 2 3 -3
+            |> addEdge 1 3 10
+
+        match johnsonInt graph with
+        | Ok dists ->
+            Assert.Equal(1, dists.[(1, 3)]) // 1 -> 2 -> 3 = 4 - 3 = 1
+            Assert.Equal(4, dists.[(1, 2)])
+            Assert.Equal(-3, dists.[(2, 3)])
+        | Error _ -> Assert.True(false, "Should not detect negative cycle")
+
+    [<Fact>]
+    let ``Johnson - detects negative cycles`` () =
+        let graph =
+            empty Directed
+            |> addNode 1 ()
+            |> addNode 2 ()
+            |> addEdge 1 2 1
+            |> addEdge 2 1 -3
+
+        match johnsonInt graph with
+        | Error () -> Assert.True(true)
+        | Ok _ -> Assert.True(false, "Should detect negative cycle")
+
+// =============================================================================
+// YEN'S K-SHORTEST PATHS TESTS
+// =============================================================================
+
+module YenTests =
+    open Yog.Pathfinding.Yen
+
+    [<Fact>]
+    let ``Yen - finds multiple shortest loopless paths`` () =
+        let graph =
+            empty Directed
+            |> addNode 1 ()
+            |> addNode 2 ()
+            |> addNode 3 ()
+            |> addNode 4 ()
+            |> addNode 5 ()
+            |> addEdge 1 2 1
+            |> addEdge 1 3 2
+            |> addEdge 2 3 1
+            |> addEdge 2 4 3
+            |> addEdge 3 4 1
+            |> addEdge 3 5 4
+            |> addEdge 4 5 1
+
+        match kShortestPathsInt 1 5 3 graph with
+        | Some paths ->
+            Assert.Equal(3, paths.Length)
+            Assert.Equal(4, paths.[0].TotalWeight) // 1 -> 2 -> 3 -> 4 -> 5 (weight 4)
+            Assert.Equal(4, paths.[1].TotalWeight) // 1 -> 3 -> 4 -> 5 (weight 4)
+            Assert.Equal(5, paths.[2].TotalWeight) // 1 -> 2 -> 4 -> 5 (weight 5)
+        | None -> Assert.True(false, "Paths should exist")
+
+// =============================================================================
+// CHINESE POSTMAN TESTS
+// =============================================================================
+
+module ChinesePostmanTests =
+    open Yog.Pathfinding.ChinesePostman
+
+    [<Fact>]
+    let ``ChinesePostman - solves Eulerian graph`` () =
+        let graph =
+            empty Undirected
+            |> addNode 1 ()
+            |> addNode 2 ()
+            |> addNode 3 ()
+            |> addNode 4 ()
+            |> addEdge 1 2 1
+            |> addEdge 2 3 1
+            |> addEdge 3 4 1
+            |> addEdge 4 1 1
+
+        match chinesePostmanInt graph with
+        | Some (walk, weight) ->
+            Assert.Equal(4, weight)
+            Assert.Equal(5, walk.Length) // closed walk of 4 edges has 5 vertices
+            Assert.Equal(walk.[0], walk.[walk.Length - 1])
+        | None -> Assert.True(false, "Should find Eulerian path")
+
+    [<Fact>]
+    let ``ChinesePostman - solves non-Eulerian graph with odd vertices`` () =
+        let graph =
+            empty Undirected
+            |> addNode 1 ()
+            |> addNode 2 ()
+            |> addNode 3 ()
+            |> addNode 4 ()
+            |> addEdge 1 2 1
+            |> addEdge 2 3 1
+            |> addEdge 3 4 1
+            |> addEdge 4 1 1
+            |> addEdge 1 3 2 // odd degree nodes: 1 and 3
+
+        match chinesePostmanInt graph with
+        | Some (walk, weight) ->
+            // Original sum = 1 + 1 + 1 + 1 + 2 = 6
+            // Perfect matching will match odd degree nodes 1 and 3 (distance is 2)
+            // Total inspection weight = 6 + 2 = 8
+            Assert.Equal(8, weight)
+            Assert.Equal(walk.[0], walk.[walk.Length - 1])
+        | None -> Assert.True(false, "Should find Chinese Postman tour")
+

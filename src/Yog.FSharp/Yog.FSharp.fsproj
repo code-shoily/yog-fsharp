@@ -41,22 +41,27 @@
         <Compile Include="Transform.fs" />
         <Compile Include="Mst.fs" />
         <Compile Include="Connectivity.fs" />
-        <Compile Include="Pathfinding\Utils.fs" />
-        <Compile Include="Pathfinding\Dijkstra.fs" />
-        <Compile Include="Pathfinding\AStar.fs" />
-        <Compile Include="Pathfinding\BellmanFord.fs" />
-        <Compile Include="Pathfinding\FloydWarshall.fs" />
-        <Compile Include="Pathfinding\DistanceMatrix.fs" />
-        <Compile Include="Flow\MaxFlow.fs" />
-        <Compile Include="Flow\MinCut.fs" />
-        <Compile Include="Centrality.fs" />
-        <Compile Include="Health.fs" />
+        <Compile Include="MultiGraph.fs" />
         <Compile Include="Properties\Bipartite.fs" />
-
         <Compile Include="Properties\Clique.fs" />
         <Compile Include="Properties\Cyclicity.fs" />
         <Compile Include="Properties\Eulerian.fs" />
         <Compile Include="Properties\Coloring.fs" />
+        <Compile Include="Pathfinding\Utils.fs" />
+        <Compile Include="Pathfinding\Lca.fs" />
+        <Compile Include="Pathfinding\Dijkstra.fs" />
+        <Compile Include="Pathfinding\Bidirectional.fs" />
+        <Compile Include="Pathfinding\AStar.fs" />
+        <Compile Include="Pathfinding\BellmanFord.fs" />
+        <Compile Include="Pathfinding\FloydWarshall.fs" />
+        <Compile Include="Pathfinding\DistanceMatrix.fs" />
+        <Compile Include="Pathfinding\Johnson.fs" />
+        <Compile Include="Pathfinding\Yen.fs" />
+        <Compile Include="Pathfinding\ChinesePostman.fs" />
+        <Compile Include="Flow\MaxFlow.fs" />
+        <Compile Include="Flow\MinCut.fs" />
+        <Compile Include="Centrality.fs" />
+        <Compile Include="Health.fs" />
         <Compile Include="IO\Json.fs" />
 
         <Compile Include="IO\GraphML.fs" />
@@ -69,7 +74,6 @@
         <Compile Include="Builder\Toroidal.fs" />
         <Compile Include="Dag\Model.fs" />
         <Compile Include="Dag\Algorithms.fs" />
-        <Compile Include="MultiGraph.fs" />
         <Compile Include="Render\Dot.fs" />
         <Compile Include="Render\Mermaid.fs" />
         <Compile Include="Render\Ascii.fs" />
