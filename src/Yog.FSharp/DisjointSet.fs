@@ -84,15 +84,23 @@ let add (element: 'a) (dsu: DisjointSet<'a>) : DisjointSet<'a> =
 ///     let (dsu2, root) = find 1 dsu
 ///     // root is the representative of the set containing 1 and 2
 ///
-let rec find (element: 'a) (dsu: DisjointSet<'a>) : DisjointSet<'a> * 'a =
-    match dsu.Parents |> Map.tryFind element with
-    // If not found, add it and return as its own root
-    | None -> (add element dsu, element)
-    | Some parent when parent = element -> (dsu, element)
-    | Some parent ->
-        let (updatedDsu, root) = find parent dsu
-        let newParents = updatedDsu.Parents |> Map.add element root
-        ({ updatedDsu with Parents = newParents }, root)
+let find (element: 'a) (dsu: DisjointSet<'a>) : DisjointSet<'a> * 'a =
+    let rec findRoot el acc =
+        match Map.tryFind el dsu.Parents with
+        | None -> (el, true, acc)
+        | Some parent when parent = el -> (el, false, acc)
+        | Some parent -> findRoot parent (el :: acc)
+
+    let root, needsAdd, path = findRoot element []
+
+    if needsAdd then
+        let updatedDsu = add element dsu
+        (updatedDsu, element)
+    else
+        let newParents =
+            (dsu.Parents, path)
+            ||> List.fold (fun pMap pathEl -> Map.add pathEl root pMap)
+        ({ dsu with Parents = newParents }, root)
 
 /// Merges the sets containing the two elements.
 ///
