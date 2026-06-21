@@ -1,5 +1,6 @@
 namespace Yog.Dag
 
+open System.Collections.Generic
 open Yog.Model
 open Yog.Dag.Model
 
@@ -15,32 +16,6 @@ type Direction =
 /// These algorithms are optimized for DAGs and would be incorrect or inefficient
 /// on general graphs with cycles. The DAG property enables linear-time solutions
 /// for problems that are NP-hard on general graphs.
-///
-/// ## Algorithms Provided
-///
-/// | Algorithm | Complexity | Use Case |
-/// |-----------|------------|----------|
-/// | `topologicalSort` | O(V+E) | Task scheduling, dependency ordering |
-/// | `longestPath` | O(V+E) | Critical path analysis (PERT/CPM) |
-/// | `shortestPath` | O(V+E) | Minimum cost path between nodes |
-/// | `transitiveClosure` | O(V²) | Reachability queries, indirect dependencies |
-/// | `transitiveReduction` | O(V×E) | Simplify graphs, remove implied edges |
-/// | `countReachability` | O(V+E) | Impact analysis, prerequisite counting |
-/// | `lowestCommonAncestors` | O(V×(V+E)) | Merge bases, shared dependencies |
-///
-/// ## Why DAGs Are Special
-///
-/// DAGs enable efficient algorithms for problems that are intractable on general graphs:
-/// - **Longest Path**: O(V+E) on DAGs vs NP-hard on general graphs
-/// - **Topological Sort**: Always succeeds on DAGs vs may fail with cycles
-/// - **Shortest Path**: O(V+E) on DAGs vs O((V+E) log V) with Dijkstra
-///
-/// ## References
-///
-/// - [Wikipedia: Directed Acyclic Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)
-/// - [Longest Path Problem](https://en.wikipedia.org/wiki/Longest_path_problem)
-/// - [Transitive Closure](https://en.wikipedia.org/wiki/Transitive_closure)
-/// - [Transitive Reduction](https://en.wikipedia.org/wiki/Transitive_reduction)
 module Algorithms =
 
     /// Topological sort guaranteed to succeed for the Dag type.
@@ -51,18 +26,6 @@ module Algorithms =
     ///
     /// ## Returns
     /// List of node IDs in topological order (sources before targets).
-    ///
-    /// ## Note
-    /// This function cannot fail because the Dag type guarantees acyclicity.
-    /// If it somehow encounters a cycle, it raises an exception (indicating a bug).
-    ///
-    /// ## Example
-    ///
-    ///     let order = Algorithms.topologicalSort dag
-    ///     // Process nodes in dependency order
-    ///     for node in order do
-    ///         executeTask node
-    ///
     let topologicalSort (dag: Dag<'n, 'e>) =
         match Yog.Traversal.topologicalSort (toGraph dag) with
         | Ok sorted -> sorted
@@ -82,18 +45,6 @@ module Algorithms =
     ///
     /// ## Returns
     /// List of node IDs forming the longest path from any source to any sink.
-    ///
-    /// ## Example
-    ///
-    ///     // Task durations as edge weights
-    ///     let criticalPath = Algorithms.longestPath dag
-    ///     printfn "Project duration: %d"
-    ///         (criticalPath.Length - 1)
-    ///
-    /// ## Use Cases
-    /// - Project management (PERT/CPM)
-    /// - Scheduling with dependencies
-    /// - Finding slowest execution path
     let longestPath (dag: Dag<'n, int>) =
         let graph = toGraph dag
         let sorted = topologicalSort dag
@@ -104,7 +55,7 @@ module Algorithms =
         for u in sorted do
             let distU = Map.tryFind u distances |> Option.defaultValue 0
 
-            for (v, weight) in successors u graph do
+            for (v, weight) in Yog.Model.successors u graph do
                 let newDist = distU + weight
 
                 let currentV = Map.tryFind v distances |> Option.defaultValue System.Int32.MinValue
@@ -138,20 +89,6 @@ module Algorithms =
     ///
     /// ## Complexity
     /// - **Time**: O(V² + VE) - processes each edge and potential path
-    /// - **Space**: O(V²) - stores reachability for all pairs
-    ///
-    /// ## Returns
-    /// A new DAG representing the transitive closure.
-    ///
-    /// ## Example
-    ///
-    ///     // Merge by taking minimum weight along any path
-    ///     let closure = Algorithms.transitiveClosure min dag
-    ///
-    /// ## Use Cases
-    /// - Dependency analysis (what indirectly depends on what)
-    /// - Reachability queries
-    /// - Partial order completion
     let transitiveClosure (mergeFn: 'e -> 'e -> 'e) (dag: Dag<'n, 'e>) =
         let graph = toGraph dag
         let sorted = topologicalSort dag |> List.rev
@@ -160,7 +97,7 @@ module Algorithms =
         for u in sorted do
             let mutable uReach = Map.empty
 
-            for (v, weight) in successors u graph do
+            for (v, weight) in Yog.Model.successors u graph do
                 uReach <- Map.add v weight uReach
 
                 match Map.tryFind v reachability with
@@ -180,39 +117,27 @@ module Algorithms =
 
         let mutable newGraph = graph
 
+        // Add reachability edges to graph
         for KeyValue(u, targets) in reachability do
             for KeyValue(v, weight) in targets do
-                newGraph <- Yog.Model.addEdge u v weight newGraph
+                newGraph <- Yog.Model.addEdgeEnsured u v weight Unchecked.defaultof<'n> Unchecked.defaultof<'n> newGraph
 
         match Model.fromGraph newGraph with
-        | Ok d -> d
-        | Error _ -> failwith "Closure error"
+        | Ok tcDag -> tcDag
+        | Error _ -> failwith "Transitive closure of DAG should be a DAG"
 
-    /// Count total descendants or ancestors using set-based DP.
+    /// Counts how many nodes are reachable from or can reach each node in the DAG.
     ///
     /// ## Parameters
-    /// - `direction`: Count Ancestors (can reach node) or Descendants (reachable from node)
-    /// - `dag`: The input DAG
+    /// - `direction`: Ancestors (prerequisites) or Descendants (dependents)
+    /// - `dag`: The DAG to analyze
     ///
     /// ## Complexity
-    /// - **Time**: O(V + E)
-    /// - **Space**: O(V²) in worst case (storing all reachability sets)
+    /// - **Time**: O(V + E) - dynamic programming on topological sort
+    /// - **Space**: O(V²) - set storage per node in the worst case
     ///
     /// ## Returns
-    /// Map from node ID to count of reachable nodes in the specified direction.
-    ///
-    /// ## Example
-    ///
-    ///     // Count how many tasks depend on each task (descendants)
-    ///     let impact = Algorithms.countReachability Descendants dag
-    ///
-    ///     // Count prerequisites for each task (ancestors)
-    ///     let prerequisites = Algorithms.countReachability Ancestors dag
-    ///
-    /// ## Use Cases
-    /// - Impact analysis (how many things break if X fails)
-    /// - Work prioritization (tasks with many prerequisites first)
-    /// - Dependency metrics
+    /// Map from each node to the count of its ancestors or descendants (excluding itself).
     let countReachability (direction: Direction) (dag: Dag<'n, 'e>) =
         let graph = toGraph dag
 
@@ -226,8 +151,8 @@ module Algorithms =
         for u in nodes do
             let related =
                 match direction with
-                | Descendants -> successors u graph |> List.map fst
-                | Ancestors -> predecessors u graph |> List.map fst
+                | Descendants -> Yog.Model.successors u graph |> List.map fst
+                | Ancestors -> Yog.Model.predecessors u graph |> List.map fst
 
             let mutable currentSet = Set.ofList related
 
@@ -238,39 +163,24 @@ module Algorithms =
 
             reachSets <- Map.add u currentSet reachSets
 
-        reachSets |> Map.map (fun _ s -> Set.count s)
+        reachSets |> Map.map (fun _ s -> s.Count)
 
-    /// Computes the transitive reduction of a DAG.
+    /// Transitive Reduction: Smallest DAG preserving the same reachability.
     ///
-    /// The transitive reduction removes all edges that are redundant - i.e., edges
-    /// u -> v where there exists an indirect path from u to v through other nodes.
-    /// The result has the minimum number of edges while preserving all reachability
-    /// relationships.
-    ///
-    /// This is the inverse of transitive closure.
+    /// Removes redundant edges that are implied by longer paths.
+    /// For example, if A->B, B->C, and A->C exist, the edge A->C is redundant
+    /// and will be removed.
     ///
     /// ## Parameters
-    /// - `mergeFn`: Function to combine weights when multiple paths exist
+    /// - `mergeFn`: Function to combine weights
     /// - `dag`: The input DAG
     ///
     /// ## Complexity
-    /// - **Time**: O(V×E)
-    /// - **Space**: O(V²)
+    /// - **Time**: O(V × E) with topological sorting checks
+    /// - **Space**: O(V + E)
     ///
     /// ## Returns
-    /// A new DAG with redundant edges removed.
-    ///
-    /// ## Example
-    ///
-    ///     // Original: A->B, B->C, A->C (A->C is implied by A->B->C)
-    ///     // Reduction removes: A->C
-    ///     // Result: A->B, B->C
-    ///     let minimal = Algorithms.transitiveReduction min dag
-    ///
-    /// ## Use Cases
-    /// - Simplifying dependency graphs
-    /// - Removing implied dependencies
-    /// - Creating minimal representations
+    /// Reduced DAG with all redundant edges removed.
     let transitiveReduction (mergeFn: 'e -> 'e -> 'e) (dag: Dag<'n, 'e>) =
         let graph = toGraph dag
         let reachDag = transitiveClosure mergeFn dag
@@ -314,19 +224,6 @@ module Algorithms =
     /// ## Returns
     /// - `Some path`: List of node IDs from src to dst with minimum total weight
     /// - `None`: If no path exists from src to dst
-    ///
-    /// ## Example
-    ///
-    ///     match Algorithms.shortestPath dag 0 5 with
-    ///     | Some path ->
-    ///         printfn "Shortest path: %A" path
-    ///     | None ->
-    ///         printfn "No path exists"
-    ///
-    /// ## Use Cases
-    /// - Finding fastest route in task dependencies
-    /// - Minimum cost path in project networks
-    /// - Critical path alternatives
     let shortestPath (src: NodeId) (dst: NodeId) (dag: Dag<'n, int>) =
         let graph = toGraph dag
         let sorted = topologicalSort dag
@@ -337,7 +234,7 @@ module Algorithms =
         for u in sorted do
             match Map.tryFind u distances with
             | Some distU ->
-                for (v, weight) in successors u graph do
+                for (v, weight) in Yog.Model.successors u graph do
                     let newDist = distU + weight
 
                     let currentV = Map.tryFind v distances |> Option.defaultValue System.Int32.MaxValue
@@ -367,36 +264,27 @@ module Algorithms =
         let graph = toGraph dag
 
         let rec dfs current visited =
-            if current = target then
-                true
-            elif Set.contains current visited then
-                false
+            if current = target then true
+            elif Set.contains current visited then false
             else
+                let neighbors = Yog.Model.successors current graph |> List.map fst
                 let newVisited = Set.add current visited
-
-                successors current graph
-                |> List.map fst
-                |> List.exists (fun child -> dfs child newVisited)
+                neighbors |> List.exists (fun n -> dfs n newVisited)
 
         dfs start Set.empty
 
-    /// Finds the lowest common ancestors (LCAs) of two nodes.
+    /// Finds the Lowest Common Ancestors (LCAs) of two nodes.
     ///
-    /// A common ancestor of nodes A and B is any node that has paths to both A and B.
-    /// The "lowest" common ancestors are those that are not ancestors of any other
-    /// common ancestor - they are the "closest" shared dependencies.
-    ///
-    /// ## Parameters
-    /// - `nodeA`: First node
-    /// - `nodeB`: Second node
-    /// - `dag`: The input DAG
+    /// An LCA of nodes A and B is a common ancestor X such that no descendant
+    /// of X is also a common ancestor of A and B. In a DAG, there can be multiple
+    /// lowest common ancestors.
     ///
     /// ## Complexity
-    /// - **Time**: O(V×(V+E))
+    /// - **Time**: O(V × (V + E)) - checks paths from all nodes
     /// - **Space**: O(V)
     ///
     /// ## Returns
-    /// List of node IDs representing the lowest common ancestors.
+    /// List of node IDs that are lowest common ancestors of A and B.
     ///
     /// ## Example
     ///
@@ -424,3 +312,156 @@ module Algorithms =
         commonAncestors
         |> List.filter (fun candidate ->
             not (List.exists (fun other -> other <> candidate && hasPath dag candidate other) commonAncestors))
+
+    /// Returns the topological generations of a DAG.
+    let topologicalGenerations (dag: Dag<'n, 'e>) : NodeId list list =
+        let graph = toGraph dag
+        let nodes = allNodes graph
+        
+        let mutable inDegrees = Map.empty
+        let mutable currentGen = []
+        
+        for node in nodes do
+            let preds = Yog.Model.predecessorIds node graph
+            let deg = preds.Length
+            inDegrees <- Map.add node deg inDegrees
+            if deg = 0 then
+                currentGen <- node :: currentGen
+                
+        let mutable result = []
+        
+        while not (List.isEmpty currentGen) do
+            result <- (currentGen |> List.sort) :: result
+            let mutable nextGen = []
+            
+            for node in currentGen do
+                let succs = Yog.Model.successorIds node graph
+                for succ in succs do
+                    let currentDeg = Map.find succ inDegrees
+                    let newDeg = currentDeg - 1
+                    inDegrees <- Map.add succ newDeg inDegrees
+                    if newDeg = 0 then
+                        nextGen <- succ :: nextGen
+                        
+            currentGen <- nextGen
+            
+        List.rev result
+
+    /// Returns all source nodes (in-degree 0).
+    let sources (dag: Dag<'n, 'e>) : NodeId list =
+        let graph = toGraph dag
+        allNodes graph
+        |> List.filter (fun node -> (Yog.Model.predecessors node graph).Length = 0)
+        |> List.sort
+
+    /// Returns all sink nodes (out-degree 0).
+    let sinks (dag: Dag<'n, 'e>) : NodeId list =
+        let graph = toGraph dag
+        allNodes graph
+        |> List.filter (fun node -> (Yog.Model.successors node graph).Length = 0)
+        |> List.sort
+
+    /// Returns all ancestors of a node (nodes that have a path to the given node, including itself).
+    let ancestors (node: NodeId) (dag: Dag<'n, 'e>) : NodeId list =
+        let graph = toGraph dag
+        let visited = HashSet<NodeId>()
+        let q = Queue<NodeId>()
+        q.Enqueue(node)
+        visited.Add(node) |> ignore
+        
+        while q.Count > 0 do
+            let curr = q.Dequeue()
+            for pred in Yog.Model.predecessorIds curr graph do
+                if visited.Add(pred) then
+                    q.Enqueue(pred)
+                    
+        visited |> Seq.toList |> List.sort
+
+    /// Returns all descendants of a node (nodes reachable from the given node, including itself).
+    let descendants (node: NodeId) (dag: Dag<'n, 'e>) : NodeId list =
+        let graph = toGraph dag
+        let visited = HashSet<NodeId>()
+        let q = Queue<NodeId>()
+        q.Enqueue(node)
+        visited.Add(node) |> ignore
+        
+        while q.Count > 0 do
+            let curr = q.Dequeue()
+            for succ in Yog.Model.successorIds curr graph do
+                if visited.Add(succ) then
+                    q.Enqueue(succ)
+                    
+        visited |> Seq.toList |> List.sort
+
+    /// Computes single-source shortest distances to all reachable nodes.
+    let singleSourceDistances (from: NodeId) (dag: Dag<'n, int>) : Map<NodeId, int> =
+        let graph = toGraph dag
+        let sorted = topologicalSort dag
+        let relevant = sorted |> List.skipWhile (fun n -> n <> from)
+        
+        if List.isEmpty relevant then
+            Map.empty
+        else
+            let mutable distances = Map.empty |> Map.add from 0
+            for u in relevant do
+                match Map.tryFind u distances with
+                | Some distU ->
+                    for (v, weight) in Yog.Model.successors u graph do
+                        let newDist = distU + weight
+                        let currentV = Map.tryFind v distances |> Option.defaultValue System.Int32.MaxValue
+                        if newDist < currentV then
+                            distances <- Map.add v newDist distances
+                | None -> ()
+            distances
+
+    /// Finds the longest path between two specific nodes in a weighted DAG.
+    let longestPathBetween (src: NodeId) (dst: NodeId) (dag: Dag<'n, int>) : NodeId list option =
+        let graph = toGraph dag
+        let sorted = topologicalSort dag
+        let relevant = sorted |> List.skipWhile (fun n -> n <> src)
+
+        if List.isEmpty relevant then
+            None
+        else
+            let mutable distances = Map.empty |> Map.add src 0
+            let mutable predecessors = Map.empty
+
+            for u in relevant do
+                match Map.tryFind u distances with
+                | Some distU ->
+                    for (v, weight) in Yog.Model.successors u graph do
+                        let newDist = distU + weight
+                        let currentV = Map.tryFind v distances |> Option.defaultValue System.Int32.MinValue
+                        if newDist > currentV then
+                            distances <- Map.add v newDist distances
+                            predecessors <- Map.add v u predecessors
+                | None -> ()
+
+            match Map.tryFind dst distances with
+            | None -> None
+            | Some _ ->
+                let rec reconstruct curr acc =
+                    match Map.tryFind curr predecessors with
+                    | Some prev -> reconstruct prev (curr :: acc)
+                    | None -> curr :: acc
+                Some(reconstruct dst [])
+
+    /// Counts the number of distinct paths between two nodes in a DAG.
+    let pathCount (src: NodeId) (dst: NodeId) (dag: Dag<'n, 'e>) : int =
+        let graph = toGraph dag
+        let sorted = topologicalSort dag
+        let relevant = sorted |> List.skipWhile (fun n -> n <> src)
+        
+        if List.isEmpty relevant then
+            0
+        else
+            let mutable counts = Map.empty |> Map.add src 1
+            for u in relevant do
+                match Map.tryFind u counts with
+                | Some count ->
+                    let succs = Yog.Model.successorIds u graph
+                    for succ in succs do
+                        let currentCount = Map.tryFind succ counts |> Option.defaultValue 0
+                        counts <- Map.add succ (currentCount + count) counts
+                | None -> ()
+            Map.tryFind dst counts |> Option.defaultValue 0

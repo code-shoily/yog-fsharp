@@ -825,3 +825,69 @@ module LowestCommonAncestorsTests =
         let lcas = Algorithms.lowestCommonAncestors 1 2 dag
 
         Assert.Equal<int list>([ 1 ], lcas)
+
+    [<Fact>]
+    let ``topologicalGenerations - simple diamond`` () =
+        let graph =
+            empty Directed
+            |> addNode 1 () |> addNode 2 () |> addNode 3 () |> addNode 4 ()
+            |> addEdge 1 2 1 |> addEdge 1 3 1 |> addEdge 2 4 1 |> addEdge 3 4 1
+        let dag = Model.fromGraph graph |> unwrapDag
+        let gens = Algorithms.topologicalGenerations dag
+        Assert.Equal(3, gens.Length)
+        Assert.Equal<int list>([ 1 ], gens.[0])
+        Assert.Equal<int list>([ 2; 3 ], gens.[1])
+        Assert.Equal<int list>([ 4 ], gens.[2])
+
+    [<Fact>]
+    let ``sources and sinks - simple diamond`` () =
+        let graph =
+            empty Directed
+            |> addNode 1 () |> addNode 2 () |> addNode 3 () |> addNode 4 ()
+            |> addEdge 1 2 1 |> addEdge 1 3 1 |> addEdge 2 4 1 |> addEdge 3 4 1
+        let dag = Model.fromGraph graph |> unwrapDag
+        Assert.Equal<int list>([ 1 ], Algorithms.sources dag)
+        Assert.Equal<int list>([ 4 ], Algorithms.sinks dag)
+
+    [<Fact>]
+    let ``ancestors and descendants`` () =
+        let graph =
+            empty Directed
+            |> addNode 1 () |> addNode 2 () |> addNode 3 ()
+            |> addEdge 1 2 1 |> addEdge 2 3 1
+        let dag = Model.fromGraph graph |> unwrapDag
+        Assert.Equal<int list>([ 1; 2; 3 ], Algorithms.ancestors 3 dag)
+        Assert.Equal<int list>([ 1; 2; 3 ], Algorithms.descendants 1 dag)
+
+    [<Fact>]
+    let ``singleSourceDistances - simple weighted graph`` () =
+        let graph =
+            empty Directed
+            |> addNode 1 () |> addNode 2 () |> addNode 3 ()
+            |> addEdge 1 2 3 |> addEdge 2 3 2 |> addEdge 1 3 10
+        let dag = Model.fromGraph graph |> unwrapDag
+        let dists = Algorithms.singleSourceDistances 1 dag
+        Assert.Equal(0, Map.find 1 dists)
+        Assert.Equal(3, Map.find 2 dists)
+        Assert.Equal(5, Map.find 3 dists)
+
+    [<Fact>]
+    let ``longestPathBetween - simple weighted graph`` () =
+        let graph =
+            empty Directed
+            |> addNode 1 () |> addNode 2 () |> addNode 3 () |> addNode 4 ()
+            |> addEdge 1 2 1 |> addEdge 1 3 5 |> addEdge 2 4 1 |> addEdge 3 4 1
+        let dag = Model.fromGraph graph |> unwrapDag
+        let path = Algorithms.longestPathBetween 1 4 dag
+        Assert.True(path.IsSome)
+        Assert.Equal<int list>([ 1; 3; 4 ], path.Value)
+
+    [<Fact>]
+    let ``pathCount - simple diamond`` () =
+        let graph =
+            empty Directed
+            |> addNode 1 () |> addNode 2 () |> addNode 3 () |> addNode 4 ()
+            |> addEdge 1 2 1 |> addEdge 1 3 1 |> addEdge 2 4 1 |> addEdge 3 4 1
+        let dag = Model.fromGraph graph |> unwrapDag
+        Assert.Equal(2, Algorithms.pathCount 1 4 dag)
+

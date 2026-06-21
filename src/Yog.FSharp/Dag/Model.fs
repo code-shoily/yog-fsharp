@@ -1,7 +1,9 @@
 namespace Yog.Dag
 
+open System.Collections.Generic
 open Yog.Model
 open Yog.Properties.Cyclicity
+
 
 /// Error indicating a cycle was detected during DAG construction.
 type DagError = CycleDetected
@@ -162,5 +164,112 @@ module Model =
     ///     | Ok dag' -> printfn "Edge added"
     ///     | Error CycleDetected -> printfn "Would create cycle"
     ///
+    /// Checks if from node can reach to node in the DAG.
+    let private isReachable src dst (dag: Dag<'n, 'e>) : bool =
+        let graph = dag.InternalGraph
+        let visited = HashSet<NodeId>()
+        let q = Queue<NodeId>()
+        q.Enqueue(src)
+        visited.Add(src) |> ignore
+        
+        let mutable found = false
+        while q.Count > 0 && not found do
+            let curr = q.Dequeue()
+            if curr = dst then
+                found <- true
+            else
+                let neighbors = Yog.Model.successors curr graph |> List.map fst
+                for n in neighbors do
+                    if visited.Add(n) then
+                        q.Enqueue(n)
+        found
+
+    /// Adds an edge. Returns Result because it could create a cycle.
+    ///
+    /// ## Parameters
+    /// - `src`: Source node ID
+    /// - `dst`: Target node ID
+    /// - `weight`: Edge weight
+    /// - `dag`: The DAG to modify
+    ///
+    /// ## Returns
+    /// - `Ok updatedDag`: If adding the edge doesn't create a cycle
+    /// - `Error CycleDetected`: If the edge would create a cycle
+    ///
+    /// ## Example
+    ///
+    ///     match Model.addEdge 0 1 weight dag with
+    ///     | Ok dag' -> printfn "Edge added"
+    ///     | Error CycleDetected -> printfn "Would create cycle"
+    ///
     let addEdge src dst weight (dag: Dag<'n, 'e>) =
-        Yog.Model.addEdge src dst weight dag.InternalGraph |> fromGraph
+        // An edge from A to B creates a cycle ONLY if there's already a path from B to A.
+        // We can do a fast reachable check to avoid full topological sort cycle detection!
+        if isReachable dst src dag then
+            Error CycleDetected
+        else
+            Ok(Dag<'n, 'e>(Yog.Model.addEdgeEnsured src dst weight Unchecked.defaultof<'n> Unchecked.defaultof<'n> dag.InternalGraph))
+
+
+
+    /// Creates a new empty DAG.
+    let empty<'n, 'e when 'n: equality and 'e: equality> : Dag<'n, 'e> = 
+        Dag<'n, 'e>(Yog.Model.empty Directed)
+
+    /// Creates a DAG from a list of edges (src * dst * weight).
+    let fromEdges (edges: (NodeId * NodeId * 'e) list) : Result<Dag<unit, 'e>, DagError> =
+        Yog.Model.fromEdges Directed edges |> fromGraph
+
+    /// Creates a DAG from a list of unweighted edges (src * dst).
+    let fromUnweightedEdges (edges: (NodeId * NodeId) list) : Result<Dag<unit, unit>, DagError> =
+        Yog.Model.fromUnweightedEdges Directed edges |> fromGraph
+
+    /// Creates a DAG from a list of unweighted edges (src * dst) and a default weight.
+    let fromEdgesWithDefaultWeight (edges: (NodeId * NodeId) list) (defaultWeight: 'e) : Result<Dag<unit, 'e>, DagError> =
+        let weightedEdges = edges |> List.map (fun (src, dst) -> (src, dst, defaultWeight))
+        fromEdges weightedEdges
+
+    /// Checks if a node exists in the DAG.
+    let hasNode id (dag: Dag<'n, 'e>) : bool =
+        dag.InternalGraph.Nodes |> Map.containsKey id
+
+    /// Checks if an edge exists in the DAG.
+    let hasEdge src dst (dag: Dag<'n, 'e>) : bool =
+        match Map.tryFind src dag.InternalGraph.OutEdges with
+        | Some targets -> Map.containsKey dst targets
+        | None -> false
+
+    /// Returns the number of nodes in the DAG.
+    let nodeCount (dag: Dag<'n, 'e>) : int =
+        dag.InternalGraph.Nodes.Count
+
+    /// Returns the number of edges in the DAG.
+    let edgeCount (dag: Dag<'n, 'e>) : int =
+        dag.InternalGraph.OutEdges |> Map.values |> Seq.sumBy (fun m -> m.Count)
+
+    /// Returns all node IDs in the DAG.
+    let nodes (dag: Dag<'n, 'e>) : NodeId list =
+        dag.InternalGraph.Nodes |> Map.toList |> List.map fst
+
+    /// Returns all outgoing edges from a node as [(to, weight)].
+    let successors id (dag: Dag<'n, 'e>) : (NodeId * 'e) list =
+        Yog.Model.successors id dag.InternalGraph
+
+    /// Returns all incoming edges to a node as [(from, weight)].
+    let predecessors id (dag: Dag<'n, 'e>) : (NodeId * 'e) list =
+        Yog.Model.predecessors id dag.InternalGraph
+
+    /// Returns the in-degree of a node.
+    let inDegree id (dag: Dag<'n, 'e>) : int =
+        (predecessors id dag).Length
+
+    /// Returns the out-degree of a node.
+    let outDegree id (dag: Dag<'n, 'e>) : int =
+        (successors id dag).Length
+
+    /// Checks if from node can reach to node in the DAG.
+    let reachable src dst (dag: Dag<'n, 'e>) : bool =
+        isReachable src dst dag
+
+
+
