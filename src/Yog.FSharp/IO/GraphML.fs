@@ -280,6 +280,51 @@ let deserializeWith
 
     g
 
+// =============================================================================
+// Result-based Deserialization
+// =============================================================================
+
+/// Attempts to deserialize a GraphML string with custom data mappers,
+/// returning `Ok graph` on success or `Error message` on failure.
+///
+/// This is the safe variant of `deserializeWith` that catches XML parsing
+/// errors instead of throwing exceptions.
+///
+/// **Time Complexity:** O(V + E)
+///
+/// ## Example
+///
+///     match GraphML.tryDeserializeWith nodeFolder edgeFolder xml with
+///     | Ok graph -> printfn "Loaded %d nodes" (order graph)
+///     | Error msg -> printfn "Parse error: %s" msg
+///
+let tryDeserializeWith
+    (nodeFolder: Map<string, string> -> 'n)
+    (edgeFolder: Map<string, string> -> 'e)
+    (xml: string)
+    : Result<Graph<'n, 'e>, string> =
+    try
+        Ok(deserializeWith nodeFolder edgeFolder xml)
+    with ex ->
+        Error ex.Message
+
+/// Attempts to deserialize a GraphML string, returning `Ok graph` on success
+/// or `Error message` on failure.
+///
+/// This is the safe variant of `deserialize` that catches XML parsing
+/// errors instead of throwing exceptions.
+///
+/// **Time Complexity:** O(V + E)
+///
+/// ## Example
+///
+///     match GraphML.tryDeserialize xml with
+///     | Ok graph -> printfn "Loaded %d nodes" (order graph)
+///     | Error msg -> printfn "Parse error: %s" msg
+///
+let tryDeserialize (xml: string) : Result<Graph<Map<string, string>, Map<string, string>>, string> =
+    tryDeserializeWith id id xml
+
 /// Deserializes a GraphML string to a graph.
 ///
 /// This is a simplified version of `deserializeWith` for graphs where
@@ -331,3 +376,37 @@ let readFileWith
     (path: string)
     : Graph<'n, 'e> =
     File.ReadAllText(path) |> deserializeWith nodeFolder edgeFolder
+
+/// Attempts to read a graph from a GraphML file, returning `Ok graph`
+/// on success or `Error message` on failure.
+///
+/// ## Example
+///
+///     match GraphML.tryReadFile "graph.graphml" with
+///     | Ok graph -> printfn "Loaded %d nodes" (order graph)
+///     | Error msg -> printfn "Error: %s" msg
+///
+let tryReadFile (path: string) : Result<Graph<Map<string, string>, Map<string, string>>, string> =
+    try
+        Ok(readFile path)
+    with ex ->
+        Error ex.Message
+
+/// Attempts to read a graph from a GraphML file with custom data mappers,
+/// returning `Ok graph` on success or `Error message` on failure.
+///
+/// ## Example
+///
+///     match GraphML.tryReadFileWith nodeFolder edgeFolder "graph.graphml" with
+///     | Ok graph -> printfn "Loaded %d nodes" (order graph)
+///     | Error msg -> printfn "Error: %s" msg
+///
+let tryReadFileWith
+    (nodeFolder: Map<string, string> -> 'n)
+    (edgeFolder: Map<string, string> -> 'e)
+    (path: string)
+    : Result<Graph<'n, 'e>, string> =
+    try
+        Ok(readFileWith nodeFolder edgeFolder path)
+    with ex ->
+        Error ex.Message

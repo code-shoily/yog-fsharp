@@ -480,3 +480,65 @@ let ``serialize handles special characters in data`` () =
 
     // Note: XML encoding may change the format, but content should be preserved
     Assert.Equal(2, order restored)
+
+// ============================================================================
+// RESULT-BASED DESERIALIZATION
+// ============================================================================
+
+[<Fact>]
+let ``tryDeserialize on valid XML returns Ok`` () =
+    let xml =
+        """<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <graph id="G" edgedefault="directed">
+    <node id="1"><data key="label">A</data></node>
+    <node id="2"><data key="label">B</data></node>
+    <edge source="1" target="2"><data key="weight">5</data></edge>
+  </graph>
+</graphml>"""
+
+    match tryDeserialize xml with
+    | Ok graph ->
+        Assert.Equal(2, order graph)
+        Assert.Equal(1, edgeCount graph)
+    | Error msg -> failwith $"Expected Ok but got Error: {msg}"
+
+[<Fact>]
+let ``tryDeserialize on invalid XML returns Error`` () =
+    let badXml = "this is not xml at all <><><"
+
+    match tryDeserialize badXml with
+    | Ok _ -> failwith "Expected Error but got Ok"
+    | Error _ -> ()
+
+[<Fact>]
+let ``tryDeserializeWith on valid XML returns Ok`` () =
+    let xml =
+        """<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <graph id="G" edgedefault="directed">
+    <node id="1"><data key="name">Alice</data><data key="age">30</data></node>
+    <edge source="1" target="1"><data key="weight">5</data></edge>
+  </graph>
+</graphml>"""
+
+    let nodeFolder (data: Map<string, string>) =
+        Map.tryFind "name" data |> Option.defaultValue ""
+
+    let edgeFolder (data: Map<string, string>) =
+        Map.tryFind "weight" data |> Option.map int |> Option.defaultValue 0
+
+    match tryDeserializeWith nodeFolder edgeFolder xml with
+    | Ok graph ->
+        Assert.Equal("Alice", graph.Nodes.[1])
+        Assert.Equal(5, graph.OutEdges.[1].[1])
+    | Error msg -> failwith $"Expected Ok but got Error: {msg}"
+
+[<Fact>]
+let ``tryReadFile on non-existent path returns Error`` () =
+    let path =
+        System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"nonexistent-{System.Guid.NewGuid()}.graphml")
+
+    match tryReadFile path with
+    | Ok _ -> failwith "Expected Error but got Ok"
+    | Error _ -> ()
