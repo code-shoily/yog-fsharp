@@ -544,3 +544,161 @@ let toUndirected (resolve: 'e -> 'e -> 'e) (graph: Graph<'n, 'e>) : Graph<'n, 'e
             Kind = Undirected
             OutEdges = symmetricOut
             InEdges = symmetricOut }
+/// Updates a specific node's data using an updater function.
+/// Similar to Map.add but with default value if node doesn't exist.
+let updateNode (id: NodeId) (defaultVal: 'n) (updater: 'n -> 'n) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
+    let newNodes =
+        graph.Nodes
+        |> Map.change id (fun maybeData ->
+            match maybeData with
+            | Some data -> Some (updater data)
+            | None -> Some defaultVal)
+    { graph with Nodes = newNodes }
+
+/// Helper for updating a directed edge.
+let private doUpdateDirectedEdge src dst defaultVal fn (graph: Graph<'n, 'e>) =
+    let updateFn mapOpt =
+        match mapOpt with
+        | Some m ->
+            let newW =
+                match Map.tryFind dst m with
+                | Some w -> fn w
+                | None -> defaultVal
+            Some (Map.add dst newW m)
+        | None -> Some (Map.ofList [ (dst, defaultVal) ])
+
+    let updateInFn mapOpt =
+        match mapOpt with
+        | Some m ->
+            let newW =
+                match Map.tryFind src m with
+                | Some w -> fn w
+                | None -> defaultVal
+            Some (Map.add src newW m)
+        | None -> Some (Map.ofList [ (src, defaultVal) ])
+
+    { graph with
+        OutEdges = graph.OutEdges |> Map.change src updateFn
+        InEdges = graph.InEdges |> Map.change dst updateInFn }
+
+/// Updates a specific edge's weight/metadata safely.
+/// Properly handles undirected graphs by updating both directions.
+let updateEdge (src: NodeId) (dst: NodeId) (defaultVal: 'e) (fn: 'e -> 'e) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
+    let hasSrc = graph.Nodes |> Map.containsKey src
+    let hasDst = graph.Nodes |> Map.containsKey dst
+    match hasSrc, hasDst with
+    | true, true ->
+        let g = doUpdateDirectedEdge src dst defaultVal fn graph
+        match g.Kind with
+        | Directed -> g
+        | Undirected ->
+            if src = dst then g
+            else doUpdateDirectedEdge dst src defaultVal fn g
+    | _ -> graph
+/// Helper for DAG transitive closure.
+let private doTransitiveClosureDag (graph: Graph<'n, 'e>) (sorted: NodeId list) (mergeFn: 'e -> 'e -> 'e) : Graph<'n, 'e> =
+    let reachabilityMap =
+        (Map.empty, List.rev sorted)
+        ||> List.fold (fun acc node ->
+            let edges = graph.OutEdges |> Map.tryFind node |> Option.defaultValue Map.empty
+            let reachableFromNode =
+                (edges, edges)
+                ||> Map.fold (fun reachableAcc child wNodeChild ->
+                    let childReachable = acc |> Map.tryFind child |> Option.defaultValue Map.empty
+                    let mappedChild = childReachable |> Map.map (fun _ w -> mergeFn wNodeChild w)
+                    (reachableAcc, mappedChild)
+                    ||> Map.fold (fun combinedAcc k v ->
+                        match Map.tryFind k combinedAcc with
+                        | Some existing -> Map.add k (mergeFn existing v) combinedAcc
+                        | None -> Map.add k v combinedAcc
+                    )
+                )
+            Map.add node reachableFromNode acc
+        )
+
+    (graph, reachabilityMap)
+    ||> Map.fold (fun gAcc src targets ->
+        (gAcc, targets)
+        ||> Map.fold (fun gInner dst w ->
+            addEdge src dst w gInner
+        )
+    )
+
+/// Helper for general transitive closure.
+let private doWeightedReachability (graph: Graph<'n, 'e>) (queue: (NodeId * 'e) list) (visited: Map<NodeId, 'e>) (updates: Map<NodeId, int>) (mergeFn: 'e -> 'e -> 'e) (maxUpdates: int) : Map<NodeId, 'e> =
+    let rec loop q vis upds =
+        match q with
+        | [] -> vis
+        | (current, weightToCurrent) :: rest ->
+            match Map.tryFind current vis with
+            | Some prevWeight ->
+                let merged = mergeFn prevWeight weightToCurrent
+                if merged = prevWeight then
+                    loop rest vis upds
+                else
+                    let updateCount = Map.tryFind current upds |> Option.defaultValue 0
+                    if updateCount >= maxUpdates then
+                        loop rest vis upds
+                    else
+                        let newVis = Map.add current merged vis
+                        let newUpds = Map.add current (updateCount + 1) upds
+                        let successors = successors current graph
+                        let nextSteps = successors |> List.map (fun (dst, w) -> (dst, mergeFn merged w))
+                        loop (rest @ nextSteps) newVis newUpds
+            | None ->
+                let newVis = Map.add current weightToCurrent vis
+                let newUpds = Map.add current 1 upds
+                let successors = successors current graph
+                let nextSteps = successors |> List.map (fun (dst, w) -> (dst, mergeFn weightToCurrent w))
+                loop (rest @ nextSteps) newVis newUpds
+    loop queue visited updates
+
+/// Finds all reachable nodes with their aggregated weights.
+let private findAllReachableWeighted (graph: Graph<'n, 'e>) (start: NodeId) (mergeFn: 'e -> 'e -> 'e) : Map<NodeId, 'e> =
+    let succs = successors start graph
+    let maxUpdates = nodeCount graph
+    doWeightedReachability graph succs Map.empty Map.empty mergeFn maxUpdates
+
+/// Helper to compute general transitive closure (for graphs with cycles).
+let private doTransitiveClosureGeneral (graph: Graph<'n, 'e>) (mergeFn: 'e -> 'e -> 'e) : Graph<'n, 'e> =
+    (graph, allNodes graph)
+    ||> List.fold (fun accGraph startNode ->
+        let reachable = findAllReachableWeighted graph startNode mergeFn
+        (accGraph, reachable)
+        ||> Map.fold (fun innerGraph targetNode weight ->
+            addEdge startNode targetNode weight innerGraph
+        )
+    )
+
+/// Computes the transitive closure of a graph.
+/// Adds edges between all pairs of nodes where a path exists in the original graph.
+let transitiveClosure (mergeFn: 'e -> 'e -> 'e) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
+    match Yog.Traversal.topologicalSort graph with
+    | Ok sorted -> doTransitiveClosureDag graph sorted mergeFn
+    | Error _ -> doTransitiveClosureGeneral graph mergeFn
+
+/// Computes the transitive reduction of a graph.
+/// Removes all edges that are redundant (indirectly reachable).
+let transitiveReduction (mergeFn: 'e -> 'e -> 'e) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
+    let reachGraph = transitiveClosure mergeFn graph
+    (graph, graph.OutEdges)
+    ||> Map.fold (fun gAcc u targets ->
+        (gAcc, targets)
+        ||> Map.fold (fun gInner v _ ->
+            let isRedundant =
+                (false, targets)
+                ||> Map.fold (fun foundRedundant w _ ->
+                    if foundRedundant then
+                        true
+                    elif w = v then
+                        false
+                    else
+                        match Map.tryFind w reachGraph.OutEdges with
+                        | Some wTargets -> Map.containsKey v wTargets
+                        | None -> false
+                )
+            if isRedundant then removeEdge u v gInner
+            else gInner
+        )
+    )
+

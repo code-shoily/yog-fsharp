@@ -539,3 +539,74 @@ let ``toUndirected resolves weight conflicts`` () =
     // Both directions should have weight 20 (max of 10 and 20)
     Assert.Equal<(NodeId * int) list>([ 2, 20 ], successors 1 undirected)
     Assert.Equal<(NodeId * int) list>([ 1, 20 ], successors 2 undirected)
+
+[<Fact>]
+let ``updateNode updates data correctly`` () =
+    let graph = empty Directed |> addNode 1 100
+    let updated = updateNode 1 0 (fun x -> x + 50) graph
+    Assert.Equal(Some 150, node 1 updated)
+
+    let created = updateNode 2 10 (fun x -> x + 50) graph
+    Assert.Equal(Some 10, node 2 created)
+
+[<Fact>]
+let ``updateEdge updates weight correctly`` () =
+    let graph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addEdge 1 2 10
+
+    let updated = updateEdge 1 2 0 (fun w -> w + 5) graph
+    Assert.Equal(Some 15, edgeData 1 2 updated)
+
+[<Fact>]
+let ``transitiveClosure computed correctly for DAG`` () =
+    // A -> B -> C
+    // Closure should add A -> C
+    let graph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addNode 3 "C"
+        |> addEdge 1 2 2
+        |> addEdge 2 3 3
+
+    let closure = transitiveClosure (+) graph
+    Assert.True(hasEdge 1 3 closure)
+    Assert.Equal(Some 5, edgeData 1 3 closure)
+
+[<Fact>]
+let ``transitiveClosure computed correctly for cyclic graph`` () =
+    // A -> B -> C -> A
+    let graph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addNode 3 "C"
+        |> addEdge 1 2 1
+        |> addEdge 2 3 1
+        |> addEdge 3 1 1
+
+    let closure = transitiveClosure (+) graph
+    Assert.True(hasEdge 1 3 closure)
+    Assert.True(hasEdge 3 2 closure)
+
+[<Fact>]
+let ``transitiveReduction computes minimal DAG correctly`` () =
+    // A -> B, B -> C, A -> C
+    // A -> C is redundant and should be removed
+    let graph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addNode 3 "C"
+        |> addEdge 1 2 1
+        |> addEdge 2 3 1
+        |> addEdge 1 3 2
+
+    let reduced = transitiveReduction (+) graph
+    Assert.True(hasEdge 1 2 reduced)
+    Assert.True(hasEdge 2 3 reduced)
+    Assert.False(hasEdge 1 3 reduced)
+

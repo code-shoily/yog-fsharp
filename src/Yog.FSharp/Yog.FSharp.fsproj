@@ -36,9 +36,9 @@
 
     <ItemGroup>
         <Compile Include="Model.fs" />
-        <Compile Include="Transform.fs" />
         <Compile Include="DisjointSet.fs" />
         <Compile Include="Traversal.fs" />
+        <Compile Include="Transform.fs" />
         <Compile Include="Mst.fs" />
         <Compile Include="Connectivity.fs" />
         <Compile Include="Pathfinding\Utils.fs" />
