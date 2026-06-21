@@ -86,3 +86,72 @@ Complete reference of all algorithms implemented in Yog.FSharp, organized by cat
 | LR Planarity Test | `Yog.Properties.Planarity` | Exact planarity check and combinatorial embedding | O(V²) | O(V) |
 | Tree Decomposition | `Yog.Properties.TreeDecomposition` | Struct validation of tree decompositions | O(V+E) | O(V) |
 | Weisfeiler-Lehman | `Yog.Properties.WeisfeilerLehman` | Graph hashing for isomorphism verification | O(k(V+E)) | O(V) |
+
+## Random Graph Generation
+
+| Algorithm | Module | Purpose | Time Complexity | Space Complexity |
+|-----------|--------|---------|-----------------|------------------|
+| Erdős-Rényi (GNP) | `Yog.Generators.Random` | Fixed probability per edge | O(V²) | O(V+E) |
+| Erdős-Rényi (GNM) | `Yog.Generators.Random` | Fixed number of edges | O(V²) | O(V+E) |
+| Barabási-Albert | `Yog.Generators.Random` | Preferential attachment | O(VE) | O(V+E) |
+| Watts-Strogatz | `Yog.Generators.Random` | Small-world networks | O(V²) | O(V+E) |
+| Random Tree | `Yog.Generators.Random` | Uniform random tree | O(V) | O(V) |
+| Random Regular | `Yog.Generators.Random` | Fixed-degree random graph | O(VD) | O(V+E) |
+| SBM | `Yog.Generators.Random` | Stochastic Block Model | O(V²) | O(V+E) |
+| DCSBM | `Yog.Generators.Random` | Degree-Corrected SBM | O(V²) | O(V+E) |
+| HSBM | `Yog.Generators.Random` | Hierarchical SBM | O(V²) | O(V+E) |
+| Configuration Model | `Yog.Generators.Random` | Given degree sequence | O(V+E) | O(V+E) |
+| Power Law Graph | `Yog.Generators.Random` | Scale-free network | O(VE) | O(V+E) |
+| Kronecker | `Yog.Generators.Random` | Recursive matrix product | O(V+E) | O(V+E) |
+| R-MAT | `Yog.Generators.Random` | Recursive matrix model | O(E log V) | O(V+E) |
+| Geometric | `Yog.Generators.Random` | Distance-threshold graph | O(V²) | O(V²) |
+| Waxman | `Yog.Generators.Random` | Probabilistic distance graph | O(V²) | O(V²) |
+
+## Classic Graph Generators
+
+| Algorithm | Module | Purpose | Time Complexity | Space Complexity |
+|-----------|--------|---------|-----------------|------------------|
+| Complete Graph | `Yog.Generators.Classic` | Kₙ generator | O(V²) | O(V²) |
+| Cycle Graph | `Yog.Generators.Classic` | Cₙ generator | O(V) | O(V) |
+| Path Graph | `Yog.Generators.Classic` | Pₙ generator | O(V) | O(V) |
+| Star Graph | `Yog.Generators.Classic` | Sₙ generator | O(V) | O(V) |
+| Wheel Graph | `Yog.Generators.Classic` | Wₙ generator | O(V) | O(V) |
+| Complete Bipartite | `Yog.Generators.Classic` | Kₘ,ₙ generator | O(m·n) | O(m+n) |
+| Binary Tree | `Yog.Generators.Classic` | Full binary tree | O(V) | O(V) |
+| K-ary Tree | `Yog.Generators.Classic` | Full k-ary tree | O(V) | O(V) |
+| Complete K-ary | `Yog.Generators.Classic` | Complete k-ary tree | O(V) | O(V) |
+| Caterpillar | `Yog.Generators.Classic` | Spine with leaves | O(V) | O(V) |
+| Grid 2D | `Yog.Generators.Classic` | Rectangular lattice | O(V) | O(V) |
+| Petersen Graph | `Yog.Generators.Classic` | Famous 10-node graph | O(1) | O(1) |
+| Empty Graph | `Yog.Generators.Classic` | N isolated nodes | O(V) | O(V) |
+| Hypercube | `Yog.Generators.Classic` | Qₙ generator | O(V log V) | O(V log V) |
+| Ladder | `Yog.Generators.Classic` | Ladder graph | O(V) | O(V) |
+| Circular Ladder | `Yog.Generators.Classic` | Prism graph | O(V) | O(V) |
+| Möbius Ladder | `Yog.Generators.Classic` | Möbius-Kantor variant | O(V) | O(V) |
+| Friendship | `Yog.Generators.Classic` | Windmill Fₙ | O(V) | O(V) |
+| Windmill | `Yog.Generators.Classic` | Generalized windmill | O(V) | O(V) |
+| Book Graph | `Yog.Generators.Classic` | Stacked triangles | O(V) | O(V) |
+| Crown Graph | `Yog.Generators.Classic` | Sₙ⁻ generator | O(V²) | O(V²) |
+| Lollipop | `Yog.Generators.Classic` | Kₘ connected to Pₙ | O(m+n) | O(m+n) |
+| Barbell | `Yog.Generators.Classic` | Two cliques + path | O(m+n) | O(m+n) |
+| Turán Graph | `Yog.Generators.Classic` | T(n,r) extremal graph | O(V²) | O(V²) |
+| Platonic Solids | `Yog.Generators.Classic` | Tetrahedron, Cube, Octahedron, Dodecahedron, icosahedron | O(1) | O(1) |
+| Tutte Graph | `Yog.Generators.Classic` | Non-Hamiltonian polyhedral | O(1) | O(1) |
+| Sedgewick Maze | `Yog.Generators.Classic` | Classic 8-node maze | O(1) | O(1) |
+
+## Maze Generation
+
+| Algorithm | Module | Purpose | Time Complexity | Space Complexity |
+|-----------|--------|---------|-----------------|------------------|
+| Binary Tree | `Yog.Generators.Maze` | Simplest, fastest | O(N) | O(1) |
+| Sidewinder | `Yog.Generators.Maze` | Vertical corridors | O(N) | O(cols) |
+| Recursive Backtracker | `Yog.Generators.Maze` | Classic "roguelike" passages | O(N) | O(N) |
+| Hunt-and-Kill | `Yog.Generators.Maze` | Organic, winding | O(N²) | O(1) |
+| Aldous-Broder | `Yog.Generators.Maze` | Uniform spanning tree | O(N²) | O(N) |
+| Wilson's | `Yog.Generators.Maze` | Efficient uniform tree | O(N) avg | O(N) |
+| Kruskal's | `Yog.Generators.Maze` | Balanced, randomized | O(N log N) | O(N) |
+| Prim's (Simplified) | `Yog.Generators.Maze` | Radial, many dead ends | O(N log N) | O(N) |
+| Prim's (True) | `Yog.Generators.Maze` | True Prim maze | O(N log N) | O(N) |
+| Eller's | `Yog.Generators.Maze` | Infinite height potential | O(N) | O(cols) |
+| Growing Tree | `Yog.Generators.Maze` | Meta-algorithm (versatile) | O(N) | O(N) |
+| Recursive Division | `Yog.Generators.Maze` | Fractal, room-based | O(N log N) | O(log N) |

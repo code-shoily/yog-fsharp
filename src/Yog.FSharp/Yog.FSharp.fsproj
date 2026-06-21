@@ -74,12 +74,13 @@
         <Compile Include="IO\Tgf.fs" />
         <Compile Include="IO\List.fs" />
         <Compile Include="IO\Matrix.fs" />
-        <Compile Include="Generators/Classic.fs" />
-        <Compile Include="Generators/Random.fs" />
         <Compile Include="Builder\Labeled.fs" />
         <Compile Include="Builder\Live.fs" />
         <Compile Include="Builder\Grid.fs" />
         <Compile Include="Builder\Toroidal.fs" />
+        <Compile Include="Generators/Classic.fs" />
+        <Compile Include="Generators/Random.fs" />
+        <Compile Include="Generators/Maze.fs" />
         <Compile Include="Dag\Model.fs" />
         <Compile Include="Dag\Algorithms.fs" />
         <Compile Include="Render\Dot.fs" />

@@ -111,12 +111,23 @@ match shortestPathInt 1 3 graph with
 **Classic Deterministic Graphs:**
 - Complete (K_n), Cycle (C_n), Path (P_n), Star (S_n), Wheel (W_n)
 - Grid2D, Binary Tree, Complete Bipartite, Petersen Graph, Empty Graph
+- Hypercube (Q_n), Ladder, Circular Ladder (Prism), Möbius Ladder
+- Friendship (F_n), Windmill, Book, Crown, Lollipop, Barbell, Turán
+- Platonic Solids (Tetrahedron, Cube, Octahedron, Dodecahedron, Icosahedron)
+- Tutte Graph, Sedgewick Maze
 
 **Random Network Models:**
 - Erdős-Rényi: G(n,p) and G(n,m) random graphs
 - Barabási-Albert: Scale-free networks with preferential attachment
 - Watts-Strogatz: Small-world networks
 - Random Trees: Uniformly random spanning trees
+- Random Regular, SBM, DCSBM, HSBM, Configuration Model
+- Power Law Graph, Kronecker, R-MAT, Geometric, Waxman
+
+**Maze Generators:**
+- Binary Tree, Sidewinder, Recursive Backtracker (DFS), Hunt-and-Kill
+- Aldous-Broder, Wilson's, Kruskal's, Simplified/True Prim's
+- Eller's, Growing Tree, Recursive Division
 
 ### Graph Builders
 - **Labeled Builder**: Use custom labels (strings, UUIDs) instead of integer IDs
