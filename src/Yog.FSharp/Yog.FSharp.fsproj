@@ -50,7 +50,9 @@
         <Compile Include="Flow\MaxFlow.fs" />
         <Compile Include="Flow\MinCut.fs" />
         <Compile Include="Centrality.fs" />
+        <Compile Include="Health.fs" />
         <Compile Include="Properties\Bipartite.fs" />
+
         <Compile Include="Properties\Clique.fs" />
         <Compile Include="Properties\Cyclicity.fs" />
         <Compile Include="Properties\Eulerian.fs" />

@@ -20,7 +20,9 @@
         <Compile Include="TraversalTests.fs"/>
         <Compile Include="ConnectivityTests.fs"/>
         <Compile Include="CentralityTests.fs"/>
+        <Compile Include="HealthTests.fs"/>
         <Compile Include="MSTTests.fs"/>
+
         <Compile Include="MultiGraphTests.fs"/>
         <Compile Include="BipartiteTests.fs"/>
         <Compile Include="CliqueTests.fs"/>
