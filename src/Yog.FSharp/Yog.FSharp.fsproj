@@ -39,6 +39,7 @@
         <Compile Include="DisjointSet.fs" />
         <Compile Include="Traversal.fs" />
         <Compile Include="Transform.fs" />
+        <Compile Include="Operation.fs" />
         <Compile Include="Mst.fs" />
         <Compile Include="Connectivity.fs" />
         <Compile Include="MultiGraph.fs" />

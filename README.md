@@ -96,6 +96,14 @@ match shortestPathInt 1 3 graph with
 - **Map/Filter**: Transform nodes and edges
 - **Subgraph**: Extract subgraphs by node set
 
+### Graph Operations
+- **Set Operations**: Union, intersection, difference, symmetric difference, disjoint union
+- **Graph Products**: Cartesian, tensor, strong, and lexicographic products
+- **Composition**: Compose/merge graphs
+- **Line Graph**: Convert edges to nodes
+- **Graph Power**: Connect nodes within distance k
+- **Structural Comparison**: Subgraph and isomorphism checks
+
 ### Graph Generators
 **Classic Deterministic Graphs:**
 - Complete (K_n), Cycle (C_n), Path (P_n), Star (S_n), Wheel (W_n)

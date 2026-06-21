@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Graph Operations module** (`Yog.Operation`) - Set-theoretic operations (union, intersection, difference, symmetric difference, disjoint union), graph products (Cartesian, tensor, strong, lexicographic), composition, line graph, graph power, subgraph, and isomorphism checks
 - GDF (GUESS Graph Format) export support in `Yog.IO.Gdf` module
 - `render-gdf.fsx` example demonstrating GDF serialization
 - Enhanced README with comprehensive feature documentation

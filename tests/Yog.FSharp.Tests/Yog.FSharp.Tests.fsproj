@@ -11,6 +11,7 @@
         <Compile Include="AlgorithmPropertyTests.fs"/>
         <Compile Include="ModelTests.fs"/>
         <Compile Include="TransformTests.fs"/>
+        <Compile Include="OperationTests.fs"/>
         <Compile Include="DisjointSetTests.fs"/>
         <Compile Include="GeneratorsTests.fs"/>
         <Compile Include="IOTests.fs"/>
