@@ -60,9 +60,15 @@ printfn "  C ↔ D: $100"
 printfn ""
 
 // Find MST using Kruskal's algorithm
-let cables = kruskal compare buildings
+let cables =
+    match kruskalInt buildings with
+    | Ok res -> res.Edges
+    | Error msg -> failwith msg
 
-let totalCost = cables |> List.sumBy (fun edge -> edge.Weight)
+let totalCost =
+    match kruskalInt buildings with
+    | Ok res -> res.TotalWeight
+    | Error msg -> failwith msg
 
 printfn "=== Optimal Cable Layout ==="
 printfn "Cables to install:"

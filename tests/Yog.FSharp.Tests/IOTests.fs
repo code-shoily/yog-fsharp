@@ -5,6 +5,7 @@ open Xunit
 open System.Text.Json
 open Yog.Model
 open Yog.IO
+open Yog.Render
 
 // ============================================================================
 // DOT RENDERING
@@ -150,7 +151,7 @@ let ``toMermaid uses TD for directed`` () =
 let ``toMermaid uses LR for undirected`` () =
     let graph = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 5
 
-    let mermaid = Mermaid.render Mermaid.defaultOptions graph
+    let mermaid = Mermaid.render { Mermaid.defaultOptions with Direction = "LR" } graph
 
     Assert.Contains("graph LR", mermaid)
     Assert.Contains("---", mermaid)

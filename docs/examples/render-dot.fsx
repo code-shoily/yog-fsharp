@@ -10,7 +10,7 @@ We'll create a simple directed graph and export it to DOT syntax.
 #r "Yog.FSharp.dll"
 
 open Yog.Model
-open Yog.IO.Dot
+open Yog.Render.Dot
 open Yog.Transform
 
 // Create a sample graph
