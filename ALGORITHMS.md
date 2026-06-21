@@ -39,7 +39,10 @@ Complete reference of all algorithms implemented in Yog.FSharp, organized by cat
 
 | Algorithm | Module | Purpose | Time Complexity | Space Complexity |
 |-----------|--------|---------|-----------------|------------------|
-| Maximum Matching | `Yog.Properties.Bipartite` | Maximum bipartite matching | O(VE) | O(V) |
+| Hopcroft-Karp | `Yog.Properties.Matching` | Maximum bipartite matching | O(E√V) | O(V+E) |
+| Hungarian (Kuhn-Munkres) | `Yog.Properties.Matching` | Min/max weight perfect matching (bipartite) | O(V³) | O(V²) |
+| Edmonds' Blossom | `Yog.Properties.Matching` | Maximum general matching (non-bipartite) | O(V²E) | O(V+E) |
+| Maximum Matching | `Yog.Properties.Bipartite` | Naive maximum bipartite matching | O(VE) | O(V) |
 | Gale-Shapley | `Yog.Properties.Bipartite` | Stable marriage matching | O(V²) | O(V) |
 
 ## Connectivity & Components

@@ -44,6 +44,7 @@
         <Compile Include="Connectivity.fs" />
         <Compile Include="MultiGraph.fs" />
         <Compile Include="Properties/Bipartite.fs" />
+        <Compile Include="Properties/Matching.fs" />
         <Compile Include="Properties/Clique.fs" />
         <Compile Include="Properties/Cyclicity.fs" />
         <Compile Include="Properties/Structure.fs" />

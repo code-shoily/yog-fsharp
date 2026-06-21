@@ -87,7 +87,8 @@ match shortestPathInt 1 3 graph with
 - **Centrality**: Degree, betweenness, and closeness centrality measures
 - **Cycles**: Cycle detection and analysis
 - **Eulerian**: Eulerian path/circuit detection and finding (Hierholzer's)
-- **Bipartite**: Bipartite detection, maximum matching, stable marriage (Gale-Shapley)
+- **Bipartite**: Bipartite detection, stable marriage (Gale-Shapley)
+- **Matching**: Hopcroft-Karp maximum bipartite matching, Hungarian optimal assignment (min/max weight perfect matching), and Edmonds' Blossom maximum general matching
 - **Cliques**: Maximum clique detection (Bron-Kerbosch)
 - **Planarity**: Exact Left-Right planarity checks, combinatorial planar embedding, and Kuratowski witness ($K_5$/$K_{3,3}$ subdivision) identification
 - **WL Hashing**: Weisfeiler-Lehman graph hashing for isomorphism and structure verification
@@ -153,6 +154,9 @@ match shortestPathInt 1 3 graph with
 | **Hierholzer** | Eulerian paths/circuits, route planning | O(V+E) |
 | **Topological Sort** | Ordering tasks with dependencies | O(V+E) |
 | **Gale-Shapley** | Stable matching, college admissions | O(n²) |
+| **Hopcroft-Karp** | Maximum bipartite matching | O(E√V) |
+| **Hungarian** | Minimum/maximum weight bipartite matching | O(V³) |
+| **Edmonds' Blossom** | Maximum general (non-bipartite) matching | O(V²E) |
 | **Implicit Search** | Pathfinding/Traversal on on-demand graphs | O((V+E) log V) |
 | **LR Planarity Test** | Determining if undirected graph is planar | O(V²) |
 | **WL Hashing** | Generating graph signature to verify isomorphism | O(k(V+E)) |

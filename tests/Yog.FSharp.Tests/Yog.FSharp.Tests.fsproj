@@ -27,6 +27,7 @@
 
         <Compile Include="MultiGraphTests.fs"/>
         <Compile Include="BipartiteTests.fs"/>
+        <Compile Include="MatchingTests.fs"/>
         <Compile Include="CliqueTests.fs"/>
         <Compile Include="EulerianTests.fs"/>
         <Compile Include="ColoringTests.fs"/>

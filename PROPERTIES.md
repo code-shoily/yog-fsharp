@@ -24,6 +24,13 @@ This document lists the algorithmic invariants (hypotheses) verified by `Yog.FSh
 - **Star Graph Centrality**: In a star graph, the center node has strictly higher centrality (Degree, Closeness, Betweenness, PageRank, Eigenvector) than any leaf node.
 - **PageRank Unity**: The sum of PageRank scores across all nodes equals exactly 1.0.
 
+## Matching
+
+- **Bipartite Matching Partition**: Maximum matching edges only connect vertices between left and right partitions.
+- **Hopcroft-Karp Bipartite Matching**: Maximum matching size matches naive augmenting paths algorithm.
+- **Hungarian Cost Optimality**: Hungarian algorithm produces a perfect matching with optimal (min or max) total cost.
+- **Edmonds' Blossom Alternating Paths**: Blossom maximum matching finds the absolute maximum cardinality matching on general graphs, resolving odd cycles via contraction.
+
 ## Graph Operations & Transformations
 
 - **Transpose Involutivity**: `transpose (transpose G) == G`.
