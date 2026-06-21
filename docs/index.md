@@ -17,13 +17,15 @@
 
 ```
 
+> **Note**: This is a work in progress and is being actively developed. API design is subject to change.
+
 [![NuGet Version](https://img.shields.io/nuget/v/Yog.FSharp)](https://www.nuget.org/packages/Yog.FSharp/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Yog.FSharp)](https://www.nuget.org/packages/Yog.FSharp/)
 [![Documentation](https://img.shields.io/badge/docs-online-blue)](https://code-shoily.github.io/yog-fsharp)
 
 A comprehensive graph algorithm library for F#, providing functional APIs for graph construction, analysis, and visualization.
 
-📖 **[Full Documentation & API Reference](https://code-shoily.github.io/yog-fsharp)** | 🌟 **[Original Gleam Version](https://github.com/code-shoily/yog)** | 📊 **[Gleam vs F# Comparison](https://code-shoily.github.io/yog-fsharp/GLEAM_FSHARP_COMPARISON.html)**
+📖 **[Full Documentation & API Reference](https://code-shoily.github.io/yog-fsharp)** | 🌟 **[Original Gleam Version](https://github.com/code-shoily/yog)** | 📋 **[Complete Algorithm Catalog](ALGORITHMS.md)** | 🧪 **[Algorithmic Invariants Catalog](PROPERTIES.md)**
 
 ## Installation
 
@@ -73,7 +75,6 @@ match shortestPathInt 1 3 graph with
 ### Flow & Optimization
 - **Edmonds-Karp**: Maximum flow algorithm
 - **Stoer-Wagner**: Global minimum cut
-- **Network Simplex**: Minimum cost flow optimization ⚠️ **EXPERIMENTAL** - Incomplete implementation
 - **Kruskal's MST**: Minimum spanning tree with Union-Find
 
 ### Graph Traversal
@@ -88,11 +89,22 @@ match shortestPathInt 1 3 graph with
 - **Eulerian**: Eulerian path/circuit detection and finding (Hierholzer's)
 - **Bipartite**: Bipartite detection, maximum matching, stable marriage (Gale-Shapley)
 - **Cliques**: Maximum clique detection (Bron-Kerbosch)
+- **Planarity**: Exact Left-Right planarity checks, combinatorial planar embedding, and Kuratowski witness ($K_5$/$K_{3,3}$ subdivision) identification
+- **WL Hashing**: Weisfeiler-Lehman graph hashing for isomorphism and structure verification
+- **Tree Decomposition**: Struct representation and validation (vertex coverage, edge coverage, running intersection)
 
 ### Graph Transformations
 - **Transpose**: O(1) reverse of all edges
 - **Map/Filter**: Transform nodes and edges
 - **Subgraph**: Extract subgraphs by node set
+
+### Graph Operations
+- **Set Operations**: Union, intersection, difference, symmetric difference, disjoint union
+- **Graph Products**: Cartesian, tensor, strong, and lexicographic products
+- **Composition**: Compose/merge graphs
+- **Line Graph**: Convert edges to nodes
+- **Graph Power**: Connect nodes within distance k
+- **Structural Comparison**: Subgraph and isomorphism checks
 
 ### Graph Generators
 **Classic Deterministic Graphs:**
@@ -116,6 +128,9 @@ match shortestPathInt 1 3 graph with
 - **GDF**: Lightweight text format for Gephi and data interchange
 - **JSON**: Data interchange and web applications
 - **Mermaid**: Embed diagrams in markdown documents
+- **TGF (Trivial Graph Format)**: Simple line-based format parser and serializer
+- **Adjacency/Edge List**: Compact text-based lists parser and serializer
+- **Adjacency Matrix**: Matrix representation parser and serializer
 
 ### Advanced Features
 - **Disjoint Set (Union-Find)**: Path compression and union by rank
@@ -131,7 +146,6 @@ match shortestPathInt 1 3 graph with
 | **Bellman-Ford** | Negative weights OR cycle detection needed | O(VE) |
 | **Floyd-Warshall** | All-pairs shortest paths, distance matrices | O(V³) |
 | **Edmonds-Karp** | Maximum flow, bipartite matching | O(VE²) |
-| **Network Simplex** ⚠️ **EXPERIMENTAL** | Global minimum cost flow optimization | O(E) pivots |
 | **BFS/DFS** | Unweighted graphs, exploring reachability | O(V+E) |
 | **Kruskal's MST** | Finding minimum spanning tree | O(E log E) |
 | **Stoer-Wagner** | Global minimum cut, graph partitioning | O(V³) |
@@ -140,6 +154,8 @@ match shortestPathInt 1 3 graph with
 | **Topological Sort** | Ordering tasks with dependencies | O(V+E) |
 | **Gale-Shapley** | Stable matching, college admissions | O(n²) |
 | **Implicit Search** | Pathfinding/Traversal on on-demand graphs | O((V+E) log V) |
+| **LR Planarity Test** | Determining if undirected graph is planar | O(V²) |
+| **WL Hashing** | Generating graph signature to verify isomorphism | O(k(V+E)) |
 
 ## Usage Examples
 
@@ -208,6 +224,12 @@ File.WriteAllText("graph.gdf", gdf)
 // Export to Mermaid for markdown
 let mermaid = Mermaid.render Mermaid.defaultOptions graph
 printfn "```mermaid\n%s\n```" mermaid
+
+// Trivial Graph Format (TGF)
+let tgfString = Tgf.serialize Tgf.defaultOptions graph
+
+// Adjacency List
+let adjList = List.serialize false " " graph
 ```
 
 ## Real-World Use Cases
@@ -225,8 +247,6 @@ printfn "```mermaid\n%s\n```" mermaid
 **Version:** 0.5.0 (Pre-release) - [Changelog](CHANGELOG.md)
 
 This is an F# port of the [Gleam Yog](https://github.com/code-shoily/yog) library. While not a 1:1 port, it captures the spirit and functional API of the original while adding F#-specific enhancements.
-
-📊 **[Gleam vs F# Feature Comparison](https://code-shoily.github.io/yog-fsharp/GLEAM_FSHARP_COMPARISON.html)** - Detailed side-by-side comparison
 
 **Stability:** The library is actively developed and APIs may change before 1.0. Feedback and contributions are welcome!
 

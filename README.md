@@ -128,6 +128,9 @@ match shortestPathInt 1 3 graph with
 - **GDF**: Lightweight text format for Gephi and data interchange
 - **JSON**: Data interchange and web applications
 - **Mermaid**: Embed diagrams in markdown documents
+- **TGF (Trivial Graph Format)**: Simple line-based format parser and serializer
+- **Adjacency/Edge List**: Compact text-based lists parser and serializer
+- **Adjacency Matrix**: Matrix representation parser and serializer
 
 ### Advanced Features
 - **Disjoint Set (Union-Find)**: Path compression and union by rank
@@ -221,6 +224,12 @@ File.WriteAllText("graph.gdf", gdf)
 // Export to Mermaid for markdown
 let mermaid = Mermaid.render Mermaid.defaultOptions graph
 printfn "```mermaid\n%s\n```" mermaid
+
+// Trivial Graph Format (TGF)
+let tgfString = Tgf.serialize Tgf.defaultOptions graph
+
+// Adjacency List
+let adjList = List.serialize false " " graph
 ```
 
 ## Real-World Use Cases
@@ -238,8 +247,6 @@ printfn "```mermaid\n%s\n```" mermaid
 **Version:** 0.5.0 (Pre-release) - [Changelog](CHANGELOG.md)
 
 This is an F# port of the [Gleam Yog](https://github.com/code-shoily/yog) library. While not a 1:1 port, it captures the spirit and functional API of the original while adding F#-specific enhancements.
-
-📊 **[Gleam vs F# Feature Comparison](https://code-shoily.github.io/yog-fsharp/GLEAM_FSHARP_COMPARISON.html)** - Detailed side-by-side comparison
 
 **Stability:** The library is actively developed and APIs may change before 1.0. Feedback and contributions are welcome!
 

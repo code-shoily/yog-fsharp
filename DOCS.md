@@ -305,9 +305,8 @@ output/
 - **CHANGELOG.md** - Version history and release notes
 - **README.md** - Project overview (synced to docs/index.md)
 - **DOCS.md** - This documentation guide
-- **docs/GLEAM_FSHARP_COMPARISON.md** - Detailed comparison with Gleam version
-- **NETWORK_SIMPLEX_ISSUES.md** - Known issues with Network Simplex algorithm
-- **GLEAM_NETWORK_SIMPLEX_ANALYSIS.md** - Analysis of Gleam's complete implementation
+- **ALGORITHMS.md** - Complete list of implemented algorithms and details
+- **PROPERTIES.md** - Algorithmic invariants and property checks documentation
 - **LICENSE** - MIT License
 
 ## 🌐 External Resources
