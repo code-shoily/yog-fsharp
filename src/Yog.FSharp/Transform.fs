@@ -702,3 +702,176 @@ let transitiveReduction (mergeFn: 'e -> 'e -> 'e) (graph: Graph<'n, 'e>) : Graph
         )
     )
 
+/// Maps node data using a function that also accepts the Node ID.
+let mapNodesIndexed (f: NodeId -> 'n -> 'm) (graph: Graph<'n, 'e>) : Graph<'m, 'e> =
+    let newNodes = graph.Nodes |> Map.map f
+    { Nodes = newNodes
+      OutEdges = graph.OutEdges
+      InEdges = graph.InEdges
+      Kind = graph.Kind }
+
+/// Maps edge weights using a function that also accepts the source and destination Node IDs.
+let mapEdgesIndexed (f: NodeId -> NodeId -> 'e -> 'f) (graph: Graph<'n, 'e>) : Graph<'n, 'f> =
+    let mapOuter outerMap =
+        outerMap
+        |> Map.map (fun src innerMap ->
+            innerMap |> Map.map (fun dst weight -> f src dst weight)
+        )
+    { Nodes = graph.Nodes
+      OutEdges = mapOuter graph.OutEdges
+      InEdges = mapOuter graph.InEdges
+      Kind = graph.Kind }
+
+/// Adds a self-loop (an edge from a node to itself) for every node in the graph if it doesn't already exist.
+let addSelfLoops (defaultWeight: 'e) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
+    (graph, allNodes graph)
+    ||> List.fold (fun gAcc node ->
+        if hasEdge node node gAcc then gAcc
+        else addEdge node node defaultWeight gAcc
+    )
+
+/// Removes all self-loops (edges from a node to itself) from the graph.
+let removeSelfLoops (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
+    filterEdges (fun u v _ -> u <> v) graph
+
+/// Relabels all node IDs in the graph using a mapping function.
+/// Updates all node identifiers and edge references (source and destination) to maintain consistency.
+let relabelNodes (f: NodeId -> NodeId) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
+    // 1. Add all nodes
+    let graphWithNodes =
+        (empty graph.Kind, graph.Nodes)
+        ||> Map.fold (fun acc id data ->
+            addNode (f id) data acc
+        )
+
+    // 2. Add all edges
+    let isDirected = graph.Kind = Directed
+    let edges =
+        graph.OutEdges
+        |> Map.fold (fun accOuter u dests ->
+            (accOuter, dests)
+            ||> Map.fold (fun acc v weight ->
+                if isDirected || u <= v then
+                    addEdge (f u) (f v) weight acc
+                else
+                    acc
+            )
+        ) graphWithNodes
+
+    edges
+
+/// Normalizes all node IDs to a continuous range of integers 0..n-1.
+/// The mapping is deterministic, based on the sorted order of existing node IDs.
+let normalizeNodeIds (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
+    let sortedNodes = graph.Nodes.Keys |> Seq.sort |> Seq.toList
+    let mapping =
+        sortedNodes
+        |> List.mapi (fun idx id -> (id, idx))
+        |> Map.ofList
+    relabelNodes (fun id -> Map.find id mapping) graph
+
+/// Mode specifying which edges to follow when constructing an ego graph.
+type EgoMode =
+    /// Follow only outgoing edges (successors).
+    | Successors
+    /// Follow both outgoing and incoming edges (neighbors).
+    | Neighbors
+
+/// Helper for ego graph BFS traversal.
+let private egoBfs (graph: Graph<'n, 'e>) (startNode: NodeId) (radius: int) (mode: EgoMode) : Set<NodeId> =
+    let rec doEgoBfs (queue: NodeId list) (dist: int) (visited: Set<NodeId>) =
+        if List.isEmpty queue || dist >= radius then
+            visited
+        else
+            let nextQueue =
+                queue
+                |> List.collect (fun current ->
+                    let neighbors =
+                        match graph.Kind, mode with
+                        | Undirected, _ -> successorIds current graph
+                        | Directed, Neighbors -> neighborIds current graph
+                        | Directed, Successors -> successorIds current graph
+                    neighbors
+                )
+                |> List.filter (fun n -> not (Set.contains n visited))
+                |> List.distinct
+
+            let newVisited = (visited, nextQueue) ||> List.fold (fun acc n -> Set.add n acc)
+            doEgoBfs nextQueue (dist + 1) newVisited
+
+    doEgoBfs [startNode] 0 (Set.singleton startNode)
+
+/// Returns the ego graph of a node within a given radius.
+/// An ego graph is the subgraph induced by the node (the "ego") and its neighbors (the "alters") within distance `radius`.
+let egoGraph (node: NodeId) (radius: int) (mode: EgoMode) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
+    if radius < 0 then
+        invalidArg "radius" "Radius must be non-negative."
+    let ids = egoBfs graph node radius mode |> Set.toList
+    subgraph ids graph
+
+/// Contracts nodes according to a partition map, producing a quotient graph.
+/// Each block (supernode) in the partition becomes a single node in the new graph.
+/// Edges between nodes in different blocks become edges between supernodes.
+/// Nodes not present in `partition` are treated as singleton blocks (their block ID is themselves).
+let quotientGraph
+    (partition: Map<NodeId, NodeId>)
+    (combineWeight: 'e -> 'e -> 'e)
+    (combineData: 'n -> 'n -> 'n)
+    (graph: Graph<'n, 'e>)
+    : Graph<'n, 'e> =
+    
+    let blockFor node = Map.tryFind node partition |> Option.defaultValue node
+
+    // 1. Group node data by supernode
+    let blockNodes =
+        (Map.empty, graph.Nodes)
+        ||> Map.fold (fun acc node data ->
+            let block = blockFor node
+            match Map.tryFind block acc with
+            | Some existing -> Map.add block (combineData existing data) acc
+            | None -> Map.add block data acc
+        )
+
+    // 2. Aggregate edge weights between different supernodes
+    let blockEdges =
+        let edgesList =
+            graph.OutEdges
+            |> Map.fold (fun accOuter u dests ->
+                dests |> Map.fold (fun accInner v weight ->
+                    if graph.Kind = Directed || u <= v then
+                        (u, v, weight) :: accInner
+                    else
+                        accInner
+                ) accOuter
+            ) []
+
+        (Map.empty, edgesList)
+        ||> List.fold (fun acc (u, v, weight) ->
+            let bu = blockFor u
+            let bv = blockFor v
+            if bu = bv then
+                acc
+            else
+                let edgeKey =
+                    match graph.Kind with
+                    | Directed -> (bu, bv)
+                    | Undirected -> if bu <= bv then (bu, bv) else (bv, bu)
+
+                match Map.tryFind edgeKey acc with
+                | Some existing -> Map.add edgeKey (combineWeight existing weight) acc
+                | None -> Map.add edgeKey weight acc
+        )
+
+    // 3. Build the quotient graph
+    let mutable newGraph =
+        { Nodes = blockNodes
+          OutEdges = Map.empty
+          InEdges = Map.empty
+          Kind = graph.Kind }
+
+    for KeyValue((fromBlock, toBlock), weight) in blockEdges do
+        newGraph <- addEdge fromBlock toBlock weight newGraph
+
+    newGraph
+
+

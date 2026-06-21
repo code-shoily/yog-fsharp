@@ -610,3 +610,74 @@ let ``transitiveReduction computes minimal DAG correctly`` () =
     Assert.True(hasEdge 2 3 reduced)
     Assert.False(hasEdge 1 3 reduced)
 
+[<Fact>]
+let ``mapNodesIndexed maps data with ID`` () =
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B"
+    let mapped = mapNodesIndexed (fun id data -> sprintf "%d:%s" id data) graph
+    Assert.Equal(Some "1:A", node 1 mapped)
+    Assert.Equal(Some "2:B", node 2 mapped)
+
+[<Fact>]
+let ``mapEdgesIndexed maps weights with IDs`` () =
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
+    let mapped = mapEdgesIndexed (fun u v w -> u + v + w) graph
+    Assert.Equal(Some 13, edgeData 1 2 mapped)
+
+[<Fact>]
+let ``addSelfLoops adds missing loops`` () =
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 1 5
+    let looped = addSelfLoops 10 graph
+    Assert.Equal(Some 5, edgeData 1 1 looped)
+    Assert.Equal(Some 10, edgeData 2 2 looped)
+
+[<Fact>]
+let ``removeSelfLoops removes loops`` () =
+    let graph = empty Directed |> addNode 1 "A" |> addEdge 1 1 5
+    let unlooped = removeSelfLoops graph
+    Assert.False(hasEdge 1 1 unlooped)
+
+[<Fact>]
+let ``relabelNodes transforms IDs consistently`` () =
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
+    let relabeled = relabelNodes (fun id -> id * 10) graph
+    Assert.True(hasNode 10 relabeled)
+    Assert.True(hasNode 20 relabeled)
+    Assert.True(hasEdge 10 20 relabeled)
+    Assert.Equal(Some 10, edgeData 10 20 relabeled)
+
+[<Fact>]
+let ``normalizeNodeIds maps to sequential range`` () =
+    let graph = empty Directed |> addNode 5 "B" |> addNode 3 "A" |> addEdge 3 5 10
+    let normalized = normalizeNodeIds graph
+    Assert.True(hasNode 0 normalized)
+    Assert.True(hasNode 1 normalized)
+    Assert.True(hasEdge 0 1 normalized)
+    Assert.Equal(Some 10, edgeData 0 1 normalized)
+
+[<Fact>]
+let ``egoGraph extracts subgraph within radius`` () =
+    let graph =
+        empty Directed
+        |> addNode 1 "A" |> addNode 2 "B" |> addNode 3 "C" |> addNode 4 "D"
+        |> addEdge 1 2 1 |> addEdge 2 3 1 |> addEdge 3 4 1
+    let ego = egoGraph 1 2 Successors graph
+    Assert.Equal(3, order ego)
+    Assert.True(hasNode 1 ego)
+    Assert.True(hasNode 2 ego)
+    Assert.True(hasNode 3 ego)
+    Assert.False(hasNode 4 ego)
+
+[<Fact>]
+let ``quotientGraph contracts partition blocks`` () =
+    let graph =
+        empty Directed
+        |> addNode 1 10 |> addNode 2 20 |> addNode 3 30 |> addNode 4 40
+        |> addEdge 1 3 1 |> addEdge 2 3 1 |> addEdge 3 4 1
+    let partition = Map.ofList [ (1, 100); (2, 100); (3, 200); (4, 200) ]
+    let q = quotientGraph partition (+) (+) graph
+    Assert.Equal(2, order q)
+    Assert.Equal(Some 30, node 100 q)
+    Assert.Equal(Some 70, node 200 q)
+    Assert.Equal(Some 2, edgeData 100 200 q)
+
+
