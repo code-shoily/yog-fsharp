@@ -723,3 +723,65 @@ let lexicographicalTopologicalSort (compareNodes: 'n -> 'n -> int) (graph: Graph
         Ok(List.rev sorted)
     else
         Error()
+
+/// Folds over nodes in Best-First order using a priority queue.
+/// Nodes are explored according to the score returned by `scoreOf` (cheapest first).
+let bestFirstFold
+    (start: NodeId)
+    (initial: 'a)
+    (scoreOf: NodeId -> int)
+    (folder: 'a -> NodeId -> WalkControl * 'a)
+    (graph: Graph<'n, 'e>)
+    : 'a =
+    let frontier = PriorityQueue<NodeId, int>()
+    let visited = HashSet<NodeId>()
+
+    frontier.Enqueue(start, scoreOf start)
+
+    let mutable acc = initial
+    let mutable halted = false
+
+    while frontier.Count > 0 && not halted do
+        let node = frontier.Dequeue()
+        if visited.Add(node) then
+            let (control, newAcc) = folder acc node
+            acc <- newAcc
+
+            match control with
+            | Halt -> halted <- true
+            | Stop -> ()
+            | Continue ->
+                for successor in successorIds node graph do
+                    if not (visited.Contains(successor)) then
+                        frontier.Enqueue(successor, scoreOf successor)
+    acc
+
+/// Performs a Greedy Best-First Walk starting from the given node.
+/// Visits nodes in order of their score as determined by `scoreOf`.
+let bestFirstWalk (startId: NodeId) (scoreOf: NodeId -> int) (graph: Graph<'n, 'e>) : NodeId list =
+    bestFirstFold startId [] scoreOf (fun acc nodeId -> (Continue, nodeId :: acc)) graph
+    |> List.rev
+
+/// Simulates a random walk on the graph for a specified number of steps.
+/// At each step, one of the current node's successors is chosen uniformly at random.
+let randomWalk (startId: NodeId) (steps: int) (seed: int option) (graph: Graph<'n, 'e>) : NodeId list =
+    let rng =
+        match seed with
+        | Some s -> System.Random(s)
+        | None -> System.Random()
+
+    let rec walkStep current remaining acc =
+        if remaining <= 0 then
+            acc
+        else
+            let successors = successorIds current graph
+            match successors with
+            | [] -> acc
+            | neighbors ->
+                let nextIdx = rng.Next(neighbors.Length)
+                let nextNode = neighbors.[nextIdx]
+                walkStep nextNode (remaining - 1) (nextNode :: acc)
+
+    walkStep startId steps [startId]
+    |> List.rev
+

@@ -535,8 +535,42 @@ module ImplicitTraversalTests =
 
     [<Fact>]
     let ``implicitDijkstra - basic`` () =
-        // Walk chain 0 -> 1 -> 2 -> 3 -> 4 -> 5, cost 10 each step
-        // The folder receives (acc, node, cost_so_far); at node 5, cost = 10*5 = 50
         let successors n = if n < 5 then [ (n + 1, 10) ] else []
         let total = implicitDijkstra 0 0 successors (fun acc _n cost -> Continue, cost)
         Assert.Equal(50, total)
+
+
+[<Fact>]
+let ``bestFirstFold and bestFirstWalk work correctly`` () =
+    let graph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addNode 3 "C"
+        |> addEdge 1 2 10
+        |> addEdge 1 3 20
+
+    // Priority: scoreOf node 3 = 1 (visit first), scoreOf node 2 = 100
+    let scoreOf nodeId =
+        if nodeId = 3 then 1
+        elif nodeId = 2 then 100
+        else 50
+
+    let path = bestFirstWalk 1 scoreOf graph
+    Assert.Equal<NodeId list>([ 1; 3; 2 ], path)
+
+[<Fact>]
+let ``randomWalk walks limit steps`` () =
+    let graph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addNode 3 "C"
+        |> addEdge 1 2 1
+        |> addEdge 2 3 1
+        |> addEdge 3 1 1
+
+    let walkResult = randomWalk 1 5 (Some 42) graph
+    Assert.Equal(6, walkResult.Length) // 5 steps + start node = 6 elements
+    Assert.Equal(1, walkResult.[0])
+
