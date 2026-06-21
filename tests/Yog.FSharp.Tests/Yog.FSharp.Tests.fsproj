@@ -15,6 +15,7 @@
         <Compile Include="GeneratorsTests.fs"/>
         <Compile Include="IOTests.fs"/>
         <Compile Include="GraphMLTests.fs"/>
+        <Compile Include="GdfTests.fs"/>
         <Compile Include="FlowTests.fs"/>
         <Compile Include="PathfindingTests.fs"/>
         <Compile Include="TraversalTests.fs"/>
