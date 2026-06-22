@@ -305,6 +305,71 @@ let ``toJson handles complex data types`` () =
     Assert.Contains("(1, 2)", json)
     Assert.Contains("(3, 4)", json)
 
+[<Fact>]
+let ``fromJson can parse YogGeneric format`` () =
+    let json =
+        "{\"kind\":\"Directed\",\"nodes\":[{\"id\":1,\"data\":\"A\"},{\"id\":2,\"data\":\"B\"}],\"edges\":[{\"source\":1,\"target\":2,\"weight\":\"5\"}]}"
+
+    match Json.deserialize json with
+    | Ok g ->
+        Assert.Equal(Directed, g.Kind)
+        Assert.Equal(2, order g)
+        Assert.True(hasEdge 1 2 g)
+        Assert.Equal("5", edgeData 1 2 g |> Option.get)
+        Assert.Equal("A", node 1 g |> Option.get)
+    | Error msg -> Assert.Fail(msg)
+
+[<Fact>]
+let ``fromJson can parse NetworkX format`` () =
+    let json =
+        "{\"directed\":false,\"nodes\":[{\"id\":1,\"data\":\"A\"},{\"id\":2,\"data\":\"B\"}],\"links\":[{\"source\":1,\"target\":2,\"weight\":\"5\"}]}"
+
+    match Json.deserialize json with
+    | Ok g ->
+        Assert.Equal(Undirected, g.Kind)
+        Assert.Equal(2, order g)
+        Assert.True(hasEdge 1 2 g)
+        Assert.Equal("5", edgeData 1 2 g |> Option.get)
+    | Error msg -> Assert.Fail(msg)
+
+[<Fact>]
+let ``fromJson can parse D3Force format`` () =
+    let json =
+        "{\"nodes\":[{\"id\":1,\"data\":\"A\"},{\"id\":2,\"data\":\"B\"}],\"links\":[{\"source\":1,\"target\":2,\"weight\":\"5\"}]}"
+
+    match Json.deserialize json with
+    | Ok g ->
+        Assert.Equal(2, order g)
+        Assert.True(hasEdge 1 2 g)
+        Assert.Equal("5", edgeData 1 2 g |> Option.get)
+    | Error msg -> Assert.Fail(msg)
+
+[<Fact>]
+let ``fromJson can parse Cytoscape format`` () =
+    let json =
+        "{\"elements\":[{\"data\":{\"id\":\"1\",\"label\":\"A\"}},{\"data\":{\"id\":\"2\",\"label\":\"B\"}},{\"data\":{\"source\":\"1\",\"target\":\"2\",\"weight\":\"5\"}}]}"
+
+    match Json.deserialize json with
+    | Ok g ->
+        Assert.Equal(2, order g)
+        Assert.True(hasEdge 1 2 g)
+        Assert.Equal("5", edgeData 1 2 g |> Option.get)
+        Assert.Equal("A", node 1 g |> Option.get)
+    | Error msg -> Assert.Fail(msg)
+
+[<Fact>]
+let ``fromJson can parse VisJs format`` () =
+    let json =
+        "{\"nodes\":[{\"id\":1,\"label\":\"A\"},{\"id\":2,\"label\":\"B\"}],\"edges\":[{\"from\":1,\"to\":2,\"label\":\"5\"}]}"
+
+    match Json.deserialize json with
+    | Ok g ->
+        Assert.Equal(2, order g)
+        Assert.True(hasEdge 1 2 g)
+        Assert.Equal("5", edgeData 1 2 g |> Option.get)
+        Assert.Equal("A", node 1 g |> Option.get)
+    | Error msg -> Assert.Fail(msg)
+
 // ============================================================================
 // DEFAULT OPTIONS
 // ============================================================================
