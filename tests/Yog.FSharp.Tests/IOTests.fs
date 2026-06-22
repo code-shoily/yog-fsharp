@@ -633,3 +633,71 @@ let ``Edgelist parse and serialize weighted`` () =
         Assert.Contains("1 2 5.5", serialized)
         Assert.Contains("2 3 10", serialized)
     | Error msg -> Assert.Fail(msg)
+
+// ============================================================================
+// MATRIX MARKET TESTS
+// ============================================================================
+
+[<Fact>]
+let ``MatrixMarket parse and serialize coordinate real general`` () =
+    let input =
+        "%%MatrixMarket matrix coordinate real general\n% comment\n3 3 2\n1 2 4.5\n2 3 9.0\n"
+
+    match MatrixMarket.parse input None with
+    | Ok res ->
+        let graph = res.Graph
+        Assert.Equal(3, order graph)
+        Assert.Equal(4.5, edgeData 1 2 graph |> Option.get)
+        Assert.Equal(9.0, edgeData 2 3 graph |> Option.get)
+        let serialized = MatrixMarket.serialize graph
+        Assert.Contains("%%MatrixMarket matrix coordinate real general", serialized)
+        Assert.Contains("1 2 4.5", serialized)
+        Assert.Contains("2 3 9", serialized)
+    | Error err -> Assert.Fail(sprintf "Expected Ok, got %A" err)
+
+[<Fact>]
+let ``MatrixMarket parse symmetric coordinate`` () =
+    let input = "%%MatrixMarket matrix coordinate pattern symmetric\n2 2 1\n1 2\n"
+
+    match MatrixMarket.parse input None with
+    | Ok res ->
+        let graph = res.Graph
+        Assert.Equal(2, order graph)
+        Assert.Equal(Undirected, graph.Kind)
+        Assert.True(hasEdge 1 2 graph)
+        Assert.True(hasEdge 2 1 graph)
+    | Error err -> Assert.Fail(sprintf "Expected Ok, got %A" err)
+
+// ============================================================================
+// PAJEK TESTS
+// ============================================================================
+
+[<Fact>]
+let ``Pajek serialize directed graph`` () =
+    let graph =
+        empty Directed |> addNode 1 "Alice" |> addNode 2 "Bob" |> addEdge 1 2 5.0
+
+    let options =
+        { Pajek.defaultOptions with
+            NodeLabel = fun n -> n
+            EdgeWeight = fun w -> Some(w.ToString()) }
+
+    let pajekStr = Pajek.serializeWith options graph
+    Assert.Contains("*Vertices 2", pajekStr)
+    Assert.Contains("1 \"Alice\"", pajekStr)
+    Assert.Contains("2 \"Bob\"", pajekStr)
+    Assert.Contains("*Arcs", pajekStr)
+    Assert.Contains("1 2 5", pajekStr)
+
+[<Fact>]
+let ``Pajek parse simple and parse with edge weights`` () =
+    let input =
+        "*Vertices 3\n1 \"Alice\"\n2 \"Bob\"\n3 \"Carol\"\n*Arcs\n1 2 5.5\n2 3\n"
+
+    match Pajek.parseWith input id (fun w -> w |> Option.defaultValue 1.0) with
+    | Ok res ->
+        let graph = res.Graph
+        Assert.Equal(3, order graph)
+        Assert.Equal(5.5, edgeData 1 2 graph |> Option.get)
+        Assert.Equal(1.0, edgeData 2 3 graph |> Option.get)
+    | Error err -> Assert.Fail(sprintf "Expected Ok, got %A" err)

@@ -74,6 +74,8 @@
         <Compile Include="IO\Tgf.fs" />
         <Compile Include="IO\List.fs" />
         <Compile Include="IO\Edgelist.fs" />
+        <Compile Include="IO\MatrixMarket.fs" />
+        <Compile Include="IO\Pajek.fs" />
         <Compile Include="IO\Matrix.fs" />
         <Compile Include="Builder\Labeled.fs" />
         <Compile Include="Builder\Live.fs" />

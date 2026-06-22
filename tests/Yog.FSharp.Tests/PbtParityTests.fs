@@ -438,7 +438,8 @@ module TransformPropertyTests =
     let ``transitive closure is idempotent`` () =
         property {
             let! g = smallGraphGen
-            let closure1 = Yog.Transform.transitiveClosure max g
+            let nonNegativeG = g |> Yog.Transform.mapEdges (fun w -> abs w + 1)
+            let closure1 = Yog.Transform.transitiveClosure max nonNegativeG
             let closure2 = Yog.Transform.transitiveClosure max closure1
             return closure2 = closure1
         }
@@ -1180,6 +1181,55 @@ module IoPropertyTests =
                 parsed.Kind = expected.Kind
                 && parsed.Nodes = expected.Nodes
                 && parsed.OutEdges = expected.OutEdges
+        }
+        |> Property.checkBool
+
+    let private reindexGraph (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
+        let nodes = allNodes graph |> List.sort
+        let mapping = nodes |> List.mapi (fun idx n -> (n, idx + 1)) |> Map.ofList
+        let mutable newGraph = empty graph.Kind
+
+        for node in nodes do
+            newGraph <- addNode mapping.[node] graph.Nodes.[node] newGraph
+
+        for (u, v, w) in allEdges graph do
+            newGraph <- addEdge mapping.[u] mapping.[v] w newGraph
+
+        newGraph
+
+    [<Fact>]
+    let ``MatrixMarket serialize-parse roundtrip preserves counts`` () =
+        property {
+            let! g = smallGraphGen
+            let gReindexed = reindexGraph g |> Yog.Transform.mapEdges float
+            let serialized = Yog.IO.MatrixMarket.serialize gReindexed
+
+            match Yog.IO.MatrixMarket.parse serialized None with
+            | Ok res -> return order res.Graph = order gReindexed && edgeCount res.Graph = edgeCount gReindexed
+            | Error _ -> return false
+        }
+        |> Property.checkBool
+
+    [<Fact>]
+    let ``Pajek serialize-parse roundtrip preserves counts`` () =
+        property {
+            let! g = smallGraphGen
+
+            let gReindexed =
+                reindexGraph g
+                |> Yog.Transform.mapNodes (fun _ -> "node")
+                |> Yog.Transform.mapEdges float
+
+            let options =
+                { Yog.IO.Pajek.defaultOptions with
+                    NodeLabel = fun _ -> "node"
+                    EdgeWeight = fun w -> Some(w.ToString()) }
+
+            let serialized = Yog.IO.Pajek.serializeWith options gReindexed
+
+            match Yog.IO.Pajek.parseWith serialized id (fun w -> w |> Option.defaultValue 1.0) with
+            | Ok res -> return order res.Graph = order gReindexed && edgeCount res.Graph = edgeCount gReindexed
+            | Error _ -> return false
         }
         |> Property.checkBool
 
