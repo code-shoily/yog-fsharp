@@ -1,7 +1,7 @@
 # Yog.FSharp
 
 ```text
-                    ★
+                    ♯
                    /|\
                   / | \
                  /  |  \
@@ -25,7 +25,7 @@
 
 A comprehensive graph algorithm library for F#, providing functional APIs for graph construction, analysis, and visualization.
 
-📖 **[Full Documentation & API Reference](https://code-shoily.github.io/yog-fsharp)** | 🌟 **[Original Gleam Version](https://github.com/code-shoily/yog)** | 📋 **[Complete Algorithm Catalog](ALGORITHMS.md)** | 🧪 **[Algorithmic Invariants Catalog](PROPERTIES.md)**
+**[Full Documentation & API Reference](https://code-shoily.github.io/yog-fsharp)** | **[Elixir Version](https://github.com/code-shoily/yog_ex)** | **[Complete Algorithm Catalog](ALGORITHMS.md)** | **[Algorithmic Invariants Catalog](PROPERTIES.md)**
 
 ## Installation
 
@@ -96,8 +96,14 @@ match shortestPathInt 1 3 graph with
 
 ### Graph Transformations
 - **Transpose**: O(1) reverse of all edges
-- **Map/Filter**: Transform nodes and edges
-- **Subgraph**: Extract subgraphs by node set
+- **Map/Filter**: Functor operations on nodes and edges (`mapNodes`, `mapNodesIndexed`, `mapEdges`, `mapEdgesIndexed`, `filterNodes`, `filterEdges`)
+- **Self Loops**: Add or remove self-loops (`addSelfLoops`, `removeSelfLoops`)
+- **Relabeling**: Map node IDs using a function or normalize to `0..N-1` (`relabelNodes`, `normalizeNodeIds`)
+- **Ego Graph**: Extract subgraphs of neighbors within a given radius (`egoGraph`)
+- **Quotient Graph**: Condense a graph by grouping nodes into partition blocks (`quotientGraph`)
+- **Contract**: Merge node $b$ into node $a$, combining edge weights (`contract`)
+- **Subgraph**: Extract induced subgraphs by a subset of nodes
+
 
 ### Graph Operations
 - **Set Operations**: Union, intersection, difference, symmetric difference, disjoint union
@@ -267,17 +273,14 @@ This is an F# port of the [Gleam Yog](https://github.com/code-shoily/yog) librar
 
 ## Documentation
 
-- 📖 [Full Documentation](https://code-shoily.github.io/yog-fsharp)
-- 🎓 [Getting Started Guide](https://code-shoily.github.io/yog-fsharp/tutorials/getting-started.html)
-- 📚 [Examples](https://code-shoily.github.io/yog-fsharp/examples.html) - 37+ real-world examples
-- 🔍 [API Reference](https://code-shoily.github.io/yog-fsharp/reference/index.html)
+- [Full Documentation](https://code-shoily.github.io/yog-fsharp)
+- [Getting Started Guide](https://code-shoily.github.io/yog-fsharp/tutorials/getting-started.html)
+- [Examples](https://code-shoily.github.io/yog-fsharp/examples.html) - 37+ real-world examples
+- [API Reference](https://code-shoily.github.io/yog-fsharp/reference/index.html)
 
 ## Contributing
 
-Contributions are welcome! Please see the documentation for details on:
-- Reporting issues
-- Submitting pull requests
-- Adding new algorithms or features
+Contributions are welcome! Please create an issue or a PR for any bugfix or feature request.
 
 ## License
 

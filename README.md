@@ -1,7 +1,7 @@
 # Yog.FSharp
 
 ```text
-                    ★
+                    ♯
                    /|\
                   / | \
                  /  |  \
@@ -25,7 +25,7 @@
 
 A comprehensive graph algorithm library for F#, providing functional APIs for graph construction, analysis, and visualization.
 
-📖 **[Full Documentation & API Reference](https://code-shoily.github.io/yog-fsharp)** | 🌟 **[Original Gleam Version](https://github.com/code-shoily/yog)** | 📋 **[Complete Algorithm Catalog](ALGORITHMS.md)** | 🧪 **[Algorithmic Invariants Catalog](PROPERTIES.md)**
+**[Full Documentation & API Reference](https://code-shoily.github.io/yog-fsharp)** | **[Elixir Version](https://github.com/code-shoily/yog_ex)** | **[Complete Algorithm Catalog](ALGORITHMS.md)** | **[Algorithmic Invariants Catalog](PROPERTIES.md)**
 
 ## Installation
 
@@ -273,17 +273,14 @@ This is an F# port of the [Gleam Yog](https://github.com/code-shoily/yog) librar
 
 ## Documentation
 
-- 📖 [Full Documentation](https://code-shoily.github.io/yog-fsharp)
-- 🎓 [Getting Started Guide](https://code-shoily.github.io/yog-fsharp/tutorials/getting-started.html)
-- 📚 [Examples](https://code-shoily.github.io/yog-fsharp/examples.html) - 37+ real-world examples
-- 🔍 [API Reference](https://code-shoily.github.io/yog-fsharp/reference/index.html)
+- [Full Documentation](https://code-shoily.github.io/yog-fsharp)
+- [Getting Started Guide](https://code-shoily.github.io/yog-fsharp/tutorials/getting-started.html)
+- [Examples](https://code-shoily.github.io/yog-fsharp/examples.html) - 37+ real-world examples
+- [API Reference](https://code-shoily.github.io/yog-fsharp/reference/index.html)
 
 ## Contributing
 
-Contributions are welcome! Please see the documentation for details on:
-- Reporting issues
-- Submitting pull requests
-- Adding new algorithms or features
+Contributions are welcome! Please create an issue or a PR for any bugfix or feature request.
 
 ## License
 
