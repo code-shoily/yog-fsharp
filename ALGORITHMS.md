@@ -153,5 +153,14 @@ Complete reference of all algorithms implemented in Yog.FSharp, organized by cat
 | Prim's (Simplified) | `Yog.Generators.Maze` | Radial, many dead ends | O(N log N) | O(N) |
 | Prim's (True) | `Yog.Generators.Maze` | True Prim maze | O(N log N) | O(N) |
 | Eller's | `Yog.Generators.Maze` | Infinite height potential | O(N) | O(cols) |
-| Growing Tree | `Yog.Generators.Maze` | Meta-algorithm (versatile) | O(N) | O(N) |
 | Recursive Division | `Yog.Generators.Maze` | Fractal, room-based | O(N log N) | O(log N) |
+ 
+## Approximation Algorithms
+
+| Algorithm | Module | Purpose | Time Complexity | Space Complexity |
+|-----------|--------|---------|-----------------|------------------|
+| Vertex Cover | `Yog.Approximate` | 2-approximation for minimum vertex cover | O(V+E) | O(V) |
+| Maximum Clique | `Yog.Approximate` | Greedy maximum clique approximation | O(V²) | O(V) |
+| Maximum Independent Set | `Yog.Approximate` | Greedy independent set approximation | O(V²) | O(V) |
+| TSP (Metric) | `Yog.Approximate` | 2-approximation for Metric Traveling Salesperson | O(V²) | O(V²) |
+| Graph Coloring | `Yog.Approximate` | Greedy graph coloring approximation | O(V log V + E) | O(V) |

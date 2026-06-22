@@ -5,36 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.0] - 2026-06-22
 
 ### Added
-- **Graph Operations module** (`Yog.Operation`) - Set-theoretic operations (union, intersection, difference, symmetric difference, disjoint union), graph products (Cartesian, tensor, strong, lexicographic), composition, line graph, graph power, subgraph, and isomorphism checks
-- GDF (GUESS Graph Format) export support in `Yog.IO.Gdf` module
-- `render-gdf.fsx` example demonstrating GDF serialization
-- Enhanced README with comprehensive feature documentation
-- Documentation for Graph Generators (Classic and Random)
-- Documentation for Graph Builders (Labeled, Live, Grid)
-- Documentation for Visualization & Export formats
-- Comprehensive test suite for Network Simplex algorithm verification
-- **Gleam vs F# comparison document** - Detailed side-by-side feature comparison (docs/GLEAM_FSHARP_COMPARISON.md)
-- `addEdgeEnsuredWith` function for dynamically creating missing endpoints using a callback
+- **Approximate Algorithms** (`Yog.Approximate` module) - parachute/exact parity with Elixir approximation algorithms (clique, coloring, vertex cover, TSP, independent set, etc.)
+- **New Serialization Formats**:
+  - Pajek parser and serializer (`Yog.IO.Pajek`)
+  - MatrixMarket parser and serializer (`Yog.IO.MatrixMarket`)
+  - Adjacency List/TGF/Edgelist parser and serializer formats (`Yog.IO.List`, `Yog.IO.Tgf`, `Yog.IO.Edgelist`)
+  - Full deserialization support & multiple visualizer format outputs (NetworkX, D3Force, Cytoscape, VisJs) in `Yog.IO.Json` module
+- **Flow & Optimization**:
+  - Dinic's maximum flow algorithm
+  - Push-Relabel maximum flow algorithm
+- **Pathfinding & Search**:
+  - LCA (Lowest Common Ancestor) using Binary Lifting
+  - Yen's K-Shortest loopless paths
+  - Bidirectional search (Dijkstra and BFS)
+  - Chinese Postman tour solver
+  - Johnson's all-pairs shortest paths for sparse graphs
+- **Matching & Centrality**:
+  - Hopcroft-Karp, Hungarian, and Edmonds' Blossom matching algorithms
+  - HITS centrality (Hubs and Authorities)
+- **Advanced Graph Analysis**:
+  - Health module (`Yog.Health`) for network structural and quality metrics
+  - Highlight formatting utilities for path, MST, min-cut, and matchings in DOT/Mermaid renderers
+- **Hedgehog Property-Based Tests**: Replaced FsCheck with Hedgehog to achieve parity and property test alignment with Elixir `yog_ex`.
 
 ### Changed
-- Improved README structure with usage examples and real-world use cases
-- Updated documentation to accurately reflect all implemented features
-- Enhanced DOCS.md with complete example listing
-- **Network Simplex algorithm marked as EXPERIMENTAL** due to incomplete pivot implementation
-- `addEdge` and `addEdgeWithCombine` now throw an exception if source or destination nodes do not exist instead of creating "ghost nodes"
-- `addEdgeEnsured` now takes separate default values for source and destination nodes
+- Marked Network Simplex as experimental
+- Standardized `addEdge` endpoints validation behavior (raises exception instead of auto-creating ghost nodes, unless `addEdgeEnsured` or `addEdgeEnsuredWith` is explicitly used)
+- Unified transform, operation, and generator signatures for better Elixir parity
 
 ### Fixed
-- Fixed documentation deployment URLs with proper trailing slash handling
-
-### Known Issues
-- **Network Simplex**: Pivot loop implementation is incomplete, causing false `Infeasible` results
-  for valid minimum cost flow problems. The algorithm skeleton is present but core pivot logic
-  is missing. See `NETWORK_SIMPLEX_ISSUES.md` for details. Alternative: Use successive shortest
-  paths or wait for complete implementation in future release.
+- Fixed GDF schema auto-discovery bug and unified schema output parameters
+- Fixed formatting of doc chess grids
 
 ## [0.5.0] - 2025-03-15
 
@@ -145,6 +149,7 @@ This is the first public release of Yog.FSharp, an F# port of the Gleam Yog libr
 
 ---
 
-[Unreleased]: https://github.com/code-shoily/yog-fsharp/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/code-shoily/yog-fsharp/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/code-shoily/yog-fsharp/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/code-shoily/yog-fsharp/releases/tag/v0.5.0
 [0.1.0]: https://github.com/code-shoily/yog-fsharp/commits/main

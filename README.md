@@ -265,9 +265,9 @@ let adjList = List.serialize false " " graph
 
 ## Project Status
 
-**Version:** 0.5.0 (Pre-release) - [Changelog](CHANGELOG.md)
+**Version:** 0.6.0 - [Changelog](CHANGELOG.md)
 
-This is an F# port of the [Gleam Yog](https://github.com/code-shoily/yog) library. While not a 1:1 port, it captures the spirit and functional API of the original while adding F#-specific enhancements.
+This is an F# port of the [Gleam Yog](https://github.com/code-shoily/yog) library. While not a 1:1 port, it captures the spirit and functional API of the original while adding F#-specific enhancements to achieve Elixir parity (excluding a few formats and community detection).
 
 **Stability:** The library is actively developed and APIs may change before 1.0. Feedback and contributions are welcome!
 
