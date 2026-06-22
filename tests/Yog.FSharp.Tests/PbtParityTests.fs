@@ -1320,3 +1320,49 @@ module StressPropertyTests =
             return Yog.Transform.transpose (Yog.Transform.transpose g) = g
         }
         |> checkBool10
+
+// =============================================================================
+// APPROXIMATE ALGORITHMS PROPERTIES
+// =============================================================================
+
+module ApproximatePropertyTests =
+    open Generators
+
+    [<Fact>]
+    let ``Approximate diameter is a lower bound for exact diameter`` () =
+        property {
+            let! g = smallGraphGen
+            let gFloat = Yog.Transform.mapEdges (fun w -> float (abs w) + 1.0) g
+
+            match Yog.Approximate.diameterUnweighted 4 gFloat, Yog.Health.diameter 0.0 (+) compare gFloat with
+            | Some approx, Some exact -> return approx <= exact
+            | _ -> return true
+        }
+        |> Property.checkBool
+
+    [<Fact>]
+    let ``vertexCover approximation cover definition holds`` () =
+        property {
+            let! g = smallGraphGen
+            let cover = Yog.Approximate.vertexCover g
+            // Every edge must touch the cover
+            return
+                allEdges g
+                |> List.forall (fun (u: NodeId, v: NodeId, _) -> cover.Contains(u) || cover.Contains(v))
+        }
+        |> Property.checkBool
+
+    [<Fact>]
+    let ``maxClique approximation produces a valid clique`` () =
+        property {
+            let! g = smallGraphGen
+            let clique = Yog.Approximate.maxClique g
+            let cliqueList = clique |> Set.toList
+
+            let isClique =
+                cliqueList
+                |> List.forall (fun u -> cliqueList |> List.forall (fun v -> u = v || hasEdge u v g || hasEdge v u g))
+
+            return isClique
+        }
+        |> Property.checkBool

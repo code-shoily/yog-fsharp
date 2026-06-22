@@ -68,6 +68,7 @@
         <Compile Include="Flow\MinCut.fs" />
         <Compile Include="Centrality.fs" />
         <Compile Include="Health.fs" />
+        <Compile Include="Approximate.fs" />
         <Compile Include="IO\Json.fs" />
         <Compile Include="IO\GraphML.fs" />
         <Compile Include="IO\Gdf.fs" />
