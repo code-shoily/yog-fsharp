@@ -36,29 +36,29 @@ type Grid<'CellData, 'EdgeData> =
 ///
 /// **Rook (4-way cardinal):**
 ///
-/// . ↑ .
-/// ← · →
-/// . ↓ .
+///     . ↑ .
+///     ← · →
+///     . ↓ .
 ///
 /// **Bishop (4-way diagonal):**
 ///
-/// ↖ . ↗
-/// . · .
-/// ↙ . ↘
+///     ↖ . ↗
+///     . · .
+///     ↙ . ↘
 ///
 /// **Queen (8-way):**
 ///
-/// ↖ ↑ ↗
-/// ← · →
-/// ↙ ↓ ↘
+///     ↖ ↑ ↗
+///     ← · →
+///     ↙ ↓ ↘
 ///
 /// **Knight (L-shaped):**
 ///
-/// . ♞ . ♞ .
-/// ♞ . . . ♞
-/// . . · . .
-/// ♞ . . . ♞
-/// . ♞ . ♞ .
+///     . ♞ . ♞ .
+///     ♞ . . . ♞
+///     . . · . .
+///     ♞ . . . ♞
+///     . ♞ . ♞ .
 ///
 /// ## Example Usage
 ///
@@ -95,9 +95,9 @@ module Grid =
     ///
     /// Named after the rook in chess, which moves along ranks and files.
     ///
-    /// . ↑ .
-    /// ← · →
-    /// . ↓ .
+    ///     . ↑ .
+    ///     ← · →
+    ///     . ↓ .
     ///
     let rook = [ (-1, 0); (1, 0); (0, -1); (0, 1) ]
 
@@ -105,9 +105,9 @@ module Grid =
     ///
     /// Named after the bishop in chess, which moves along diagonals.
     ///
-    /// ↖ . ↗
-    /// . · .
-    /// ↙ . ↘
+    ///     ↖ . ↗
+    ///     . · .
+    ///     ↙ . ↘
     ///
     let bishop = [ (-1, -1); (-1, 1); (1, -1); (1, 1) ]
 
@@ -115,9 +115,9 @@ module Grid =
     ///
     /// Named after the queen in chess, which combines rook and bishop movement.
     ///
-    /// ↖ ↑ ↗
-    /// ← · →
-    /// ↙ ↓ ↘
+    ///     ↖ ↑ ↗
+    ///     ← · →
+    ///     ↙ ↓ ↘
     ///
     let queen = [ (-1, -1); (-1, 0); (-1, 1); (0, -1); (0, 1); (1, -1); (1, 0); (1, 1) ]
 
@@ -126,11 +126,11 @@ module Grid =
     /// Named after the knight in chess, which jumps in an L-shape
     /// (2 squares in one direction, 1 square perpendicular).
     ///
-    /// . ♞ . ♞ .
-    /// ♞ . . . ♞
-    /// . . · . .
-    /// ♞ . . . ♞
-    /// . ♞ . ♞ .
+    ///     . ♞ . ♞ .
+    ///     ♞ . . . ♞
+    ///     . . · . .
+    ///     ♞ . . . ♞
+    ///     . ♞ . ♞ .
     ///
     let knight =
         [ (-2, -1); (-2, 1); (-1, -2); (-1, 2); (1, -2); (1, 2); (2, -1); (2, 1) ]
@@ -266,14 +266,15 @@ module Grid =
     let private array2DFromList (lst: list<list<'n>>) =
         let rows = lst.Length
         let cols = if rows = 0 then 0 else lst.[0].Length
-        if cols = 0 then Array2D.zeroCreate 0 0
+
+        if cols = 0 then
+            Array2D.zeroCreate 0 0
         else
             let arr = Array2D.zeroCreate rows cols
-            lst |> List.iteri (fun r row ->
-                row |> List.iteri (fun c item ->
-                    arr.[r, c] <- item
-                )
-            )
+
+            lst
+            |> List.iteri (fun r row -> row |> List.iteri (fun c item -> arr.[r, c] <- item))
+
             arr
 
     /// Creates a grid-graph from a 2D list using 4-directional (rook) movement.
@@ -289,12 +290,12 @@ module Grid =
     /// Finds a node in the grid where the cell data matches a predicate.
     let findNode predicate grid =
         let maxId = grid.Rows * grid.Cols - 1
-        seq { 0 .. maxId }
+
+        seq { 0..maxId }
         |> Seq.tryPick (fun id ->
             match Map.tryFind id grid.Graph.Nodes with
             | Some data when predicate data -> Some id
-            | _ -> None
-        )
+            | _ -> None)
 
     /// Converts the grid to a standard Graph.
     let toGraph grid = grid.Graph
