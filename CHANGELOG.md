@@ -124,35 +124,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Core pathfinding algorithms
 - Initial test suite
 
----
-
-## Release Notes
-
-### Version 0.6.0
-
-This release significantly closes the gap with the Elixir `yog_ex` library, implementing identical graph approximation algorithms, Pajek/MatrixMarket/Tgf/List serialization formats, Dinic/Push-Relabel maximum flow algorithms, advanced pathfinding (Yen's K-Shortest, Chinese Postman, Bidirectional search, LCA binary lifting), Blossom/Hungarian/Hopcroft-Karp matchings, network structural Health metrics, and transition to Hedgehog property-based testing.
-
-**Highlights:**
-- Dynamic approximation algorithms (TSP, Independent Set, Vertex Cover, Graph Coloring)
-- Expanded deserializer & visualization format outputs (VisJs, Cytoscape, D3, NetworkX, MatrixMarket, Pajek)
-- Advanced flows, matchings, and pathfinding models
-- High-fidelity Hedgehog PBT parity
-
-### Version 0.5.0
-
-This is the first public release of Yog.FSharp, an F# port of the Gleam Yog library. While not a 1:1 port, it captures the spirit and functional API of the original while adding F#-specific enhancements.
-
-**Highlights:**
-- Comprehensive graph algorithm library with 20+ algorithms
-- Multiple pathfinding algorithms including A* and implicit search
-- Flow algorithms and network optimization
-- Rich graph generation capabilities (14+ generators)
-- Multiple export formats for visualization
-- Type-safe DAG wrapper preventing cycles
-- 37+ documented examples
-
----
-
 [Unreleased]: https://github.com/code-shoily/yog-fsharp/compare/v0.6.0...HEAD
 [0.6.0]: https://github.com/code-shoily/yog-fsharp/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/code-shoily/yog-fsharp/releases/tag/v0.5.0
