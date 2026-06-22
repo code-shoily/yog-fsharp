@@ -360,3 +360,113 @@ let ``tuple elements`` () =
 
     let (_, connected) = connected (0, 0) (0, 1) dsu
     Assert.True(connected)
+
+
+// =============================================================================
+// STATEFUL MODEL-BASED PROPERTY TESTS
+// =============================================================================
+
+module DisjointSetStatefulTests =
+    open Hedgehog
+    open Hedgehog.FSharp
+    open Yog.DisjointSet
+
+    /// Operations under test. Values are drawn from a fixed universe so that
+    /// shrinking the operation list never produces references to unknown values.
+    type Op =
+        | Add of int
+        | Union of int * int
+        | Connected of int * int
+
+    /// Reference model: a partition of all elements seen so far.
+    module Model =
+        let empty: Set<Set<int>> = Set.empty
+
+        let private ensure x (m: Set<Set<int>>) =
+            if m |> Set.exists (Set.contains x) then
+                m
+            else
+                Set.add (Set.singleton x) m
+
+        let private findSet x (m: Set<Set<int>>) =
+            m |> Set.toSeq |> Seq.find (Set.contains x)
+
+        let add x m = ensure x m
+
+        let union x y m =
+            let m' = ensure x m |> ensure y
+            let sx = findSet x m'
+            let sy = findSet y m'
+
+            if sx = sy then
+                m'
+            else
+                m' |> Set.remove sx |> Set.remove sy |> Set.add (Set.union sx sy)
+
+        let connected x y m =
+            let m' = ensure x m |> ensure y
+            findSet x m' = findSet y m'
+
+        let totalElements (m: Set<Set<int>>) = m |> Seq.sumBy Set.count
+
+    /// Runs one operation against both the SUT and the reference model, then
+    /// checks that observable invariants still match.
+    let private step model dsu op =
+        match op with
+        | Add x ->
+            let model' = Model.add x model
+            let dsu' = add x dsu
+            true, model', dsu'
+        | Union(x, y) ->
+            let model' = Model.union x y model
+            let dsu' = union x y dsu
+            true, model', dsu'
+        | Connected(x, y) ->
+            let model' = Model.add x model |> Model.add y
+            let dsu', actual = connected x y dsu
+            let expected = Model.connected x y model'
+            actual = expected, model', dsu'
+
+    /// Runs the whole operation sequence and validates final invariants.
+    let private runAll ops =
+        let rec loop model dsu remaining =
+            match remaining with
+            | [] ->
+                let expectedSets = model
+                let actualSets = toLists dsu |> List.map Set.ofList |> Set.ofList
+
+                countSets dsu = Set.count model
+                && size dsu = Model.totalElements model
+                && expectedSets = actualSets
+            | op :: rest ->
+                let ok, model', dsu' = step model dsu op
+                if ok then loop model' dsu' rest else false
+
+        loop Model.empty empty ops
+
+    let private valueGen = Gen.int32 (Range.linear -20 20)
+
+    let private universeGen =
+        Gen.array (Range.linear 1 15) valueGen
+        |> Gen.map (Array.distinct >> Array.toList)
+
+    let private opGen values =
+        let value = Gen.item values
+        let pair = Gen.zip value value
+
+        Gen.frequency
+            [ 2, value |> Gen.map Add
+              4, pair |> Gen.map (fun (x, y) -> Union(x, y))
+              4, pair |> Gen.map (fun (x, y) -> Connected(x, y)) ]
+
+    let private opsGen values =
+        Gen.list (Range.linear 1 80) (opGen values)
+
+    [<Fact>]
+    let ``DisjointSet matches the set-partition model for random operation sequences`` () =
+        property {
+            let! values = universeGen
+            let! ops = opsGen values
+            return runAll ops
+        }
+        |> Property.checkBool

@@ -224,6 +224,47 @@ module Generators =
 
                     (g, subset)))
 
+    /// Generates a moderate-scale graph of the requested kind (50–100 nodes).
+    /// Used for stress-testing algorithms without blowing up test runtime.
+    let mediumGraphOfKindGen (kind: GraphType) : Gen<Graph<unit, int>> =
+        gen {
+            let! n = Gen.int32 (Range.linear 50 100)
+
+            if n = 0 then
+                return empty kind
+            else
+                let maxEdges = if kind = Undirected then n * (n - 1) / 2 else n * (n - 1)
+                let! edgeCount = Gen.int32 (Range.constant 0 (min maxEdges 300))
+
+                let! edges =
+                    Gen.array
+                        (Range.constant edgeCount edgeCount)
+                        (gen {
+                            let! u = nodeIdGen n
+
+                            let! v =
+                                if kind = Undirected then
+                                    Gen.int32 (Range.constant u (n - 1))
+                                else
+                                    nodeIdGen n
+
+                            let! w = Gen.int32 (Range.linear -100 100)
+                            return (u, v, w)
+                        })
+
+                return graphFromEdges kind (edges |> Array.toList |> List.filter (fun (u, v, _) -> u <> v))
+        }
+
+    /// Generates a moderate-scale graph of either kind.
+    let mediumGraphGen: Gen<Graph<unit, int>> =
+        gen {
+            let! kind = graphKindGen
+            return! mediumGraphOfKindGen kind
+        }
+
+    /// Generates a moderate-scale undirected graph.
+    let mediumUndirectedGraphGen = mediumGraphOfKindGen Undirected
+
 
 // =============================================================================
 // STRUCTURAL PROPERTIES
@@ -1095,3 +1136,90 @@ module IoPropertyTests =
                 | Error _ -> return false
         }
         |> Property.checkBool
+
+
+// =============================================================================
+// CUSTOM GRAPH SHRINKER
+// =============================================================================
+
+module GraphShrinkerPropertyTests =
+    open Generators
+
+    /// Returns true when the undirected graph has exactly one connected component.
+    let private isConnected (g: Graph<unit, int>) =
+        let nodes = allNodes g
+
+        if nodes.IsEmpty then
+            true
+        else
+            let start = List.head nodes
+            let visited = Yog.Traversal.walk start Yog.Traversal.BreadthFirst g |> Set.ofList
+            Set.count visited = order g
+
+    /// Shrinks a connected graph by removing single edges while preserving
+    /// connectivity. This is a skeleton for invariant-preserving graph shrinking.
+    let private shrinkConnected (g: Graph<unit, int>) : seq<Graph<unit, int>> =
+        if order g <= 1 then
+            Seq.empty
+        else
+            allEdges g
+            |> Seq.map (fun (u, v, _) -> removeEdge u v g)
+            |> Seq.filter isConnected
+
+    /// A connected-undirected-graph generator that shrinks by dropping redundant
+    /// edges. Hedgehog will use this shrink tree automatically when a property
+    /// involving this generator fails.
+    let connectedGraphWithCustomShrinkGen =
+        connectedUndirectedGraphGen |> Gen.shrinkLazy shrinkConnected
+
+    [<Fact>]
+    let ``custom graph shrinker preserves connectivity`` () =
+        property {
+            let! g = connectedGraphWithCustomShrinkGen
+            return isConnected g
+        }
+        |> Property.checkBool
+
+
+// =============================================================================
+// MODERATE-SCALE STRESS PROPERTIES
+// =============================================================================
+
+module StressPropertyTests =
+    open Generators
+
+    let private checkBool10 =
+        Property.checkBoolWith (PropertyConfig.withTests 10<tests> PropertyConfig.defaults)
+
+    [<Fact>]
+    let ``BFS and DFS visit the same reachable nodes on moderate-scale graphs`` () =
+        property {
+            let! g = mediumGraphGen
+            let nodes = allNodes g
+
+            if nodes.IsEmpty then
+                return true
+            else
+                let start = List.head nodes
+                let bfs = Yog.Traversal.walk start Yog.Traversal.BreadthFirst g |> Set.ofList
+                let dfs = Yog.Traversal.walk start Yog.Traversal.DepthFirst g |> Set.ofList
+                return bfs = dfs
+        }
+        |> checkBool10
+
+    [<Fact>]
+    let ``handshaking lemma holds on moderate-scale undirected graphs`` () =
+        property {
+            let! g = mediumUndirectedGraphGen
+            let degreeSum = allNodes g |> List.sumBy (fun u -> (neighbors u g).Length)
+            return degreeSum = 2 * edgeCount g
+        }
+        |> checkBool10
+
+    [<Fact>]
+    let ``transpose is involutive on moderate-scale graphs`` () =
+        property {
+            let! g = mediumGraphGen
+            return Yog.Transform.transpose (Yog.Transform.transpose g) = g
+        }
+        |> checkBool10
