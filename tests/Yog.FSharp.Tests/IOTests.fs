@@ -513,3 +513,123 @@ let ``matchingToOptions highlights matching edges correctly`` () =
     let dotStr = Dot.render dotOpts graph
     Assert.Contains("1 [label=\"1\" fillcolor=\"red\", style=filled]", dotStr)
     Assert.Contains("1 -- 2 [label=\"1\" color=\"red\", penwidth=2]", dotStr)
+
+// ============================================================================
+// ALIGNED TGF TESTS
+// ============================================================================
+
+[<Fact>]
+let ``Tgf parseWith parses nodes and edges with warning collection`` () =
+    let input = "1 Node One\n2 Node Two\n#\n1 2\n1 3\nmalformed_line\n"
+
+    let parseRes =
+        Tgf.parseWith Directed (fun id lbl -> lbl) (fun opt -> opt |> Option.defaultValue "default") input
+
+    match parseRes |> Result.map (fun r -> (r.Graph, r.Warnings)) with
+    | Ok(graph, warnings) ->
+        Assert.Equal(3, order graph) // Node 3 is auto-created because of 1 3
+        Assert.True(hasEdge 1 2 graph)
+        Assert.True(hasEdge 1 3 graph)
+        Assert.Single(warnings) |> ignore
+
+        match warnings.Head with
+        | Tgf.MalformedEdge(lineNum, text) ->
+            Assert.Equal(6, lineNum)
+            Assert.Equal("malformed_line", text)
+        | _ -> Assert.Fail("Expected MalformedEdge warning")
+    | Error err -> Assert.Fail(sprintf "Expected successful parse, got %A" err)
+
+[<Fact>]
+let ``Tgf parseWith returns duplicate node error`` () =
+    let input = "1 Node A\n1 Node B\n#\n1 1\n"
+
+    let parseRes =
+        Tgf.parseWith Directed (fun _ lbl -> lbl) (fun opt -> opt |> Option.defaultValue "") input
+
+    match parseRes with
+    | Error(Tgf.DuplicateNode(lineNum, id)) ->
+        Assert.Equal(2, lineNum)
+        Assert.Equal(1, id)
+    | _ -> Assert.Fail("Expected DuplicateNode error")
+
+[<Fact>]
+let ``Tgf serializeWith formats graph correctly`` () =
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 "e1"
+
+    let options: Tgf.TgfOptions<string, string> =
+        { Tgf.defaultOptions with
+            NodeLabel = fun n -> n.ToUpper()
+            EdgeLabel = Some
+            NodeFormatter = fun s -> "n_" + s
+            EdgeFormatter = fun s -> "label_" + s }
+
+    let tgfStr = Tgf.serializeWith options graph
+    Assert.Contains("n_1 n_A", tgfStr)
+    Assert.Contains("n_2 n_B", tgfStr)
+    Assert.Contains("n_1 n_2 label_e1", tgfStr)
+
+// ============================================================================
+// ALIGNED LIST TESTS
+// ============================================================================
+
+[<Fact>]
+let ``List fromList and toList parity`` () =
+    let entries = [ (1, [ (2, 5.0); (3, 10.0) ]); (2, [ (3, 2.0) ]); (3, []) ]
+
+    let graph =
+        List.fromList Directed (entries |> Seq.map (fun (id, nbrs) -> (id, nbrs |> Seq.ofList)))
+
+    Assert.Equal(3, order graph)
+    Assert.Equal(5.0, edgeData 1 2 graph |> Option.get)
+    let exported = List.toList graph
+    Assert.Equal(3, exported.Length)
+    Assert.Equal(1, fst exported.[0])
+    Assert.Equal(2, (snd exported.[0]).Length)
+
+[<Fact>]
+let ``List toString with custom options`` () =
+    let graph = empty Directed |> addNode 1 () |> addNode 2 () |> addEdge 1 2 4.5
+
+    let options =
+        { List.defaultOptions with
+            Weighted = true
+            Delimiter = "->"
+            NodeFormatter = fun id -> "node" + id.ToString()
+            WeightFormatter = fun w -> sprintf "w%.1f" w }
+
+    let serialized = List.toString options graph
+    Assert.Contains("node1-> node2,w4.5", serialized)
+
+// ============================================================================
+// EDGELIST TESTS
+// ============================================================================
+
+[<Fact>]
+let ``Edgelist parse and serialize unweighted`` () =
+    let input = "1 2\n2 3\n# comment line\n3 1"
+
+    match Edgelist.parse Directed false input with
+    | Ok graph ->
+        Assert.Equal(3, order graph)
+        Assert.True(hasEdge 1 2 graph)
+        Assert.True(hasEdge 2 3 graph)
+        Assert.True(hasEdge 3 1 graph)
+        let serialized = Edgelist.serialize false graph
+        Assert.Contains("1 2", serialized)
+        Assert.Contains("2 3", serialized)
+        Assert.Contains("3 1", serialized)
+    | Error msg -> Assert.Fail(msg)
+
+[<Fact>]
+let ``Edgelist parse and serialize weighted`` () =
+    let input = "1 2 5.5\n2 3 10\n"
+
+    match Edgelist.parse Directed true input with
+    | Ok graph ->
+        Assert.Equal(3, order graph)
+        Assert.Equal(5.5, edgeData 1 2 graph |> Option.get)
+        Assert.Equal(10.0, edgeData 2 3 graph |> Option.get)
+        let serialized = Edgelist.serialize true graph
+        Assert.Contains("1 2 5.5", serialized)
+        Assert.Contains("2 3 10", serialized)
+    | Error msg -> Assert.Fail(msg)
