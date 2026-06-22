@@ -15,12 +15,28 @@ open Yog.Flow.MinCut
 // Model a graph with two tightly connected clusters and one bridge
 let graph: Graph<unit, int> =
     empty Undirected
-    |> addNode 1 () |> addNode 2 () |> addNode 3 () |> addNode 4 () |> addNode 5 ()
-    |> addNode 6 () |> addNode 7 () |> addNode 8 () |> addNode 9 () |> addNode 10 ()
+    |> addNode 1 ()
+    |> addNode 2 ()
+    |> addNode 3 ()
+    |> addNode 4 ()
+    |> addNode 5 ()
+    |> addNode 6 ()
+    |> addNode 7 ()
+    |> addNode 8 ()
+    |> addNode 9 ()
+    |> addNode 10 ()
     // Cluster A (nodes 1-5)
-    |> addEdge 1 2 10 |> addEdge 2 3 10 |> addEdge 3 4 10 |> addEdge 4 5 10 |> addEdge 5 1 10
+    |> addEdge 1 2 10
+    |> addEdge 2 3 10
+    |> addEdge 3 4 10
+    |> addEdge 4 5 10
+    |> addEdge 5 1 10
     // Cluster B (nodes 6-10)
-    |> addEdge 6 7 10 |> addEdge 7 8 10 |> addEdge 8 9 10 |> addEdge 9 10 10 |> addEdge 10 6 10
+    |> addEdge 6 7 10
+    |> addEdge 7 8 10
+    |> addEdge 8 9 10
+    |> addEdge 9 10 10
+    |> addEdge 10 6 10
     // The Bridge (the global minimum cut)
     |> addEdge 1 6 1
 

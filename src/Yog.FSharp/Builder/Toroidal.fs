@@ -41,20 +41,17 @@ module Toroidal =
     let from2DList (gridData: list<list<'CellData>>) (graphType: GraphType) canMove =
         let rows = gridData.Length
         let cols = if rows = 0 then 0 else gridData.[0].Length
-        
+
         let cells =
             gridData
-            |> List.mapi (fun r row ->
-                row |> List.mapi (fun c cell -> (r, c, cell))
-            )
+            |> List.mapi (fun r row -> row |> List.mapi (fun c cell -> (r, c, cell)))
             |> List.concat
 
         let graphWithNodes =
             (empty graphType, cells)
             ||> List.fold (fun g (row, col, data) ->
                 let id = coordToId row col cols
-                addNode id data g
-            )
+                addNode id data g)
 
         let graphWithEdges =
             (graphWithNodes, cells)
@@ -71,30 +68,32 @@ module Toroidal =
                     if canMove fromData toData then
                         addEdge fromId toId 1 accG
                     else
-                        accG
-                )
-            )
+                        accG))
 
-        { Graph = graphWithEdges; Rows = rows; Cols = cols }
+        { Graph = graphWithEdges
+          Rows = rows
+          Cols = cols }
 
     /// Creates a toroidal grid-graph from a 2D list using custom movement topology.
-    let from2DListWithTopology (gridData: list<list<'CellData>>) (graphType: GraphType) (topology: list<int * int>) canMove =
+    let from2DListWithTopology
+        (gridData: list<list<'CellData>>)
+        (graphType: GraphType)
+        (topology: list<int * int>)
+        canMove
+        =
         let rows = gridData.Length
         let cols = if rows = 0 then 0 else gridData.[0].Length
-        
+
         let cells =
             gridData
-            |> List.mapi (fun r row ->
-                row |> List.mapi (fun c cell -> (r, c, cell))
-            )
+            |> List.mapi (fun r row -> row |> List.mapi (fun c cell -> (r, c, cell)))
             |> List.concat
 
         let graphWithNodes =
             (empty graphType, cells)
             ||> List.fold (fun g (row, col, data) ->
                 let id = coordToId row col cols
-                addNode id data g
-            )
+                addNode id data g)
 
         let graphWithEdges =
             (graphWithNodes, cells)
@@ -111,18 +110,19 @@ module Toroidal =
                     if canMove fromData toData then
                         addEdge fromId toId 1 accG
                     else
-                        accG
-                )
-            )
+                        accG))
 
-        { Graph = graphWithEdges; Rows = rows; Cols = cols }
+        { Graph = graphWithEdges
+          Rows = rows
+          Cols = cols }
 
     /// Creates a toroidal grid-graph from a 2D Array using custom movement topology.
     let fromArray2D (gridData: 'CellData[,]) (graphType: GraphType) (topology: list<int * int>) canMove =
         let rows = Array2D.length1 gridData
         let cols = Array2D.length2 gridData
-        
+
         let mutable g = empty graphType
+
         for r in 0 .. rows - 1 do
             for c in 0 .. cols - 1 do
                 let id = coordToId r c cols
@@ -145,7 +145,7 @@ module Toroidal =
         { Graph = g; Rows = rows; Cols = cols }
 
     // Distance functions
-    
+
     /// Calculates the Manhattan distance on a toroidal grid.
     let toroidalManhattanDistance fromId toId cols rows =
         let (r1, c1) = idToCoord fromId cols
@@ -179,13 +179,15 @@ module Toroidal =
         float minD * 1.414213562373095 + float (maxD - minD)
 
     // Conversions
-    
+
     /// Converts the toroidal grid to a standard Graph.
     let toGraph grid = grid.Graph
 
     /// Converts the toroidal grid to a standard Grid.
     let toGrid grid : Grid<'CellData, 'EdgeData> =
-        { Graph = grid.Graph; Rows = grid.Rows; Cols = grid.Cols }
+        { Graph = grid.Graph
+          Rows = grid.Rows
+          Cols = grid.Cols }
 
     /// Gets the number of rows in the toroidal grid.
     let rows grid = grid.Rows
@@ -203,9 +205,9 @@ module Toroidal =
     /// Finds a node in the grid where the cell data matches a predicate.
     let findNode predicate grid =
         let maxId = grid.Rows * grid.Cols - 1
-        seq { 0 .. maxId }
+
+        seq { 0..maxId }
         |> Seq.tryPick (fun id ->
             match Map.tryFind id grid.Graph.Nodes with
             | Some data when predicate data -> Some id
-            | _ -> None
-        )
+            | _ -> None)

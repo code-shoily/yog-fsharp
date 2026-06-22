@@ -171,17 +171,21 @@ module Model =
         let q = Queue<NodeId>()
         q.Enqueue(src)
         visited.Add(src) |> ignore
-        
+
         let mutable found = false
+
         while q.Count > 0 && not found do
             let curr = q.Dequeue()
+
             if curr = dst then
                 found <- true
             else
                 let neighbors = Yog.Model.successors curr graph |> List.map fst
+
                 for n in neighbors do
                     if visited.Add(n) then
                         q.Enqueue(n)
+
         found
 
     /// Adds an edge. Returns Result because it could create a cycle.
@@ -208,12 +212,22 @@ module Model =
         if isReachable dst src dag then
             Error CycleDetected
         else
-            Ok(Dag<'n, 'e>(Yog.Model.addEdgeEnsured src dst weight Unchecked.defaultof<'n> Unchecked.defaultof<'n> dag.InternalGraph))
+            Ok(
+                Dag<'n, 'e>(
+                    Yog.Model.addEdgeEnsured
+                        src
+                        dst
+                        weight
+                        Unchecked.defaultof<'n>
+                        Unchecked.defaultof<'n>
+                        dag.InternalGraph
+                )
+            )
 
 
 
     /// Creates a new empty DAG.
-    let empty<'n, 'e when 'n: equality and 'e: equality> : Dag<'n, 'e> = 
+    let empty<'n, 'e when 'n: equality and 'e: equality> : Dag<'n, 'e> =
         Dag<'n, 'e>(Yog.Model.empty Directed)
 
     /// Creates a DAG from a list of edges (src * dst * weight).
@@ -225,7 +239,10 @@ module Model =
         Yog.Model.fromUnweightedEdges Directed edges |> fromGraph
 
     /// Creates a DAG from a list of unweighted edges (src * dst) and a default weight.
-    let fromEdgesWithDefaultWeight (edges: (NodeId * NodeId) list) (defaultWeight: 'e) : Result<Dag<unit, 'e>, DagError> =
+    let fromEdgesWithDefaultWeight
+        (edges: (NodeId * NodeId) list)
+        (defaultWeight: 'e)
+        : Result<Dag<unit, 'e>, DagError> =
         let weightedEdges = edges |> List.map (fun (src, dst) -> (src, dst, defaultWeight))
         fromEdges weightedEdges
 
@@ -240,8 +257,7 @@ module Model =
         | None -> false
 
     /// Returns the number of nodes in the DAG.
-    let nodeCount (dag: Dag<'n, 'e>) : int =
-        dag.InternalGraph.Nodes.Count
+    let nodeCount (dag: Dag<'n, 'e>) : int = dag.InternalGraph.Nodes.Count
 
     /// Returns the number of edges in the DAG.
     let edgeCount (dag: Dag<'n, 'e>) : int =
@@ -260,16 +276,10 @@ module Model =
         Yog.Model.predecessors id dag.InternalGraph
 
     /// Returns the in-degree of a node.
-    let inDegree id (dag: Dag<'n, 'e>) : int =
-        (predecessors id dag).Length
+    let inDegree id (dag: Dag<'n, 'e>) : int = (predecessors id dag).Length
 
     /// Returns the out-degree of a node.
-    let outDegree id (dag: Dag<'n, 'e>) : int =
-        (successors id dag).Length
+    let outDegree id (dag: Dag<'n, 'e>) : int = (successors id dag).Length
 
     /// Checks if from node can reach to node in the DAG.
-    let reachable src dst (dag: Dag<'n, 'e>) : bool =
-        isReachable src dst dag
-
-
-
+    let reachable src dst (dag: Dag<'n, 'e>) : bool = isReachable src dst dag

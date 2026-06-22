@@ -35,13 +35,12 @@ You can customize labels, shapes, and highlight specific paths.
 *)
 printfn "\n--- DOT with Highlighted Path ---"
 // Highlight the shortest path (1 -> 2 -> 3)
-let options = {
-    defaultOptions with
+let options =
+    { defaultOptions with
         NodeLabel = fun id data -> $"{id}: {data}"
-        HighlightedNodes = Set.ofList [1; 2; 3]
-        HighlightedEdges = Set.ofList [(1, 2); (2, 3)]
-        HighlightColor = "blue"
-}
+        HighlightedNodes = Set.ofList [ 1; 2; 3 ]
+        HighlightedEdges = Set.ofList [ (1, 2); (2, 3) ]
+        HighlightColor = "blue" }
 
 let dotHighlighted = render options (graph |> mapEdges string)
 printfn "%s" dotHighlighted

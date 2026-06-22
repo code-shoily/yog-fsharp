@@ -573,4 +573,3 @@ let ``randomWalk walks limit steps`` () =
     let walkResult = randomWalk 1 5 (Some 42) graph
     Assert.Equal(6, walkResult.Length) // 5 steps + start node = 6 elements
     Assert.Equal(1, walkResult.[0])
-

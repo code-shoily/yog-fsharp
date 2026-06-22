@@ -13,35 +13,34 @@ open Yog.Model
 open Yog.Traversal
 
 // Model task dependencies (Pre-requisite, Step)
-let dependencies = [
-    ("C", "A"); ("C", "F"); ("A", "B"); ("A", "D"); ("B", "E"); ("D", "E"); ("F", "E")
-]
+let dependencies =
+    [ ("C", "A")
+      ("C", "F")
+      ("A", "B")
+      ("A", "D")
+      ("B", "E")
+      ("D", "E")
+      ("F", "E") ]
 
 let graph: Graph<string, unit> =
     dependencies
-    |> List.fold (fun (g: Graph<string, unit>) (prereq, step) ->
-        let pid = int (prereq.[0])
-        let sid = int (step.[0])
-        g
-        |> addNode pid prereq
-        |> addNode sid step
-        |> addEdge pid sid ()
-    ) (empty Directed)
+    |> List.fold
+        (fun (g: Graph<string, unit>) (prereq, step) ->
+            let pid = int (prereq.[0])
+            let sid = int (step.[0])
+            g |> addNode pid prereq |> addNode sid step |> addEdge pid sid ())
+        (empty Directed)
 
 printfn "=== Lexicographical Topological Sort ==="
 
 // Sort alphabetically by node data (task names)
 match lexicographicalTopologicalSort compare graph with
 | Ok order ->
-    let taskNames =
-        order
-        |> List.map (fun id -> graph.Nodes.[id])
-        |> String.concat ""
-    
+    let taskNames = order |> List.map (fun id -> graph.Nodes.[id]) |> String.concat ""
+
     printfn "Task execution order: %s" taskNames
     printfn "(Expected: CABDFE)"
-| Error () ->
-    printfn "Circular dependency detected!"
+| Error() -> printfn "Circular dependency detected!"
 
 (**
 ## Output

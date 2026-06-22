@@ -15,12 +15,12 @@ let makeUndirectedGraph (edges: (NodeId * NodeId) list) : Graph<unit, int> =
 let ``Diameter and Radius of a path graph`` () =
     // Path graph 1-2-3-4
     let graph = makeUndirectedGraph [ (1, 2); (2, 3); (3, 4) ]
-    
+
     let ecc1 = eccentricity 0 (+) compare 1 graph
     let ecc2 = eccentricity 0 (+) compare 2 graph
     Assert.Equal(Some 3, ecc1)
     Assert.Equal(Some 2, ecc2)
-    
+
     let diam = diameter 0 (+) compare graph
     let rad = radius 0 (+) compare graph
     Assert.Equal(Some 3, diam)
@@ -46,7 +46,7 @@ let ``Efficiency and Global/Local Efficiency`` () =
     let eff = efficiency 0 (+) compare float 1 2 graph
     let globEff = globalEfficiency 0 (+) compare float graph
     let locEff = localEfficiency 0 (+) compare float 1 graph
-    
+
     Assert.Equal(1.0, eff)
     Assert.Equal(1.0, globEff)
     Assert.Equal(1.0, locEff)

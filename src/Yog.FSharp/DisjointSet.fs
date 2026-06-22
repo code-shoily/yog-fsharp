@@ -98,8 +98,8 @@ let find (element: 'a) (dsu: DisjointSet<'a>) : DisjointSet<'a> * 'a =
         (updatedDsu, element)
     else
         let newParents =
-            (dsu.Parents, path)
-            ||> List.fold (fun pMap pathEl -> Map.add pathEl root pMap)
+            (dsu.Parents, path) ||> List.fold (fun pMap pathEl -> Map.add pathEl root pMap)
+
         ({ dsu with Parents = newParents }, root)
 
 /// Merges the sets containing the two elements.

@@ -31,9 +31,9 @@ let tasks =
     |> addNode 2 "Implement"
     |> addNode 3 "Test"
     |> addNode 4 "Deploy"
-    |> addEdge 1 2 ()  // Design before Implement
-    |> addEdge 2 3 ()  // Implement before Test
-    |> addEdge 3 4 ()  // Test before Deploy
+    |> addEdge 1 2 () // Design before Implement
+    |> addEdge 2 3 () // Implement before Test
+    |> addEdge 3 4 () // Test before Deploy
 
 (**
 ## Finding Valid Execution Order
@@ -47,10 +47,8 @@ match topologicalSort tasks with
     printfn "Execute tasks in order: %A" order
     printfn ""
     printfn "Execution plan:"
-    order
-    |> List.iteri (fun i taskId ->
-        printfn "%d. Task %d" (i + 1) taskId)
-| Error () ->
+    order |> List.iteri (fun i taskId -> printfn "%d. Task %d" (i + 1) taskId)
+| Error() ->
     printfn "Error: Circular dependency detected!"
     printfn "Cannot create a valid execution order."
 
@@ -60,14 +58,11 @@ match topologicalSort tasks with
 Let's see what happens when we add a circular dependency:
 *)
 
-let tasksWithCycle =
-    tasks
-    |> addEdge 4 1 ()  // Deploy depends on Design - creates a cycle!
+let tasksWithCycle = tasks |> addEdge 4 1 () // Deploy depends on Design - creates a cycle!
 
 match topologicalSort tasksWithCycle with
-| Ok order ->
-    printfn "\nUnexpected: Found order %A" order
-| Error () ->
+| Ok order -> printfn "\nUnexpected: Found order %A" order
+| Error() ->
     printfn "\n=== Circular Dependency Detected ==="
     printfn "Cannot execute tasks: Deploy depends on Design,"
     printfn "but Design (transitively) depends on Deploy!"

@@ -20,9 +20,9 @@ module ModelTests =
 
     [<Fact>]
     let ``directed and undirected helpers`` () =
-        let g1 = Model.directed<string, int>()
+        let g1 = Model.directed<string, int> ()
         Assert.Equal(Directed, g1.Kind)
-        let g2 = Model.undirected<string, int>()
+        let g2 = Model.undirected<string, int> ()
         Assert.Equal(Undirected, g2.Kind)
 
     [<Fact>]
@@ -83,7 +83,10 @@ module ModelTests =
 
         let g2, _ = Model.addEdge 0 1 20 g1
         Assert.Equal(2, g2.Edges.Count)
-        let weights = g2.Edges |> Map.toList |> List.map (fun (_, (_, _, w)) -> w) |> Set.ofList
+
+        let weights =
+            g2.Edges |> Map.toList |> List.map (fun (_, (_, _, w)) -> w) |> Set.ofList
+
         Assert.Equal<Set<int>>(Set.ofList [ 10; 20 ], weights)
 
     [<Fact>]
@@ -106,6 +109,7 @@ module ModelTests =
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> fun g -> Model.addEdge 0 1 10 g
+
         Assert.Contains(eid, g.OutEdgeIds.[0])
         Assert.Contains(eid, g.OutEdgeIds.[1])
         Assert.Contains(eid, g.InEdgeIds.[0])
@@ -131,6 +135,7 @@ module ModelTests =
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> fun g -> Model.addEdge 0 1 10 g
+
         let g2 = Model.removeNode 0 g1
         Assert.Equal(1, Model.order g2)
         Assert.Equal(0, Model.size g2)
@@ -142,6 +147,7 @@ module ModelTests =
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> fun g -> Model.addEdge 0 1 10 g
+
         let g2, _ = Model.addEdge 0 1 20 g1
         Assert.Equal(2, Model.edgeCount g2 0 1)
         let edges = Model.edgesBetween g2 0 1 |> List.map snd
@@ -154,6 +160,7 @@ module ModelTests =
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> fun g -> Model.addEdge 0 1 10 g
+
         let succs = Model.successors 0 g1
         Assert.Equal(1, succs.Length)
         let preds = Model.predecessors 1 g1
@@ -166,6 +173,7 @@ module ModelTests =
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> fun g -> Model.addEdge 0 1 10 g
+
         Assert.Equal(1, Model.outDegree 0 g1)
         Assert.Equal(1, Model.inDegree 1 g1)
         Assert.Equal(1, Model.degree 0 g1)
@@ -198,6 +206,7 @@ module ToSimpleGraphTests =
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> fun g -> Model.addEdge 0 1 10 g
+
         let g2, _ = Model.addEdge 0 1 20 g1
         let simple = Model.toSimpleGraphDefault g2
         let succs = successors 0 simple
@@ -210,6 +219,7 @@ module ToSimpleGraphTests =
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> fun g -> Model.addEdge 0 1 10 g
+
         let g2, _ = Model.addEdge 0 1 20 g1
         let simple = Model.toSimpleGraphMaxEdges compare g2
         let succs = successors 0 simple
@@ -222,13 +232,13 @@ module ToSimpleGraphTests =
 module TraversalTests =
     [<Fact>]
     let ``bfs on single node`` () =
-        let g = Model.directed<string, int>() |> Model.addNode 0 "A"
+        let g = Model.directed<string, int> () |> Model.addNode 0 "A"
         Assert.Equal<NodeId list>([ 0 ], Traversal.bfs 0 g)
 
     [<Fact>]
     let ``bfs traverses all reachable nodes`` () =
         let g =
-            Model.directed<string, int>()
+            Model.directed<string, int> ()
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> Model.addNode 2 "C"
@@ -236,6 +246,7 @@ module TraversalTests =
             |> fun g -> fst (Model.addEdge 0 1 1 g)
             |> fun g -> fst (Model.addEdge 0 2 2 g)
             |> fun g -> fst (Model.addEdge 1 3 3 g)
+
         let result = Traversal.bfs 0 g
         Assert.Equal(4, result.Length)
         Assert.Contains(0, result)
@@ -246,23 +257,24 @@ module TraversalTests =
     [<Fact>]
     let ``bfs with parallel edges`` () =
         let g =
-            Model.directed<string, int>()
+            Model.directed<string, int> ()
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> fun g -> fst (Model.addEdge 0 1 1 g)
             |> fun g -> fst (Model.addEdge 0 1 2 g)
+
         let result = Traversal.bfs 0 g
         Assert.Equal<NodeId list>([ 0; 1 ], result)
 
     [<Fact>]
     let ``dfs on single node`` () =
-        let g = Model.directed<string, int>() |> Model.addNode 0 "A"
+        let g = Model.directed<string, int> () |> Model.addNode 0 "A"
         Assert.Equal<NodeId list>([ 0 ], Traversal.dfs 0 g)
 
     [<Fact>]
     let ``dfs returns pre-order traversal`` () =
         let g =
-            Model.directed<string, int>()
+            Model.directed<string, int> ()
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> Model.addNode 2 "C"
@@ -270,6 +282,7 @@ module TraversalTests =
             |> fun g -> fst (Model.addEdge 0 1 1 g)
             |> fun g -> fst (Model.addEdge 0 2 2 g)
             |> fun g -> fst (Model.addEdge 1 3 3 g)
+
         let result = Traversal.dfs 0 g
         Assert.Equal(0, List.head result)
         Assert.Equal(4, result.Length)
@@ -281,12 +294,13 @@ module TraversalTests =
     [<Fact>]
     let ``foldWalk accumulates with Continue`` () =
         let g =
-            Model.directed<string, int>()
+            Model.directed<string, int> ()
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> Model.addNode 2 "C"
             |> fun g -> fst (Model.addEdge 0 1 1 g)
             |> fun g -> fst (Model.addEdge 0 2 2 g)
+
         let result = Traversal.foldWalk 0 [] (fun acc node _meta -> Continue, node :: acc) g
         Assert.Equal(3, result.Length)
         Assert.Contains(0, result)
@@ -296,19 +310,22 @@ module TraversalTests =
     [<Fact>]
     let ``foldWalk stops with Halt`` () =
         let g =
-            Model.directed<string, int>()
+            Model.directed<string, int> ()
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> Model.addNode 2 "C"
             |> fun g -> fst (Model.addEdge 0 1 1 g)
             |> fun g -> fst (Model.addEdge 1 2 2 g)
-        let result = Traversal.foldWalk 0 [] (fun acc node _meta -> if node = 1 then Halt, acc else Continue, node :: acc) g
+
+        let result =
+            Traversal.foldWalk 0 [] (fun acc node _meta -> if node = 1 then Halt, acc else Continue, node :: acc) g
+
         Assert.DoesNotContain(2, result)
 
     [<Fact>]
     let ``foldWalk skips successors with Stop`` () =
         let g =
-            Model.directed<string, int>()
+            Model.directed<string, int> ()
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> Model.addNode 2 "C"
@@ -316,7 +333,18 @@ module TraversalTests =
             |> fun g -> fst (Model.addEdge 0 1 1 g)
             |> fun g -> fst (Model.addEdge 0 2 2 g)
             |> fun g -> fst (Model.addEdge 2 3 3 g)
-        let result = Traversal.foldWalk 0 [] (fun acc node _meta -> if node = 2 then Stop, node :: acc else Continue, node :: acc) g
+
+        let result =
+            Traversal.foldWalk
+                0
+                []
+                (fun acc node _meta ->
+                    if node = 2 then
+                        Stop, node :: acc
+                    else
+                        Continue, node :: acc)
+                g
+
         Assert.Contains(0, result)
         Assert.Contains(1, result)
         Assert.Contains(2, result)
@@ -325,22 +353,28 @@ module TraversalTests =
     [<Fact>]
     let ``foldWalk provides depth and parent metadata`` () =
         let g, e1 =
-            Model.directed<string, int>()
+            Model.directed<string, int> ()
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> fun g -> Model.addEdge 0 1 10 g
+
         let g, e2 = Model.addEdge 1 2 20 g
         let g = Model.addNode 2 "C" g
-        
+
         let depths, parents =
-            Traversal.foldWalk 0 (Map.empty, Map.empty) (fun (dAcc, pAcc) node meta ->
-                let nextD = Map.add node meta.Depth dAcc
-                let nextP =
-                    match meta.Parent with
-                    | None -> pAcc
-                    | Some (p, e) -> Map.add node (p, e) pAcc
-                Continue, (nextD, nextP)
-            ) g
+            Traversal.foldWalk
+                0
+                (Map.empty, Map.empty)
+                (fun (dAcc, pAcc) node meta ->
+                    let nextD = Map.add node meta.Depth dAcc
+
+                    let nextP =
+                        match meta.Parent with
+                        | None -> pAcc
+                        | Some(p, e) -> Map.add node (p, e) pAcc
+
+                    Continue, (nextD, nextP))
+                g
 
         Assert.Equal(0, depths.[0])
         Assert.Equal(1, depths.[1])
@@ -351,18 +385,22 @@ module TraversalTests =
     [<Fact>]
     let ``foldWalk traverses all parallel edges`` () =
         let g, e1 =
-            Model.directed<string, int>()
+            Model.directed<string, int> ()
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> fun g -> Model.addEdge 0 1 10 g
+
         let g, e2 = Model.addEdge 0 1 20 g
 
         let edgesUsed =
-            Traversal.foldWalk 0 [] (fun acc _node meta ->
-                match meta.Parent with
-                | None -> Continue, acc
-                | Some (_, e) -> Continue, e :: acc
-            ) g
+            Traversal.foldWalk
+                0
+                []
+                (fun acc _node meta ->
+                    match meta.Parent with
+                    | None -> Continue, acc
+                    | Some(_, e) -> Continue, e :: acc)
+                g
 
         Assert.Equal(2, edgesUsed.Length)
         Assert.Contains(e1, edgesUsed)
@@ -375,7 +413,7 @@ module TraversalTests =
 module EulerianTests =
     [<Fact>]
     let ``empty graph checks`` () =
-        let g = Model.directed<string, int>()
+        let g = Model.directed<string, int> ()
         Assert.False(Eulerian.hasEulerianCircuit g)
         Assert.False(Eulerian.hasEulerianPath g)
         Assert.True((Eulerian.findEulerianCircuit g).IsNone)
@@ -384,14 +422,15 @@ module EulerianTests =
     [<Fact>]
     let ``directed single edge checks`` () =
         let g =
-            Model.directed<string, int>()
+            Model.directed<string, int> ()
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> fun g -> fst (Model.addEdge 0 1 1 g)
+
         Assert.False(Eulerian.hasEulerianCircuit g)
         Assert.True(Eulerian.hasEulerianPath g)
         Assert.True((Eulerian.findEulerianCircuit g).IsNone)
-        
+
         let path = Eulerian.findEulerianPath g
         Assert.True(path.IsSome)
         Assert.Equal(1, path.Value.Length)
@@ -399,16 +438,17 @@ module EulerianTests =
     [<Fact>]
     let ``directed cycle checks`` () =
         let g =
-            Model.directed<string, int>()
+            Model.directed<string, int> ()
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> Model.addNode 2 "C"
             |> fun g -> fst (Model.addEdge 0 1 1 g)
             |> fun g -> fst (Model.addEdge 1 2 2 g)
             |> fun g -> fst (Model.addEdge 2 0 3 g)
+
         Assert.True(Eulerian.hasEulerianCircuit g)
         Assert.True(Eulerian.hasEulerianPath g)
-        
+
         let circuit = Eulerian.findEulerianCircuit g
         Assert.True(circuit.IsSome)
         Assert.Equal(3, circuit.Value.Length)
@@ -416,15 +456,16 @@ module EulerianTests =
     [<Fact>]
     let ``undirected triangle checks`` () =
         let g =
-            Model.undirected<string, int>()
+            Model.undirected<string, int> ()
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> Model.addNode 2 "C"
             |> fun g -> fst (Model.addEdge 0 1 1 g)
             |> fun g -> fst (Model.addEdge 1 2 2 g)
             |> fun g -> fst (Model.addEdge 2 0 3 g)
+
         Assert.True(Eulerian.hasEulerianCircuit g)
-        
+
         let circuit = Eulerian.findEulerianCircuit g
         Assert.True(circuit.IsSome)
         Assert.Equal(3, circuit.Value.Length)
@@ -432,15 +473,16 @@ module EulerianTests =
     [<Fact>]
     let ``undirected path checks`` () =
         let g =
-            Model.undirected<string, int>()
+            Model.undirected<string, int> ()
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> Model.addNode 2 "C"
             |> fun g -> fst (Model.addEdge 0 1 1 g)
             |> fun g -> fst (Model.addEdge 1 2 2 g)
+
         Assert.False(Eulerian.hasEulerianCircuit g)
         Assert.True(Eulerian.hasEulerianPath g)
-        
+
         let path = Eulerian.findEulerianPath g
         Assert.True(path.IsSome)
         Assert.Equal(2, path.Value.Length)
@@ -448,13 +490,14 @@ module EulerianTests =
     [<Fact>]
     let ``undirected parallel edges checks`` () =
         let g =
-            Model.undirected<string, int>()
+            Model.undirected<string, int> ()
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> fun g -> fst (Model.addEdge 0 1 1 g)
             |> fun g -> fst (Model.addEdge 0 1 2 g)
+
         Assert.True(Eulerian.hasEulerianCircuit g)
-        
+
         let circuit = Eulerian.findEulerianCircuit g
         Assert.True(circuit.IsSome)
         Assert.Equal(2, circuit.Value.Length)
@@ -462,7 +505,7 @@ module EulerianTests =
     [<Fact>]
     let ``undirected triangle plus isolated node has circuit`` () =
         let g =
-            Model.undirected<string, int>()
+            Model.undirected<string, int> ()
             |> Model.addNode 0 "A"
             |> Model.addNode 1 "B"
             |> Model.addNode 2 "C"
@@ -470,8 +513,9 @@ module EulerianTests =
             |> fun g -> fst (Model.addEdge 0 1 1 g)
             |> fun g -> fst (Model.addEdge 1 2 2 g)
             |> fun g -> fst (Model.addEdge 2 0 3 g)
+
         Assert.True(Eulerian.hasEulerianCircuit g)
-        
+
         let circuit = Eulerian.findEulerianCircuit g
         Assert.True(circuit.IsSome)
         Assert.Equal(3, circuit.Value.Length)
@@ -479,15 +523,15 @@ module EulerianTests =
     [<Fact>]
     let ``self-loop checks`` () =
         let g =
-            Model.undirected<string, int>()
+            Model.undirected<string, int> ()
             |> Model.addNode 0 "U"
             |> Model.addNode 1 "V"
             |> fun g -> fst (Model.addEdge 0 0 1 g) // self loop at 0
             |> fun g -> fst (Model.addEdge 0 1 2 g)
+
         Assert.False(Eulerian.hasEulerianCircuit g)
         Assert.True(Eulerian.hasEulerianPath g)
-        
+
         let path = Eulerian.findEulerianPath g
         Assert.True(path.IsSome)
         Assert.Equal(2, path.Value.Length)
-

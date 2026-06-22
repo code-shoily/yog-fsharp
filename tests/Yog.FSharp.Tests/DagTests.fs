@@ -830,8 +830,15 @@ module LowestCommonAncestorsTests =
     let ``topologicalGenerations - simple diamond`` () =
         let graph =
             empty Directed
-            |> addNode 1 () |> addNode 2 () |> addNode 3 () |> addNode 4 ()
-            |> addEdge 1 2 1 |> addEdge 1 3 1 |> addEdge 2 4 1 |> addEdge 3 4 1
+            |> addNode 1 ()
+            |> addNode 2 ()
+            |> addNode 3 ()
+            |> addNode 4 ()
+            |> addEdge 1 2 1
+            |> addEdge 1 3 1
+            |> addEdge 2 4 1
+            |> addEdge 3 4 1
+
         let dag = Model.fromGraph graph |> unwrapDag
         let gens = Algorithms.topologicalGenerations dag
         Assert.Equal(3, gens.Length)
@@ -843,8 +850,15 @@ module LowestCommonAncestorsTests =
     let ``sources and sinks - simple diamond`` () =
         let graph =
             empty Directed
-            |> addNode 1 () |> addNode 2 () |> addNode 3 () |> addNode 4 ()
-            |> addEdge 1 2 1 |> addEdge 1 3 1 |> addEdge 2 4 1 |> addEdge 3 4 1
+            |> addNode 1 ()
+            |> addNode 2 ()
+            |> addNode 3 ()
+            |> addNode 4 ()
+            |> addEdge 1 2 1
+            |> addEdge 1 3 1
+            |> addEdge 2 4 1
+            |> addEdge 3 4 1
+
         let dag = Model.fromGraph graph |> unwrapDag
         Assert.Equal<int list>([ 1 ], Algorithms.sources dag)
         Assert.Equal<int list>([ 4 ], Algorithms.sinks dag)
@@ -853,8 +867,12 @@ module LowestCommonAncestorsTests =
     let ``ancestors and descendants`` () =
         let graph =
             empty Directed
-            |> addNode 1 () |> addNode 2 () |> addNode 3 ()
-            |> addEdge 1 2 1 |> addEdge 2 3 1
+            |> addNode 1 ()
+            |> addNode 2 ()
+            |> addNode 3 ()
+            |> addEdge 1 2 1
+            |> addEdge 2 3 1
+
         let dag = Model.fromGraph graph |> unwrapDag
         Assert.Equal<int list>([ 1; 2; 3 ], Algorithms.ancestors 3 dag)
         Assert.Equal<int list>([ 1; 2; 3 ], Algorithms.descendants 1 dag)
@@ -863,8 +881,13 @@ module LowestCommonAncestorsTests =
     let ``singleSourceDistances - simple weighted graph`` () =
         let graph =
             empty Directed
-            |> addNode 1 () |> addNode 2 () |> addNode 3 ()
-            |> addEdge 1 2 3 |> addEdge 2 3 2 |> addEdge 1 3 10
+            |> addNode 1 ()
+            |> addNode 2 ()
+            |> addNode 3 ()
+            |> addEdge 1 2 3
+            |> addEdge 2 3 2
+            |> addEdge 1 3 10
+
         let dag = Model.fromGraph graph |> unwrapDag
         let dists = Algorithms.singleSourceDistances 1 dag
         Assert.Equal(0, Map.find 1 dists)
@@ -875,8 +898,15 @@ module LowestCommonAncestorsTests =
     let ``longestPathBetween - simple weighted graph`` () =
         let graph =
             empty Directed
-            |> addNode 1 () |> addNode 2 () |> addNode 3 () |> addNode 4 ()
-            |> addEdge 1 2 1 |> addEdge 1 3 5 |> addEdge 2 4 1 |> addEdge 3 4 1
+            |> addNode 1 ()
+            |> addNode 2 ()
+            |> addNode 3 ()
+            |> addNode 4 ()
+            |> addEdge 1 2 1
+            |> addEdge 1 3 5
+            |> addEdge 2 4 1
+            |> addEdge 3 4 1
+
         let dag = Model.fromGraph graph |> unwrapDag
         let path = Algorithms.longestPathBetween 1 4 dag
         Assert.True(path.IsSome)
@@ -886,8 +916,14 @@ module LowestCommonAncestorsTests =
     let ``pathCount - simple diamond`` () =
         let graph =
             empty Directed
-            |> addNode 1 () |> addNode 2 () |> addNode 3 () |> addNode 4 ()
-            |> addEdge 1 2 1 |> addEdge 1 3 1 |> addEdge 2 4 1 |> addEdge 3 4 1
+            |> addNode 1 ()
+            |> addNode 2 ()
+            |> addNode 3 ()
+            |> addNode 4 ()
+            |> addEdge 1 2 1
+            |> addEdge 1 3 1
+            |> addEdge 2 4 1
+            |> addEdge 3 4 1
+
         let dag = Model.fromGraph graph |> unwrapDag
         Assert.Equal(2, Algorithms.pathCount 1 4 dag)
-

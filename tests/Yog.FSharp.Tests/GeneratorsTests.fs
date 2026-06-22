@@ -538,6 +538,7 @@ let ``sbmWithLabels generates correct structure`` () =
     let (g, communities) = Random.sbmWithLabels 100 4 0.5 0.01 Undirected None
     Assert.Equal(100, order g)
     Assert.Equal(100, communities.Count)
+
     for kv in communities do
         Assert.True(kv.Value >= 0 && kv.Value < 4)
 
@@ -555,31 +556,32 @@ let ``hsbm generates correct number of nodes`` () =
 let ``randomizeDegreeSequence preserves degrees`` () =
     let star = Classic.star 5 Undirected
     let res = Random.randomizeDegreeSequence star false false 100
+
     match res with
     | Ok g ->
         Assert.Equal(5, order g)
         let starHubDeg = (neighbors 0 star).Length
         let randomizedHubDeg = (neighbors 0 g).Length
         Assert.Equal(starHubDeg, randomizedHubDeg)
-    | Error err ->
-        Assert.Fail(sprintf "randomizeDegreeSequence failed: %A" err)
+    | Error err -> Assert.Fail(sprintf "randomizeDegreeSequence failed: %A" err)
 
 [<Fact>]
 let ``powerLawGraph generates correct number of nodes`` () =
     let res = Random.powerLawGraph 30 2.5 1 None true true 100
+
     match res with
     | Ok g -> Assert.Equal(30, order g)
     | Error err -> Assert.Fail(sprintf "powerLawGraph failed: %A" err)
 
 [<Fact>]
 let ``kronecker generates correct number of nodes`` () =
-    let initiator = array2D [[0.9; 0.5]; [0.5; 0.1]]
+    let initiator = array2D [ [ 0.9; 0.5 ]; [ 0.5; 0.1 ] ]
     let g = Random.kronecker 3 initiator None Undirected
     Assert.Equal(8, order g)
 
 [<Fact>]
 let ``kroneckerGeneral generates correct number of nodes`` () =
-    let initiator = array2D [[0.8; 0.2; 0.1]; [0.2; 0.7; 0.1]; [0.1; 0.1; 0.6]]
+    let initiator = array2D [ [ 0.8; 0.2; 0.1 ]; [ 0.2; 0.7; 0.1 ]; [ 0.1; 0.1; 0.6 ] ]
     let g = Random.kroneckerGeneral 2 initiator None Undirected
     Assert.Equal(9, order g)
 
@@ -643,7 +645,7 @@ let ``ellers maze creates correct grid`` () =
 let ``growingTree maze creates correct grid`` () =
     let gridLast = Maze.growingTree 6 6 Maze.Last
     Assert.Equal(36, order gridLast.Graph)
-    
+
     let gridRandom = Maze.growingTree 6 6 Maze.RandomStrategy
     Assert.Equal(36, order gridRandom.Graph)
 

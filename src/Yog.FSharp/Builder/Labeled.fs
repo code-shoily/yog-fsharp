@@ -163,7 +163,8 @@ module Labeled =
 
     /// Creates a builder from a list of edge pairs (source, target) with unit weight.
     let fromUnweightedList kind (edges: ('L * 'L) list) =
-        edges |> List.fold (fun b (src, dst) -> addUnweightedEdge src dst b) (create kind)
+        edges
+        |> List.fold (fun b (src, dst) -> addUnweightedEdge src dst b) (create kind)
 
     /// Returns the label-to-ID registry.
     let toRegistry (builder: LabeledBuilder<'Label, 'E>) = builder.LabelToId

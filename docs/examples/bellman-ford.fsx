@@ -20,11 +20,14 @@ open Yog.Pathfinding.BellmanFord
 // 0=USD, 1=EUR, 2=GBP, 3=JPY
 let exchange =
     empty Directed
-    |> addNode 0 "USD" |> addNode 1 "EUR" |> addNode 2 "GBP" |> addNode 3 "JPY"
-    |> addEdge 0 1 -1   // USD->EUR favorable
-    |> addEdge 1 2 -2   // EUR->GBP favorable
-    |> addEdge 2 3  5   // GBP->JPY costly
-    |> addEdge 0 3  4   // USD->JPY direct (costly)
+    |> addNode 0 "USD"
+    |> addNode 1 "EUR"
+    |> addNode 2 "GBP"
+    |> addNode 3 "JPY"
+    |> addEdge 0 1 -1 // USD->EUR favorable
+    |> addEdge 1 2 -2 // EUR->GBP favorable
+    |> addEdge 2 3 5 // GBP->JPY costly
+    |> addEdge 0 3 4 // USD->JPY direct (costly)
 
 (**
 ## Finding the Best Conversion Path
@@ -36,27 +39,25 @@ match bellmanFordInt 0 3 exchange with
 | ShortestPath path ->
     printfn "Best path: %A" path.Nodes
     printfn "Total cost: %d" path.TotalWeight
-| NegativeCycle ->
-    printfn "Arbitrage opportunity detected! (negative cycle)"
-| NoPath ->
-    printfn "No conversion path exists."
+| NegativeCycle -> printfn "Arbitrage opportunity detected! (negative cycle)"
+| NoPath -> printfn "No conversion path exists."
 
 // Also test a graph with a negative cycle (arbitrage)
 let arbitrage =
     empty Directed
-    |> addNode 0 "A" |> addNode 1 "B" |> addNode 2 "C"
+    |> addNode 0 "A"
+    |> addNode 1 "B"
+    |> addNode 2 "C"
     |> addEdge 0 1 1
     |> addEdge 1 2 -3
     |> addEdge 2 0 1
 
 printfn "\n=== Arbitrage Detection ==="
+
 match bellmanFordInt 0 2 arbitrage with
-| ShortestPath path ->
-    printfn "Path: %A, cost: %d" path.Nodes path.TotalWeight
-| NegativeCycle ->
-    printfn "Negative cycle detected — arbitrage opportunity!"
-| NoPath ->
-    printfn "No path found."
+| ShortestPath path -> printfn "Path: %A, cost: %d" path.Nodes path.TotalWeight
+| NegativeCycle -> printfn "Negative cycle detected — arbitrage opportunity!"
+| NoPath -> printfn "No path found."
 
 (**
 ## Output

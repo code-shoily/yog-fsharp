@@ -74,14 +74,18 @@ module KruskalTests =
 
     [<Fact>]
     let ``kruskal - square with diagonal`` () =
-        let graph = makeUndirectedWeightedGraph [ (0, 1, 1); (1, 2, 2); (2, 3, 3); (0, 3, 4); (0, 2, 5) ]
+        let graph =
+            makeUndirectedWeightedGraph [ (0, 1, 1); (1, 2, 2); (2, 3, 3); (0, 3, 4); (0, 2, 5) ]
+
         let result = runKruskal graph
         Assert.Equal(3, result.Length)
         Assert.Equal(6, totalWeight result)
 
     [<Fact>]
     let ``kruskal - complete graph K4`` () =
-        let graph = makeUndirectedWeightedGraph [ (0, 1, 1); (0, 2, 2); (0, 3, 3); (1, 2, 4); (1, 3, 5); (2, 3, 6) ]
+        let graph =
+            makeUndirectedWeightedGraph [ (0, 1, 1); (0, 2, 2); (0, 3, 3); (1, 2, 4); (1, 3, 5); (2, 3, 6) ]
+
         let result = runKruskal graph
         Assert.Equal(3, result.Length)
         Assert.Equal(6, totalWeight result)
@@ -137,7 +141,9 @@ module KruskalTests =
 
     [<Fact>]
     let ``kruskal - large weights`` () =
-        let graph = makeUndirectedWeightedGraph [ (0, 1, 1000000); (0, 2, 2000000); (1, 2, 3000000) ]
+        let graph =
+            makeUndirectedWeightedGraph [ (0, 1, 1000000); (0, 2, 2000000); (1, 2, 3000000) ]
+
         let result = runKruskal graph
         Assert.Equal(2, result.Length)
         Assert.Equal(3000000, totalWeight result)
@@ -156,14 +162,18 @@ module PrimTests =
 
     [<Fact>]
     let ``prim - square with diagonal`` () =
-        let graph = makeUndirectedWeightedGraph [ (0, 1, 1); (1, 2, 2); (2, 3, 3); (0, 3, 4); (0, 2, 5) ]
+        let graph =
+            makeUndirectedWeightedGraph [ (0, 1, 1); (1, 2, 2); (2, 3, 3); (0, 3, 4); (0, 2, 5) ]
+
         let result = runPrim graph
         Assert.Equal(3, result.Length)
         Assert.Equal(6, totalWeight result)
 
     [<Fact>]
     let ``prim - complete graph K4`` () =
-        let graph = makeUndirectedWeightedGraph [ (0, 1, 1); (0, 2, 2); (0, 3, 3); (1, 2, 4); (1, 3, 5); (2, 3, 6) ]
+        let graph =
+            makeUndirectedWeightedGraph [ (0, 1, 1); (0, 2, 2); (0, 3, 3); (1, 2, 4); (1, 3, 5); (2, 3, 6) ]
+
         let result = runPrim graph
         Assert.Equal(3, result.Length)
         Assert.Equal(6, totalWeight result)
@@ -196,14 +206,18 @@ module PrimTests =
 
     [<Fact>]
     let ``prim - star graph`` () =
-        let graph = makeUndirectedWeightedGraph [ (0, 1, 1); (0, 2, 2); (0, 3, 3); (0, 4, 4) ]
+        let graph =
+            makeUndirectedWeightedGraph [ (0, 1, 1); (0, 2, 2); (0, 3, 3); (0, 4, 4) ]
+
         let result = runPrim graph
         Assert.Equal(4, result.Length)
         Assert.Equal(10, totalWeight result)
 
     [<Fact>]
     let ``prim - path graph`` () =
-        let graph = makeUndirectedWeightedGraph [ (0, 1, 5); (1, 2, 4); (2, 3, 3); (3, 4, 2) ]
+        let graph =
+            makeUndirectedWeightedGraph [ (0, 1, 5); (1, 2, 4); (2, 3, 3); (3, 4, 2) ]
+
         let result = runPrim graph
         Assert.Equal(4, result.Length)
         Assert.Equal(14, totalWeight result)
@@ -231,7 +245,9 @@ module BoruvkaTests =
 
     [<Fact>]
     let ``boruvka - square with diagonal`` () =
-        let graph = makeUndirectedWeightedGraph [ (0, 1, 1); (1, 2, 2); (2, 3, 3); (0, 3, 4); (0, 2, 5) ]
+        let graph =
+            makeUndirectedWeightedGraph [ (0, 1, 1); (1, 2, 2); (2, 3, 3); (0, 3, 4); (0, 2, 5) ]
+
         let result = runBoruvka graph
         Assert.Equal(3, result.Length)
         Assert.Equal(6, totalWeight result)
@@ -257,7 +273,9 @@ module EdmondsTests =
 
     [<Fact>]
     let ``edmonds - with cycle`` () =
-        let graph = makeDirectedWeightedGraph [ (0, 1, 10); (0, 2, 20); (1, 2, 5); (2, 1, 3) ]
+        let graph =
+            makeDirectedWeightedGraph [ (0, 1, 10); (0, 2, 20); (1, 2, 5); (2, 1, 3) ]
+
         let result = runEdmonds 0 graph
         Assert.Equal(2, result.Length)
         Assert.Equal(15, totalWeight result)
@@ -266,6 +284,7 @@ module EdmondsTests =
     let ``edmonds - unreachable returns error`` () =
         let graph = makeDirectedWeightedGraph [ (0, 1, 10); (2, 3, 5) ]
         let res = edmondsInt 0 graph
+
         match res with
         | Error msg -> Assert.Contains("No arborescence exists", msg)
         | Ok _ -> failwith "Expected failure"
@@ -290,7 +309,9 @@ module WilsonTests =
 module ComparisonTests =
     [<Fact>]
     let ``kruskal prim and boruvka give same total weight`` () =
-        let graph = makeUndirectedWeightedGraph [ (0, 1, 4); (0, 2, 3); (0, 3, 1); (1, 2, 2); (1, 3, 5); (2, 3, 6) ]
+        let graph =
+            makeUndirectedWeightedGraph [ (0, 1, 4); (0, 2, 3); (0, 3, 1); (1, 2, 2); (1, 3, 5); (2, 3, 6) ]
+
         let kruskalResult = runKruskal graph
         let primResult = runPrim graph
         let boruvkaResult = runBoruvka graph
@@ -299,7 +320,9 @@ module ComparisonTests =
 
     [<Fact>]
     let ``algorithms produce same number of edges`` () =
-        let graph = makeUndirectedWeightedGraph [ (0, 1, 10); (0, 2, 20); (0, 3, 30); (1, 2, 5); (1, 3, 15); (2, 3, 25) ]
+        let graph =
+            makeUndirectedWeightedGraph [ (0, 1, 10); (0, 2, 20); (0, 3, 30); (1, 2, 5); (1, 3, 15); (2, 3, 25) ]
+
         let kruskalResult = runKruskal graph
         let primResult = runPrim graph
         let boruvkaResult = runBoruvka graph
@@ -336,8 +359,10 @@ module EdgeCaseTests =
             |> addEdge 0 1 1.5
             |> addEdge 1 2 2.5
             |> addEdge 0 2 4.0
+
         let result =
             match kruskalFloat graph with
             | Ok res -> res.Edges
             | Error msg -> failwith msg
+
         Assert.Equal(2, result.Length)

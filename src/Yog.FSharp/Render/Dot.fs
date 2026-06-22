@@ -85,10 +85,11 @@ module Dot =
         sb.AppendLine(header) |> ignore
         sb.AppendLine($"  node [shape={options.NodeShape}];") |> ignore
         sb.AppendLine("  edge [fontname=\"Helvetica\", fontsize=10];") |> ignore
-        
+
         for kvp in graph.Nodes do
             let id = kvp.Key
             let label = options.NodeLabel id kvp.Value
+
             let highlight =
                 if Set.contains id options.HighlightedNodes then
                     $" fillcolor=\"{options.HighlightColor}\", style=filled"
@@ -96,7 +97,9 @@ module Dot =
                     " fillcolor=\"#a8d8ea\", style=filled, color=\"#0288d1\""
                 elif Set.contains id options.HighlightedSinkNodes then
                     " fillcolor=\"#f08080\", style=filled, color=\"#c62828\""
-                else ""
+                else
+                    ""
+
             sb.AppendLine($"  {id} [label=\"{label}\"{highlight}];") |> ignore
 
         for KeyValue(src, targets) in graph.OutEdges do
@@ -105,11 +108,16 @@ module Dot =
                     let isHighlighted =
                         Set.contains (src, dst) options.HighlightedEdges
                         || (graph.Kind = Undirected && Set.contains (dst, src) options.HighlightedEdges)
+
                     let highlight =
                         if isHighlighted then
                             $" color=\"{options.HighlightColor}\", penwidth=2"
-                        else ""
-                    sb.AppendLine($"  {src} {connector} {dst} [label=\"{options.EdgeLabel weight}\"{highlight}];") |> ignore
+                        else
+                            ""
+
+                    sb.AppendLine($"  {src} {connector} {dst} [label=\"{options.EdgeLabel weight}\"{highlight}];")
+                    |> ignore
+
         sb.AppendLine("}") |> ignore
         sb.ToString()
 
@@ -121,10 +129,11 @@ module Dot =
         sb.AppendLine(header) |> ignore
         sb.AppendLine($"  node [shape={options.NodeShape}];") |> ignore
         sb.AppendLine("  edge [fontname=\"Helvetica\", fontsize=10];") |> ignore
-        
+
         for kvp in graph.Nodes do
             let id = kvp.Key
             let label = options.NodeLabel id kvp.Value
+
             let highlight =
                 if Set.contains id options.HighlightedNodes then
                     $" fillcolor=\"{options.HighlightColor}\", style=filled"
@@ -132,22 +141,30 @@ module Dot =
                     " fillcolor=\"#a8d8ea\", style=filled, color=\"#0288d1\""
                 elif Set.contains id options.HighlightedSinkNodes then
                     " fillcolor=\"#f08080\", style=filled, color=\"#c62828\""
-                else ""
+                else
+                    ""
+
             sb.AppendLine($"  {id} [label=\"{label}\"{highlight}];") |> ignore
 
         for kvp in graph.Edges do
             let edgeId = kvp.Key
             let (src, dst, weight) = kvp.Value
+
             if graph.Kind = Directed || src <= dst then
                 let isHighlighted =
                     Set.contains edgeId options.HighlightedEdges
                     || Set.contains (src, dst) options.HighlightedNodePairs
                     || (graph.Kind = Undirected && Set.contains (dst, src) options.HighlightedNodePairs)
+
                 let highlight =
                     if isHighlighted then
                         $" color=\"{options.HighlightColor}\", penwidth=2"
-                    else ""
-                sb.AppendLine($"  {src} {connector} {dst} [label=\"{options.EdgeLabel edgeId weight}\"{highlight}];") |> ignore
+                    else
+                        ""
+
+                sb.AppendLine($"  {src} {connector} {dst} [label=\"{options.EdgeLabel edgeId weight}\"{highlight}];")
+                |> ignore
+
         sb.AppendLine("}") |> ignore
         sb.ToString()
 
@@ -163,6 +180,7 @@ module Dot =
     let pathToOptions (path: Path<'e>) (baseOptions: Options<'n, 'e>) : Options<'n, 'e> =
         let nodes = Set.ofList path.Nodes
         let edges = List.pairwise path.Nodes |> Set.ofList
+
         { baseOptions with
             HighlightedNodes = nodes
             HighlightedEdges = edges }
@@ -171,6 +189,7 @@ module Dot =
     let pathToMultiOptions (path: Path<'e>) (baseOptions: MultiOptions<'n, 'e>) : MultiOptions<'n, 'e> =
         let nodes = Set.ofList path.Nodes
         let edges = List.pairwise path.Nodes |> Set.ofList
+
         { baseOptions with
             HighlightedNodes = nodes
             HighlightedNodePairs = edges }
@@ -178,7 +197,8 @@ module Dot =
     /// Creates DOT options that highlight an MST result.
     let mstToOptions (result: MstResult<'e>) (baseOptions: Options<'n, 'e>) : Options<'n, 'e> =
         let edges = result.Edges |> List.map (fun e -> (e.From, e.To)) |> Set.ofList
-        let nodes = result.Edges |> List.collect (fun e -> [e.From; e.To]) |> Set.ofList
+        let nodes = result.Edges |> List.collect (fun e -> [ e.From; e.To ]) |> Set.ofList
+
         { baseOptions with
             HighlightedNodes = nodes
             HighlightedEdges = edges }
@@ -186,7 +206,8 @@ module Dot =
     /// Creates DOT options that highlight an MST result in a multigraph.
     let mstToMultiOptions (result: MstResult<'e>) (baseOptions: MultiOptions<'n, 'e>) : MultiOptions<'n, 'e> =
         let edges = result.Edges |> List.map (fun e -> (e.From, e.To)) |> Set.ofList
-        let nodes = result.Edges |> List.collect (fun e -> [e.From; e.To]) |> Set.ofList
+        let nodes = result.Edges |> List.collect (fun e -> [ e.From; e.To ]) |> Set.ofList
+
         { baseOptions with
             HighlightedNodes = nodes
             HighlightedNodePairs = edges }
@@ -205,24 +226,31 @@ module Dot =
 
     /// Creates DOT options that highlight matched edges from a matching result.
     let matchingToOptions (matching: Map<NodeId, NodeId>) (baseOptions: Options<'n, 'e>) : Options<'n, 'e> =
-        let edges = 
-            matching 
-            |> Map.toList 
-            |> List.map (fun (u, v) -> if u <= v then (u, v) else (v, u)) 
+        let edges =
+            matching
+            |> Map.toList
+            |> List.map (fun (u, v) -> if u <= v then (u, v) else (v, u))
             |> Set.ofList
+
         let nodes = matching |> Map.keys |> Set.ofSeq
+
         { baseOptions with
             HighlightedNodes = nodes
             HighlightedEdges = edges }
 
     /// Creates DOT options that highlight matched edges in a multigraph.
-    let matchingToMultiOptions (matching: Map<NodeId, NodeId>) (baseOptions: MultiOptions<'n, 'e>) : MultiOptions<'n, 'e> =
-        let edges = 
-            matching 
-            |> Map.toList 
-            |> List.map (fun (u, v) -> if u <= v then (u, v) else (v, u)) 
+    let matchingToMultiOptions
+        (matching: Map<NodeId, NodeId>)
+        (baseOptions: MultiOptions<'n, 'e>)
+        : MultiOptions<'n, 'e> =
+        let edges =
+            matching
+            |> Map.toList
+            |> List.map (fun (u, v) -> if u <= v then (u, v) else (v, u))
             |> Set.ofList
+
         let nodes = matching |> Map.keys |> Set.ofSeq
+
         { baseOptions with
             HighlightedNodes = nodes
             HighlightedNodePairs = edges }

@@ -356,7 +356,7 @@ module MaxFlowPropertyTests =
 
     /// Generates a directed flow network with positive capacities together with a
     /// source and sink node.
-    let flowNetworkGen : Gen<Graph<unit, int> * NodeId * NodeId> =
+    let flowNetworkGen: Gen<Graph<unit, int> * NodeId * NodeId> =
         gen {
             let! n = Gen.int32 (Range.linear 2 12)
             let maxEdges = n * (n - 1)
@@ -367,14 +367,14 @@ module MaxFlowPropertyTests =
                 |> List.fold (fun acc node -> addNode node () acc) (empty Directed)
 
             let! edges =
-                Gen.array (Range.constant edgeCount edgeCount) (
-                    gen {
+                Gen.array
+                    (Range.constant edgeCount edgeCount)
+                    (gen {
                         let! u = Gen.int32 (Range.constant 0 (n - 1))
                         let! v = Gen.int32 (Range.constant 0 (n - 1))
                         let! c = Gen.int32 (Range.linear 1 100)
                         return (u, v, c)
-                    }
-                )
+                    })
 
             let g =
                 edges
@@ -388,26 +388,27 @@ module MaxFlowPropertyTests =
         }
 
     let private originalCap u v (g: Graph<unit, int>) = edgeData u v g |> Option.defaultValue 0
-    let private residualCap u v (r: MaxFlowResult<int>) = edgeData u v r.ResidualGraph |> Option.defaultValue 0
+
+    let private residualCap u v (r: MaxFlowResult<int>) =
+        edgeData u v r.ResidualGraph |> Option.defaultValue 0
+
     let private flowOn u v g r = originalCap u v g - residualCap u v r
 
     let private netOutflow g r n =
-        allNodes g
-        |> List.sumBy (fun v -> flowOn n v g r - flowOn v n g r)
+        allNodes g |> List.sumBy (fun v -> flowOn n v g r - flowOn v n g r)
 
     [<Fact>]
     let ``flow conservation holds at intermediate nodes`` () =
         property {
             let! g, s, t = flowNetworkGen
+
             if s = t then
                 return true
             else
                 let result = edmondsKarpInt s t g
                 let nodes = allNodes g
 
-                return
-                    nodes
-                    |> List.forall (fun n -> n = s || n = t || netOutflow g result n = 0)
+                return nodes |> List.forall (fun n -> n = s || n = t || netOutflow g result n = 0)
         }
         |> Property.checkBool
 
@@ -441,10 +442,10 @@ module MaxFlowAlgorithmAgreementTests =
     let ``Dinic, PushRelabel, and EdmondsKarp agree on diamond network`` () =
         let graph =
             makeFlowNetwork [ (0, 1, 10); (0, 2, 10); (1, 3, 10); (2, 3, 10); (1, 2, 5) ]
+
         let ek = edmondsKarpInt 0 3 graph
         let dn = dinicInt 0 3 graph
         let pr = pushRelabelInt 0 3 graph
         Assert.Equal(20, ek.MaxFlow)
         Assert.Equal(20, dn.MaxFlow)
         Assert.Equal(20, pr.MaxFlow)
-

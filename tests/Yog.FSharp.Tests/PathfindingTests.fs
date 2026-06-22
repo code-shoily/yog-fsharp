@@ -1261,7 +1261,7 @@ module BidirectionalTests =
 
         match shortestPathUnweighted 1 3 graph with
         | Some path ->
-            Assert.Equal<NodeId list>([1; 2; 3], path.Nodes)
+            Assert.Equal<NodeId list>([ 1; 2; 3 ], path.Nodes)
             Assert.Equal(2, path.TotalWeight)
         | None -> Assert.True(false, "Path should exist")
 
@@ -1277,7 +1277,7 @@ module BidirectionalTests =
 
         match shortestPathInt 1 3 graph with
         | Some path ->
-            Assert.Equal<NodeId list>([1; 2; 3], path.Nodes)
+            Assert.Equal<NodeId list>([ 1; 2; 3 ], path.Nodes)
             Assert.Equal(15, path.TotalWeight)
         | None -> Assert.True(false, "Path should exist")
 
@@ -1316,7 +1316,7 @@ module JohnsonTests =
             |> addEdge 2 1 -3
 
         match johnsonInt graph with
-        | Error () -> Assert.True(true)
+        | Error() -> Assert.True(true)
         | Ok _ -> Assert.True(false, "Should detect negative cycle")
 
 // =============================================================================
@@ -1372,7 +1372,7 @@ module ChinesePostmanTests =
             |> addEdge 4 1 1
 
         match chinesePostmanInt graph with
-        | Some (walk, weight) ->
+        | Some(walk, weight) ->
             Assert.Equal(4, weight)
             Assert.Equal(5, walk.Length) // closed walk of 4 edges has 5 vertices
             Assert.Equal(walk.[0], walk.[walk.Length - 1])
@@ -1393,11 +1393,10 @@ module ChinesePostmanTests =
             |> addEdge 1 3 2 // odd degree nodes: 1 and 3
 
         match chinesePostmanInt graph with
-        | Some (walk, weight) ->
+        | Some(walk, weight) ->
             // Original sum = 1 + 1 + 1 + 1 + 2 = 6
             // Perfect matching will match odd degree nodes 1 and 3 (distance is 2)
             // Total inspection weight = 6 + 2 = 8
             Assert.Equal(8, weight)
             Assert.Equal(walk.[0], walk.[walk.Length - 1])
         | None -> Assert.True(false, "Should find Chinese Postman tour")
-

@@ -13,7 +13,7 @@ open Yog.Render
 [<Fact>]
 let ``renderMulti generates digraph for directed multigraph`` () =
     let graph =
-        Model.directed<string, int>()
+        Model.directed<string, int> ()
         |> Model.addNode 1 "A"
         |> Model.addNode 2 "B"
         |> fun g -> fst (Model.addEdge 1 2 10 g)
@@ -27,7 +27,7 @@ let ``renderMulti generates digraph for directed multigraph`` () =
 [<Fact>]
 let ``renderMulti highlights specific edge ID`` () =
     let graph =
-        Model.directed<string, int>()
+        Model.directed<string, int> ()
         |> Model.addNode 1 "A"
         |> Model.addNode 2 "B"
         |> fun g -> fst (Model.addEdge 1 2 10 g) // Eid = 0
@@ -48,7 +48,7 @@ let ``renderMulti highlights specific edge ID`` () =
 [<Fact>]
 let ``renderMulti generates mermaid for directed multigraph`` () =
     let graph =
-        Model.directed<string, int>()
+        Model.directed<string, int> ()
         |> Model.addNode 1 "A"
         |> Model.addNode 2 "B"
         |> fun g -> fst (Model.addEdge 1 2 10 g)
@@ -60,7 +60,7 @@ let ``renderMulti generates mermaid for directed multigraph`` () =
 [<Fact>]
 let ``renderMulti highlights specific parallel edge`` () =
     let graph =
-        Model.directed<string, int>()
+        Model.directed<string, int> ()
         |> Model.addNode 1 "A"
         |> Model.addNode 2 "B"
         |> fun g -> fst (Model.addEdge 1 2 10 g) // Eid = 0

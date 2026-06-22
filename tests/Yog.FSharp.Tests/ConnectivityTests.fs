@@ -120,6 +120,7 @@ module BridgesTests =
     let ``Bridges - analyze on directed returns Error`` () =
         let graph = makeDirectedGraph [ (0, 1) ]
         let res = analyze graph
+
         match res with
         | Error msg -> Assert.Contains("requires an undirected graph", msg)
         | Ok _ -> failwith "Expected directed graph analyze call to fail"
@@ -171,25 +172,45 @@ module KCoreTests =
     [<Fact>]
     let ``k-core and degeneracy of a triangle`` () =
         let graph = makeUndirectedGraph [ (0, 1); (1, 2); (2, 0) ]
-        
-        let cores = match coreNumbers graph with | Ok c -> c | Error msg -> failwith msg
+
+        let cores =
+            match coreNumbers graph with
+            | Ok c -> c
+            | Error msg -> failwith msg
+
         Assert.Equal(2, Map.find 0 cores)
         Assert.Equal(2, Map.find 1 cores)
         Assert.Equal(2, Map.find 2 cores)
 
-        let degen = match degeneracy graph with | Ok d -> d | Error msg -> failwith msg
+        let degen =
+            match degeneracy graph with
+            | Ok d -> d
+            | Error msg -> failwith msg
+
         Assert.Equal(2, degen)
 
-        let k2Core = match kCore graph 2 with | Ok g -> g | Error msg -> failwith msg
+        let k2Core =
+            match kCore graph 2 with
+            | Ok g -> g
+            | Error msg -> failwith msg
+
         Assert.Equal(3, nodeCount k2Core)
 
-        let k3Core = match kCore graph 3 with | Ok g -> g | Error msg -> failwith msg
+        let k3Core =
+            match kCore graph 3 with
+            | Ok g -> g
+            | Error msg -> failwith msg
+
         Assert.Equal(0, nodeCount k3Core)
 
     [<Fact>]
     let ``shell decomposition of a star`` () =
         let graph = makeUndirectedGraph [ (0, 1); (0, 2); (0, 3) ]
-        let shells = match shellDecomposition graph with | Ok s -> s | Error msg -> failwith msg
+
+        let shells =
+            match shellDecomposition graph with
+            | Ok s -> s
+            | Error msg -> failwith msg
         // Star has center with degree 3 and leaves with degree 1.
         // Pruning leaves (deg 1 < 2) removes them, then center's degree becomes 0 < 2, so center also pruned.
         // Therefore, core numbers are all 1.

@@ -69,8 +69,7 @@ let ``serializeWith collects attributes from all nodes`` () =
         else
             [ "label", string v ]
 
-    let graph =
-        empty Directed |> addNode 1 5 |> addNode 2 15
+    let graph = empty Directed |> addNode 1 5 |> addNode 2 15
 
     let gdf = serializeWith nodeAttr (fun _ -> []) defaultOptions graph
 
@@ -96,7 +95,8 @@ let ``serializeWeighted uses weight column`` () =
 
 [<Fact>]
 let ``serialize escapes values with separator`` () =
-    let graph = empty Directed |> addNode 1 "Hello,World" |> addNode 2 "B" |> addEdge 1 2 "x"
+    let graph =
+        empty Directed |> addNode 1 "Hello,World" |> addNode 2 "B" |> addEdge 1 2 "x"
 
     let gdf = serialize graph
 
@@ -115,7 +115,11 @@ let ``serialize includes type annotations by default`` () =
 let ``serializeWithOptions can disable type annotations`` () =
     let graph = empty Directed |> addNode 1 "A" |> addEdge 1 1 "x"
 
-    let gdf = serializeWithOptions { defaultOptions with IncludeTypes = false } graph
+    let gdf =
+        serializeWithOptions
+            { defaultOptions with
+                IncludeTypes = false }
+            graph
 
     Assert.DoesNotContain("VARCHAR", gdf)
     Assert.DoesNotContain("BOOLEAN", gdf)
@@ -238,11 +242,7 @@ let ``round-trip preserves directed graph structure`` () =
 
 [<Fact>]
 let ``round-trip preserves undirected graph structure`` () =
-    let original =
-        empty Undirected
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 "5"
+    let original = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 "5"
 
     let gdf = serialize original
 
@@ -278,7 +278,8 @@ let ``writeFile and readFile round-trip`` () =
 
 [<Fact>]
 let ``readFile returns Error for non-existent file`` () =
-    let path = Path.Combine(Path.GetTempPath(), $"nonexistent-{System.Guid.NewGuid()}.gdf")
+    let path =
+        Path.Combine(Path.GetTempPath(), $"nonexistent-{System.Guid.NewGuid()}.gdf")
 
     match readFile path with
     | Ok _ -> failwith "Expected Error"

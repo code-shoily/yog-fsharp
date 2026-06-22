@@ -27,16 +27,15 @@ module Generators =
     let nodeCountGen = Gen.int32 (Range.linear 0 25)
 
     /// Generates a node ID in [0, n).
-    let nodeIdGen n = Gen.int32 (Range.constant 0 (max 0 (n - 1)))
+    let nodeIdGen n =
+        Gen.int32 (Range.constant 0 (max 0 (n - 1)))
 
     /// Builds a graph from a generated edge list. Parallel edges collapse to
     /// the last generated weight, matching yog's adjacency-list semantics.
     let graphFromEdges (kind: GraphType) (edges: (NodeId * NodeId * int) list) : Graph<unit, int> =
         let nodes = edges |> List.collect (fun (u, v, _) -> [ u; v ]) |> List.distinct
 
-        let g =
-            nodes
-            |> List.fold (fun acc n -> addNode n () acc) (empty kind)
+        let g = nodes |> List.fold (fun acc n -> addNode n () acc) (empty kind)
 
         edges |> List.fold (fun acc (u, v, w) -> addEdge u v w acc) g
 
@@ -46,29 +45,34 @@ module Generators =
     let graphOfKindGen (kind: GraphType) : Gen<Graph<unit, int>> =
         gen {
             let! n = nodeCountGen
+
             if n = 0 then
                 return empty kind
             else
                 let maxEdges = if kind = Undirected then n * (n - 1) / 2 else n * (n - 1)
                 let! edgeCount = Gen.int32 (Range.constant 0 (min maxEdges 40))
+
                 let! edges =
-                    Gen.array (Range.constant edgeCount edgeCount) (
-                        gen {
+                    Gen.array
+                        (Range.constant edgeCount edgeCount)
+                        (gen {
                             let! u = nodeIdGen n
+
                             let! v =
                                 if kind = Undirected then
                                     Gen.int32 (Range.constant u (n - 1))
                                 else
                                     nodeIdGen n
+
                             let! w = Gen.int32 (Range.linear -100 100)
                             return (u, v, w)
-                        }
-                    )
+                        })
+
                 return graphFromEdges kind (edges |> Array.toList |> List.filter (fun (u, v, _) -> u <> v))
         }
 
     /// Generates a small random graph of either kind.
-    let smallGraphGen : Gen<Graph<unit, int>> =
+    let smallGraphGen: Gen<Graph<unit, int>> =
         gen {
             let! kind = graphKindGen
             return! graphOfKindGen kind
@@ -82,26 +86,29 @@ module Generators =
 
     /// Generates a small connected undirected graph using a random tree plus
     /// optional extra edges.
-    let connectedUndirectedGraphGen : Gen<Graph<unit, int>> =
+    let connectedUndirectedGraphGen: Gen<Graph<unit, int>> =
         gen {
             let! n = Gen.int32 (Range.linear 2 20)
             let tree = Yog.Generators.Random.randomTree n Undirected
             let! extraEdgeCount = Gen.int32 (Range.constant 0 10)
+
             let! extraEdges =
-                Gen.array (Range.constant extraEdgeCount extraEdgeCount) (
-                    gen {
+                Gen.array
+                    (Range.constant extraEdgeCount extraEdgeCount)
+                    (gen {
                         let! u = nodeIdGen n
                         let! v = nodeIdGen n
                         let! w = Gen.int32 (Range.linear 1 100)
                         return (u, v, w)
-                    }
-                )
-            return (extraEdges |> Array.toList |> List.filter (fun (u, v, _) -> u <> v))
-                   |> List.fold (fun acc (u, v, w) -> addEdge u v w acc) tree
+                    })
+
+            return
+                (extraEdges |> Array.toList |> List.filter (fun (u, v, _) -> u <> v))
+                |> List.fold (fun acc (u, v, w) -> addEdge u v w acc) tree
         }
 
     /// Generates a pair of graphs of the same kind.
-    let sameKindGraphPairGen : Gen<Graph<unit, int> * Graph<unit, int>> =
+    let sameKindGraphPairGen: Gen<Graph<unit, int> * Graph<unit, int>> =
         gen {
             let! kind = graphKindGen
             let! g1 = graphOfKindGen kind
@@ -113,36 +120,41 @@ module Generators =
     let tinyGraphOfKindGen (kind: GraphType) : Gen<Graph<unit, int>> =
         gen {
             let! n = Gen.int32 (Range.linear 0 6)
+
             if n = 0 then
                 return empty kind
             else
                 let maxEdges = if kind = Undirected then n * (n - 1) / 2 else n * (n - 1)
                 let! edgeCount = Gen.int32 (Range.constant 0 (min maxEdges 10))
+
                 let! edges =
-                    Gen.array (Range.constant edgeCount edgeCount) (
-                        gen {
+                    Gen.array
+                        (Range.constant edgeCount edgeCount)
+                        (gen {
                             let! u = nodeIdGen n
+
                             let! v =
                                 if kind = Undirected then
                                     Gen.int32 (Range.constant u (n - 1))
                                 else
                                     nodeIdGen n
+
                             let! w = Gen.int32 (Range.linear 1 10)
                             return (u, v, w)
-                        }
-                    )
+                        })
+
                 return graphFromEdges kind (edges |> Array.toList |> List.filter (fun (u, v, _) -> u <> v))
         }
 
     /// Generates a very small random graph of either kind.
-    let tinyGraphGen : Gen<Graph<unit, int>> =
+    let tinyGraphGen: Gen<Graph<unit, int>> =
         gen {
             let! kind = graphKindGen
             return! tinyGraphOfKindGen kind
         }
 
     /// Generates a pair of small graphs of the same kind.
-    let tinySameKindGraphPairGen : Gen<Graph<unit, int> * Graph<unit, int>> =
+    let tinySameKindGraphPairGen: Gen<Graph<unit, int> * Graph<unit, int>> =
         gen {
             let! kind = graphKindGen
             let! g1 = tinyGraphOfKindGen kind
@@ -151,7 +163,7 @@ module Generators =
         }
 
     /// Generates a star graph with at least 3 nodes and returns (graph, center, leaves).
-    let starGraphGen : Gen<Graph<unit, int> * NodeId * NodeId list> =
+    let starGraphGen: Gen<Graph<unit, int> * NodeId * NodeId list> =
         gen {
             let! n = Gen.int32 (Range.linear 3 15)
             let g = Yog.Generators.Classic.star n Undirected
@@ -160,52 +172,56 @@ module Generators =
         }
 
     /// Generates a small undirected graph with non-negative edge weights.
-    let nonNegativeUndirectedGraphGen : Gen<Graph<unit, int>> =
+    let nonNegativeUndirectedGraphGen: Gen<Graph<unit, int>> =
         gen {
             let! n = Gen.int32 (Range.linear 0 15)
+
             if n = 0 then
                 return empty Undirected
             else
                 let maxEdges = n * (n - 1) / 2
                 let! edgeCount = Gen.int32 (Range.constant 0 (min maxEdges 30))
+
                 let! edges =
-                    Gen.array (Range.constant edgeCount edgeCount) (
-                        gen {
+                    Gen.array
+                        (Range.constant edgeCount edgeCount)
+                        (gen {
                             let! u = nodeIdGen n
                             let! v = Gen.int32 (Range.constant u (n - 1))
                             let! w = Gen.int32 (Range.linear 1 100)
                             return (u, v, w)
-                        }
-                    )
+                        })
+
                 return graphFromEdges Undirected (edges |> Array.toList |> List.filter (fun (u, v, _) -> u <> v))
         }
 
     /// Generates a graph together with an optional start node. The optional
     /// value is None for empty graphs, avoiding conditional let! inside the
     /// property computation expression.
-    let graphWithOptionalStartNodeGen : Gen<Graph<unit, int> * NodeId option> =
+    let graphWithOptionalStartNodeGen: Gen<Graph<unit, int> * NodeId option> =
         smallGraphGen
         |> Gen.bind (fun g ->
             let nodes = allNodes g
+
             if nodes.IsEmpty then
                 Gen.constant (g, None)
             else
                 Gen.item nodes |> Gen.map (fun n -> (g, Some n)))
 
     /// Generates a graph together with a randomly chosen subset of its nodes.
-    let graphAndNodeSubsetGen : Gen<Graph<unit, int> * NodeId list> =
+    let graphAndNodeSubsetGen: Gen<Graph<unit, int> * NodeId list> =
         smallGraphGen
         |> Gen.bind (fun g ->
             let nodes = allNodes g
+
             if nodes.IsEmpty then
                 Gen.constant (g, [])
             else
                 Gen.array (Range.constant nodes.Length nodes.Length) Gen.bool
                 |> Gen.map (fun keep ->
                     let subset =
-                        List.zip nodes (keep |> Array.toList)
-                        |> List.filter snd
-                        |> List.map fst
+                        List.zip nodes (keep |> Array.toList) |> List.filter snd |> List.map fst
+
                     (g, subset)))
 
 
@@ -229,11 +245,10 @@ module StructuralPropertyTests =
         property {
             let! g = undirectedGraphGen
             let nodes = allNodes g
+
             return
                 nodes
-                |> List.forall (fun u ->
-                    successors u g
-                    |> List.forall (fun (v, _) -> hasEdge v u g))
+                |> List.forall (fun u -> successors u g |> List.forall (fun (v, _) -> hasEdge v u g))
         }
         |> Property.checkBool
 
@@ -250,10 +265,10 @@ module StructuralPropertyTests =
         property {
             let! g = undirectedGraphGen
             let nodes = allNodes g
+
             return
                 nodes
-                |> List.forall (fun u ->
-                    (neighbors u g |> List.sortBy fst) = (successors u g |> List.sortBy fst))
+                |> List.forall (fun u -> (neighbors u g |> List.sortBy fst) = (successors u g |> List.sortBy fst))
         }
         |> Property.checkBool
 
@@ -352,12 +367,14 @@ module TransformPropertyTests =
         property {
             let! g = smallGraphGen
             let allNodeIds = allNodes g
+
             if allNodeIds.IsEmpty then
                 return true
             else
                 let keepCount = max 1 (allNodeIds.Length / 2)
                 let keepSet = allNodeIds |> List.take keepCount |> Set.ofList
                 let filtered = Yog.Transform.subgraph (keepSet |> Set.toList) g
+
                 return
                     order filtered <= order g
                     && edgeCount filtered <= edgeCount g
@@ -392,7 +409,10 @@ module TransformPropertyTests =
             let! g = directedGraphGen
             let reduced = Yog.Transform.transitiveReduction (+) g
             let originalEdges = allEdges g |> List.map (fun (u, v, _) -> (u, v)) |> Set.ofList
-            let reducedEdges = allEdges reduced |> List.map (fun (u, v, _) -> (u, v)) |> Set.ofList
+
+            let reducedEdges =
+                allEdges reduced |> List.map (fun (u, v, _) -> (u, v)) |> Set.ofList
+
             return Set.isSubset reducedEdges originalEdges
         }
         |> Property.checkBool
@@ -411,13 +431,20 @@ module OperationPropertyTests =
             let! (g1, g2) = sameKindGraphPairGen
             let merged = Yog.Operation.union g1 g2
             let nodesInMerged = allNodes merged |> Set.ofList
-            let edgesInMerged = allEdges merged |> List.map (fun (u, v, _) -> (u, v)) |> Set.ofList
+
+            let edgesInMerged =
+                allEdges merged |> List.map (fun (u, v, _) -> (u, v)) |> Set.ofList
+
             let nodes1 = allNodes g1 |> Set.ofList
             let nodes2 = allNodes g2 |> Set.ofList
             let edges1 = allEdges g1 |> List.map (fun (u, v, _) -> (u, v)) |> Set.ofList
             let edges2 = allEdges g2 |> List.map (fun (u, v, _) -> (u, v)) |> Set.ofList
-            return Set.isSubset nodes1 nodesInMerged && Set.isSubset nodes2 nodesInMerged
-                   && Set.isSubset edges1 edgesInMerged && Set.isSubset edges2 edgesInMerged
+
+            return
+                Set.isSubset nodes1 nodesInMerged
+                && Set.isSubset nodes2 nodesInMerged
+                && Set.isSubset edges1 edgesInMerged
+                && Set.isSubset edges2 edgesInMerged
         }
         |> Property.checkBool
 
@@ -519,9 +546,7 @@ module OperationPropertyTests =
             let! (g1, g2) = tinySameKindGraphPairGen
             let product = Yog.Operation.lexicographicProduct 1 1 g1 g2
             let expectedOrder = order g1 * order g2
-            let expectedEdges =
-                edgeCount g1 * pown (order g2) 2
-                + order g1 * edgeCount g2
+            let expectedEdges = edgeCount g1 * pown (order g2) 2 + order g1 * edgeCount g2
             return order product = expectedOrder && edgeCount product = expectedEdges
         }
         |> Property.checkBool
@@ -547,6 +572,7 @@ module TraversalPropertyTests =
     let ``BFS visits each reachable node exactly once`` () =
         property {
             let! (g, startOpt) = graphWithOptionalStartNodeGen
+
             match startOpt with
             | None -> return true
             | Some start ->
@@ -559,6 +585,7 @@ module TraversalPropertyTests =
     let ``DFS and BFS visit the same set of reachable nodes`` () =
         property {
             let! (g, startOpt) = graphWithOptionalStartNodeGen
+
             match startOpt with
             | None -> return true
             | Some start ->
@@ -576,13 +603,13 @@ module TraversalPropertyTests =
             let edges =
                 [ for u in 0 .. n - 1 do
                       for v in u + 1 .. n - 1 -> (u, v, 1) ]
+
             let g = Generators.graphFromEdges Directed edges
+
             match Yog.Traversal.topologicalSort g with
             | Ok order ->
                 let pos = order |> List.mapi (fun i x -> (x, i)) |> Map.ofList
-                return
-                    allEdges g
-                    |> List.forall (fun (u, v, _) -> Map.find u pos < Map.find v pos)
+                return allEdges g |> List.forall (fun (u, v, _) -> Map.find u pos < Map.find v pos)
             | Error _ -> return false
         }
         |> Property.checkBool
@@ -606,7 +633,10 @@ module ComponentPropertyTests =
             let allInComponents = components |> List.collect id |> Set.ofList
             let allGraphNodes = allNodes g |> Set.ofList
             let totalComponentSize = components |> List.sumBy List.length
-            return allInComponents = allGraphNodes && Set.count allInComponents = totalComponentSize
+
+            return
+                allInComponents = allGraphNodes
+                && Set.count allInComponents = totalComponentSize
         }
         |> Property.checkBool
 
@@ -614,7 +644,10 @@ module ComponentPropertyTests =
     let ``Tarjan and Kosaraju agree on SCCs`` () =
         property {
             let! g = directedGraphGen
-            let tarjan = Connectivity.stronglyConnectedComponents g |> List.map Set.ofList |> Set.ofList
+
+            let tarjan =
+                Connectivity.stronglyConnectedComponents g |> List.map Set.ofList |> Set.ofList
+
             let kosaraju = Connectivity.kosaraju g |> List.map Set.ofList |> Set.ofList
             return tarjan = kosaraju
         }
@@ -624,6 +657,7 @@ module ComponentPropertyTests =
     let ``removing a bridge disconnects the graph`` () =
         property {
             let! g = connectedUndirectedGraphGen
+
             if order g <= 1 then
                 return true
             else
@@ -631,7 +665,10 @@ module ComponentPropertyTests =
                 | Ok res when not res.Bridges.IsEmpty ->
                     let (u, v) = List.head res.Bridges
                     let gNoBridge = removeEdge u v g
-                    let reachable = Yog.Traversal.walk u Yog.Traversal.BreadthFirst gNoBridge |> Set.ofList
+
+                    let reachable =
+                        Yog.Traversal.walk u Yog.Traversal.BreadthFirst gNoBridge |> Set.ofList
+
                     return reachable.Count < order g
                 | _ -> return true
         }
@@ -652,6 +689,7 @@ module MstPropertyTests =
     let ``Kruskal and Prim agree on total weight for connected undirected graphs`` () =
         property {
             let! g = connectedUndirectedGraphGen
+
             if order g <= 1 then
                 return true
             else
@@ -666,6 +704,7 @@ module MstPropertyTests =
         property {
             let! n = Gen.int32 (Range.linear 2 20)
             let tree = Yog.Generators.Random.randomTree n Undirected
+
             match Mst.kruskalInt tree with
             | Ok mst -> return mst.EdgeCount = edgeCount tree && mst.TotalWeight = edgeCount tree
             | _ -> return false
@@ -676,6 +715,7 @@ module MstPropertyTests =
     let ``directed graphs return error from Kruskal`` () =
         property {
             let! g = directedGraphGen
+
             if order g = 0 then
                 return true
             else
@@ -699,7 +739,10 @@ module CentralityPropertyTests =
             let! (g, center, leaves) = starGraphGen
             let scores = Centrality.degree Centrality.TotalDegree g
             let centerScore = Map.tryFind center scores |> Option.defaultValue 0.0
-            return leaves |> List.forall (fun leaf -> Map.tryFind leaf scores |> Option.defaultValue 0.0 < centerScore)
+
+            return
+                leaves
+                |> List.forall (fun leaf -> Map.tryFind leaf scores |> Option.defaultValue 0.0 < centerScore)
         }
         |> Property.checkBool
 
@@ -747,9 +790,11 @@ module CyclicityPropertyTests =
     let ``DAGs built from increasing edges are acyclic`` () =
         property {
             let! n = Gen.int32 (Range.linear 2 15)
+
             let edges =
                 [ for u in 0 .. n - 1 do
                       for v in u + 1 .. n - 1 -> (u, v, 1) ]
+
             let g = Generators.graphFromEdges Directed edges
             return not (Yog.Properties.Cyclicity.isCyclic g)
         }
@@ -786,6 +831,7 @@ module BipartitePropertyTests =
     let ``partition covers all nodes and parts are disjoint`` () =
         property {
             let! g = undirectedGraphGen
+
             if not (Yog.Properties.Bipartite.isBipartite g) then
                 return true
             else
@@ -811,6 +857,7 @@ module HealthPropertyTests =
         property {
             let! n = Gen.int32 (Range.linear 2 15)
             let g = Yog.Generators.Classic.path n Undirected
+
             match Health.diameter 0 (+) compare g with
             | Some d -> return d = n - 1
             | None -> return false
@@ -822,6 +869,7 @@ module HealthPropertyTests =
         property {
             let! n = Gen.int32 (Range.linear 2 10)
             let g = Yog.Generators.Classic.complete n Undirected
+
             match Health.diameter 0 (+) compare g, Health.radius 0 (+) compare g with
             | Some d, Some r -> return d = r && d = 1
             | _ -> return false
@@ -833,6 +881,7 @@ module HealthPropertyTests =
         property {
             let! n = Gen.int32 (Range.linear 4 12)
             let! d = Gen.int32 (Range.linear 2 (n - 1))
+
             if n * d % 2 <> 0 then
                 return true
             else
@@ -897,7 +946,11 @@ module DisjointSetPropertyTests =
         property {
             let! xs = Gen.array (Range.linear 1 20) (Gen.int32 (Range.linear -100 100))
             let distinct = xs |> Array.distinct |> Array.toList
-            let dsu = distinct |> List.fold (fun acc x -> Yog.DisjointSet.add x acc) Yog.DisjointSet.empty
+
+            let dsu =
+                distinct
+                |> List.fold (fun acc x -> Yog.DisjointSet.add x acc) Yog.DisjointSet.empty
+
             return distinct |> List.forall (fun x -> snd (Yog.DisjointSet.connected x x dsu))
         }
         |> Property.checkBool
@@ -907,11 +960,13 @@ module DisjointSetPropertyTests =
         property {
             let! x = Gen.int32 (Range.linear -50 50)
             let! y = Gen.int32 (Range.linear -50 50)
+
             let dsu =
                 Yog.DisjointSet.empty
                 |> Yog.DisjointSet.add x
                 |> Yog.DisjointSet.add y
                 |> Yog.DisjointSet.union x y
+
             let xy = snd (Yog.DisjointSet.connected x y dsu)
             let yx = snd (Yog.DisjointSet.connected y x dsu)
             return xy = yx
@@ -923,10 +978,10 @@ module DisjointSetPropertyTests =
         property {
             let! x = Gen.int32 (Range.linear -50 50)
             let! y = Gen.int32 (Range.linear -50 50)
+
             let baseDsu =
-                Yog.DisjointSet.empty
-                |> Yog.DisjointSet.add x
-                |> Yog.DisjointSet.add y
+                Yog.DisjointSet.empty |> Yog.DisjointSet.add x |> Yog.DisjointSet.add y
+
             let before = (Yog.DisjointSet.toLists baseDsu).Length
             let after = (Yog.DisjointSet.toLists (Yog.DisjointSet.union x y baseDsu)).Length
             return if x = y then before = after else after = before - 1
@@ -948,8 +1003,13 @@ module IoPropertyTests =
             // TGF default options call ToString() on node data, so give each
             // node a concrete string label before roundtripping.
             let labeled = g |> Yog.Transform.mapNodes (fun () -> "node")
-            let options = { Yog.IO.Tgf.defaultOptions with NodeLabel = fun _ -> "node" }
+
+            let options =
+                { Yog.IO.Tgf.defaultOptions with
+                    NodeLabel = fun _ -> "node" }
+
             let serialized = Yog.IO.Tgf.serialize options labeled
+
             match Yog.IO.Tgf.parse labeled.Kind (fun _ -> ()) (fun _ -> 1) serialized with
             | Ok parsed -> return order parsed = order labeled && edgeCount parsed = edgeCount labeled
             | Error _ -> return false
@@ -962,6 +1022,7 @@ module IoPropertyTests =
             let! g = smallGraphGen
             let gFloat = Yog.Transform.mapEdges float g
             let serialized = Yog.IO.List.serialize false " " gFloat
+
             match Yog.IO.List.parse gFloat.Kind false " " serialized with
             | Ok parsed -> return order parsed = order gFloat && edgeCount parsed = edgeCount gFloat
             | Error _ -> return false
@@ -976,6 +1037,7 @@ module IoPropertyTests =
             // strictly positive value before roundtripping.
             let gFloat = g |> Yog.Transform.mapEdges (fun w -> float (abs w) + 1.0)
             let (_, matrix) = Yog.IO.Matrix.toMatrix gFloat
+
             match Yog.IO.Matrix.fromMatrix gFloat.Kind matrix with
             | Ok parsed -> return order parsed = order gFloat && edgeCount parsed = edgeCount gFloat
             | Error _ -> return false
@@ -989,16 +1051,10 @@ module IoPropertyTests =
             let labeled = g |> Yog.Transform.mapNodes (fun () -> "node")
 
             let serialized =
-                Yog.IO.GraphML.serializeWith
-                    (fun _ -> [ "label", "node" ])
-                    (fun w -> [ "weight", string w ])
-                    labeled
+                Yog.IO.GraphML.serializeWith (fun _ -> [ "label", "node" ]) (fun w -> [ "weight", string w ]) labeled
 
             let parsed =
-                Yog.IO.GraphML.tryDeserializeWith
-                    (fun _ -> ())
-                    (fun m -> Map.find "weight" m |> int)
-                    serialized
+                Yog.IO.GraphML.tryDeserializeWith (fun _ -> ()) (fun m -> Map.find "weight" m |> int) serialized
 
             match parsed with
             | Ok restored ->
@@ -1028,10 +1084,7 @@ module IoPropertyTests =
                         labeled
 
                 let parsed =
-                    Yog.IO.Gdf.deserializeWith
-                        (fun _ -> ())
-                        (fun m -> Map.find "weight" m |> int)
-                        serialized
+                    Yog.IO.Gdf.deserializeWith (fun _ -> ()) (fun m -> Map.find "weight" m |> int) serialized
 
                 match parsed with
                 | Ok restored ->

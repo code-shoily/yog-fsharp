@@ -26,16 +26,19 @@ Edge weights represent task durations in days.
 
 let taskGraph =
     Yog.Model.empty Directed
-    |> Yog.Model.addNode 0 "Design"   |> Yog.Model.addNode 1 "Frontend"
-    |> Yog.Model.addNode 2 "Backend"  |> Yog.Model.addNode 3 "Database"
-    |> Yog.Model.addNode 4 "Testing"  |> Yog.Model.addNode 5 "Deploy"
-    |> Yog.Model.addEdge 0 1 3  // Design -> Frontend: 3 days
-    |> Yog.Model.addEdge 0 2 5  // Design -> Backend: 5 days
-    |> Yog.Model.addEdge 0 3 2  // Design -> Database: 2 days
-    |> Yog.Model.addEdge 1 4 2  // Frontend -> Testing: 2 days
-    |> Yog.Model.addEdge 2 4 3  // Backend -> Testing: 3 days
-    |> Yog.Model.addEdge 3 2 1  // Database -> Backend: 1 day
-    |> Yog.Model.addEdge 4 5 1  // Testing -> Deploy: 1 day
+    |> Yog.Model.addNode 0 "Design"
+    |> Yog.Model.addNode 1 "Frontend"
+    |> Yog.Model.addNode 2 "Backend"
+    |> Yog.Model.addNode 3 "Database"
+    |> Yog.Model.addNode 4 "Testing"
+    |> Yog.Model.addNode 5 "Deploy"
+    |> Yog.Model.addEdge 0 1 3 // Design -> Frontend: 3 days
+    |> Yog.Model.addEdge 0 2 5 // Design -> Backend: 5 days
+    |> Yog.Model.addEdge 0 3 2 // Design -> Database: 2 days
+    |> Yog.Model.addEdge 1 4 2 // Frontend -> Testing: 2 days
+    |> Yog.Model.addEdge 2 4 3 // Backend -> Testing: 3 days
+    |> Yog.Model.addEdge 3 2 1 // Database -> Backend: 1 day
+    |> Yog.Model.addEdge 4 5 1 // Testing -> Deploy: 1 day
 
 let dag =
     match fromGraph taskGraph with
@@ -65,6 +68,7 @@ let closure = Algorithms.transitiveClosure (+) dag
 let closureGraph = toGraph closure
 
 printfn "\nIndirect dependencies (transitive closure):"
+
 for src in allNodes closureGraph do
     for (dst, weight) in successors src closureGraph do
         let srcName = closureGraph.Nodes.TryFind src |> Option.defaultValue "?"

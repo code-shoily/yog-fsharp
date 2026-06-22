@@ -42,10 +42,8 @@ match partition graph with
     printfn "Maximum assignments found: %d" matching.Length
 
     matching
-    |> List.iter (fun (workerId, taskId) ->
-        printfn "Worker %d -> Task %d" workerId taskId)
-| None ->
-    printfn "This graph is not bipartite!"
+    |> List.iter (fun (workerId, taskId) -> printfn "Worker %d -> Task %d" workerId taskId)
+| None -> printfn "This graph is not bipartite!"
 
 (**
 ## Output

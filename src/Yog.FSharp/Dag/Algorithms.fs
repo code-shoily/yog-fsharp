@@ -264,8 +264,10 @@ module Algorithms =
         let graph = toGraph dag
 
         let rec dfs current visited =
-            if current = target then true
-            elif Set.contains current visited then false
+            if current = target then
+                true
+            elif Set.contains current visited then
+                false
             else
                 let neighbors = Yog.Model.successors current graph |> List.map fst
                 let newVisited = Set.add current visited
@@ -317,39 +319,43 @@ module Algorithms =
     let topologicalGenerations (dag: Dag<'n, 'e>) : NodeId list list =
         let graph = toGraph dag
         let nodes = allNodes graph
-        
+
         let mutable inDegrees = Map.empty
         let mutable currentGen = []
-        
+
         for node in nodes do
             let preds = Yog.Model.predecessorIds node graph
             let deg = preds.Length
             inDegrees <- Map.add node deg inDegrees
+
             if deg = 0 then
                 currentGen <- node :: currentGen
-                
+
         let mutable result = []
-        
+
         while not (List.isEmpty currentGen) do
             result <- (currentGen |> List.sort) :: result
             let mutable nextGen = []
-            
+
             for node in currentGen do
                 let succs = Yog.Model.successorIds node graph
+
                 for succ in succs do
                     let currentDeg = Map.find succ inDegrees
                     let newDeg = currentDeg - 1
                     inDegrees <- Map.add succ newDeg inDegrees
+
                     if newDeg = 0 then
                         nextGen <- succ :: nextGen
-                        
+
             currentGen <- nextGen
-            
+
         List.rev result
 
     /// Returns all source nodes (in-degree 0).
     let sources (dag: Dag<'n, 'e>) : NodeId list =
         let graph = toGraph dag
+
         allNodes graph
         |> List.filter (fun node -> (Yog.Model.predecessors node graph).Length = 0)
         |> List.sort
@@ -357,6 +363,7 @@ module Algorithms =
     /// Returns all sink nodes (out-degree 0).
     let sinks (dag: Dag<'n, 'e>) : NodeId list =
         let graph = toGraph dag
+
         allNodes graph
         |> List.filter (fun node -> (Yog.Model.successors node graph).Length = 0)
         |> List.sort
@@ -368,13 +375,14 @@ module Algorithms =
         let q = Queue<NodeId>()
         q.Enqueue(node)
         visited.Add(node) |> ignore
-        
+
         while q.Count > 0 do
             let curr = q.Dequeue()
+
             for pred in Yog.Model.predecessorIds curr graph do
                 if visited.Add(pred) then
                     q.Enqueue(pred)
-                    
+
         visited |> Seq.toList |> List.sort
 
     /// Returns all descendants of a node (nodes reachable from the given node, including itself).
@@ -384,13 +392,14 @@ module Algorithms =
         let q = Queue<NodeId>()
         q.Enqueue(node)
         visited.Add(node) |> ignore
-        
+
         while q.Count > 0 do
             let curr = q.Dequeue()
+
             for succ in Yog.Model.successorIds curr graph do
                 if visited.Add(succ) then
                     q.Enqueue(succ)
-                    
+
         visited |> Seq.toList |> List.sort
 
     /// Computes single-source shortest distances to all reachable nodes.
@@ -398,20 +407,23 @@ module Algorithms =
         let graph = toGraph dag
         let sorted = topologicalSort dag
         let relevant = sorted |> List.skipWhile (fun n -> n <> from)
-        
+
         if List.isEmpty relevant then
             Map.empty
         else
             let mutable distances = Map.empty |> Map.add from 0
+
             for u in relevant do
                 match Map.tryFind u distances with
                 | Some distU ->
                     for (v, weight) in Yog.Model.successors u graph do
                         let newDist = distU + weight
                         let currentV = Map.tryFind v distances |> Option.defaultValue System.Int32.MaxValue
+
                         if newDist < currentV then
                             distances <- Map.add v newDist distances
                 | None -> ()
+
             distances
 
     /// Finds the longest path between two specific nodes in a weighted DAG.
@@ -432,6 +444,7 @@ module Algorithms =
                     for (v, weight) in Yog.Model.successors u graph do
                         let newDist = distU + weight
                         let currentV = Map.tryFind v distances |> Option.defaultValue System.Int32.MinValue
+
                         if newDist > currentV then
                             distances <- Map.add v newDist distances
                             predecessors <- Map.add v u predecessors
@@ -444,6 +457,7 @@ module Algorithms =
                     match Map.tryFind curr predecessors with
                     | Some prev -> reconstruct prev (curr :: acc)
                     | None -> curr :: acc
+
                 Some(reconstruct dst [])
 
     /// Counts the number of distinct paths between two nodes in a DAG.
@@ -451,17 +465,20 @@ module Algorithms =
         let graph = toGraph dag
         let sorted = topologicalSort dag
         let relevant = sorted |> List.skipWhile (fun n -> n <> src)
-        
+
         if List.isEmpty relevant then
             0
         else
             let mutable counts = Map.empty |> Map.add src 1
+
             for u in relevant do
                 match Map.tryFind u counts with
                 | Some count ->
                     let succs = Yog.Model.successorIds u graph
+
                     for succ in succs do
                         let currentCount = Map.tryFind succ counts |> Option.defaultValue 0
                         counts <- Map.add succ (currentCount + count) counts
                 | None -> ()
+
             Map.tryFind dst counts |> Option.defaultValue 0

@@ -544,6 +544,7 @@ let toUndirected (resolve: 'e -> 'e -> 'e) (graph: Graph<'n, 'e>) : Graph<'n, 'e
             Kind = Undirected
             OutEdges = symmetricOut
             InEdges = symmetricOut }
+
 /// Updates a specific node's data using an updater function.
 /// Similar to Map.add but with default value if node doesn't exist.
 let updateNode (id: NodeId) (defaultVal: 'n) (updater: 'n -> 'n) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
@@ -551,8 +552,9 @@ let updateNode (id: NodeId) (defaultVal: 'n) (updater: 'n -> 'n) (graph: Graph<'
         graph.Nodes
         |> Map.change id (fun maybeData ->
             match maybeData with
-            | Some data -> Some (updater data)
+            | Some data -> Some(updater data)
             | None -> Some defaultVal)
+
     { graph with Nodes = newNodes }
 
 /// Helper for updating a directed edge.
@@ -564,8 +566,9 @@ let private doUpdateDirectedEdge src dst defaultVal fn (graph: Graph<'n, 'e>) =
                 match Map.tryFind dst m with
                 | Some w -> fn w
                 | None -> defaultVal
-            Some (Map.add dst newW m)
-        | None -> Some (Map.ofList [ (dst, defaultVal) ])
+
+            Some(Map.add dst newW m)
+        | None -> Some(Map.ofList [ (dst, defaultVal) ])
 
     let updateInFn mapOpt =
         match mapOpt with
@@ -574,8 +577,9 @@ let private doUpdateDirectedEdge src dst defaultVal fn (graph: Graph<'n, 'e>) =
                 match Map.tryFind src m with
                 | Some w -> fn w
                 | None -> defaultVal
-            Some (Map.add src newW m)
-        | None -> Some (Map.ofList [ (src, defaultVal) ])
+
+            Some(Map.add src newW m)
+        | None -> Some(Map.ofList [ (src, defaultVal) ])
 
     { graph with
         OutEdges = graph.OutEdges |> Map.change src updateFn
@@ -586,46 +590,57 @@ let private doUpdateDirectedEdge src dst defaultVal fn (graph: Graph<'n, 'e>) =
 let updateEdge (src: NodeId) (dst: NodeId) (defaultVal: 'e) (fn: 'e -> 'e) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
     let hasSrc = graph.Nodes |> Map.containsKey src
     let hasDst = graph.Nodes |> Map.containsKey dst
+
     match hasSrc, hasDst with
     | true, true ->
         let g = doUpdateDirectedEdge src dst defaultVal fn graph
+
         match g.Kind with
         | Directed -> g
         | Undirected ->
-            if src = dst then g
-            else doUpdateDirectedEdge dst src defaultVal fn g
+            if src = dst then
+                g
+            else
+                doUpdateDirectedEdge dst src defaultVal fn g
     | _ -> graph
+
 /// Helper for DAG transitive closure.
-let private doTransitiveClosureDag (graph: Graph<'n, 'e>) (sorted: NodeId list) (mergeFn: 'e -> 'e -> 'e) : Graph<'n, 'e> =
+let private doTransitiveClosureDag
+    (graph: Graph<'n, 'e>)
+    (sorted: NodeId list)
+    (mergeFn: 'e -> 'e -> 'e)
+    : Graph<'n, 'e> =
     let reachabilityMap =
         (Map.empty, List.rev sorted)
         ||> List.fold (fun acc node ->
             let edges = graph.OutEdges |> Map.tryFind node |> Option.defaultValue Map.empty
+
             let reachableFromNode =
                 (edges, edges)
                 ||> Map.fold (fun reachableAcc child wNodeChild ->
                     let childReachable = acc |> Map.tryFind child |> Option.defaultValue Map.empty
                     let mappedChild = childReachable |> Map.map (fun _ w -> mergeFn wNodeChild w)
+
                     (reachableAcc, mappedChild)
                     ||> Map.fold (fun combinedAcc k v ->
                         match Map.tryFind k combinedAcc with
                         | Some existing -> Map.add k (mergeFn existing v) combinedAcc
-                        | None -> Map.add k v combinedAcc
-                    )
-                )
-            Map.add node reachableFromNode acc
-        )
+                        | None -> Map.add k v combinedAcc))
+
+            Map.add node reachableFromNode acc)
 
     (graph, reachabilityMap)
-    ||> Map.fold (fun gAcc src targets ->
-        (gAcc, targets)
-        ||> Map.fold (fun gInner dst w ->
-            addEdge src dst w gInner
-        )
-    )
+    ||> Map.fold (fun gAcc src targets -> (gAcc, targets) ||> Map.fold (fun gInner dst w -> addEdge src dst w gInner))
 
 /// Helper for general transitive closure.
-let private doWeightedReachability (graph: Graph<'n, 'e>) (queue: (NodeId * 'e) list) (visited: Map<NodeId, 'e>) (updates: Map<NodeId, int>) (mergeFn: 'e -> 'e -> 'e) (maxUpdates: int) : Map<NodeId, 'e> =
+let private doWeightedReachability
+    (graph: Graph<'n, 'e>)
+    (queue: (NodeId * 'e) list)
+    (visited: Map<NodeId, 'e>)
+    (updates: Map<NodeId, int>)
+    (mergeFn: 'e -> 'e -> 'e)
+    (maxUpdates: int)
+    : Map<NodeId, 'e> =
     let rec loop q vis upds =
         match q with
         | [] -> vis
@@ -633,10 +648,12 @@ let private doWeightedReachability (graph: Graph<'n, 'e>) (queue: (NodeId * 'e) 
             match Map.tryFind current vis with
             | Some prevWeight ->
                 let merged = mergeFn prevWeight weightToCurrent
+
                 if merged = prevWeight then
                     loop rest vis upds
                 else
                     let updateCount = Map.tryFind current upds |> Option.defaultValue 0
+
                     if updateCount >= maxUpdates then
                         loop rest vis upds
                     else
@@ -649,12 +666,20 @@ let private doWeightedReachability (graph: Graph<'n, 'e>) (queue: (NodeId * 'e) 
                 let newVis = Map.add current weightToCurrent vis
                 let newUpds = Map.add current 1 upds
                 let successors = successors current graph
-                let nextSteps = successors |> List.map (fun (dst, w) -> (dst, mergeFn weightToCurrent w))
+
+                let nextSteps =
+                    successors |> List.map (fun (dst, w) -> (dst, mergeFn weightToCurrent w))
+
                 loop (rest @ nextSteps) newVis newUpds
+
     loop queue visited updates
 
 /// Finds all reachable nodes with their aggregated weights.
-let private findAllReachableWeighted (graph: Graph<'n, 'e>) (start: NodeId) (mergeFn: 'e -> 'e -> 'e) : Map<NodeId, 'e> =
+let private findAllReachableWeighted
+    (graph: Graph<'n, 'e>)
+    (start: NodeId)
+    (mergeFn: 'e -> 'e -> 'e)
+    : Map<NodeId, 'e> =
     let succs = successors start graph
     let maxUpdates = nodeCount graph
     doWeightedReachability graph succs Map.empty Map.empty mergeFn maxUpdates
@@ -664,11 +689,9 @@ let private doTransitiveClosureGeneral (graph: Graph<'n, 'e>) (mergeFn: 'e -> 'e
     (graph, allNodes graph)
     ||> List.fold (fun accGraph startNode ->
         let reachable = findAllReachableWeighted graph startNode mergeFn
+
         (accGraph, reachable)
-        ||> Map.fold (fun innerGraph targetNode weight ->
-            addEdge startNode targetNode weight innerGraph
-        )
-    )
+        ||> Map.fold (fun innerGraph targetNode weight -> addEdge startNode targetNode weight innerGraph))
 
 /// Computes the transitive closure of a graph.
 /// Adds edges between all pairs of nodes where a path exists in the original graph.
@@ -681,6 +704,7 @@ let transitiveClosure (mergeFn: 'e -> 'e -> 'e) (graph: Graph<'n, 'e>) : Graph<'
 /// Removes all edges that are redundant (indirectly reachable).
 let transitiveReduction (mergeFn: 'e -> 'e -> 'e) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
     let reachGraph = transitiveClosure mergeFn graph
+
     (graph, graph.OutEdges)
     ||> Map.fold (fun gAcc u targets ->
         (gAcc, targets)
@@ -695,16 +719,14 @@ let transitiveReduction (mergeFn: 'e -> 'e -> 'e) (graph: Graph<'n, 'e>) : Graph
                     else
                         match Map.tryFind w reachGraph.OutEdges with
                         | Some wTargets -> Map.containsKey v wTargets
-                        | None -> false
-                )
-            if isRedundant then removeEdge u v gInner
-            else gInner
-        )
-    )
+                        | None -> false)
+
+            if isRedundant then removeEdge u v gInner else gInner))
 
 /// Maps node data using a function that also accepts the Node ID.
 let mapNodesIndexed (f: NodeId -> 'n -> 'm) (graph: Graph<'n, 'e>) : Graph<'m, 'e> =
     let newNodes = graph.Nodes |> Map.map f
+
     { Nodes = newNodes
       OutEdges = graph.OutEdges
       InEdges = graph.InEdges
@@ -714,9 +736,8 @@ let mapNodesIndexed (f: NodeId -> 'n -> 'm) (graph: Graph<'n, 'e>) : Graph<'m, '
 let mapEdgesIndexed (f: NodeId -> NodeId -> 'e -> 'f) (graph: Graph<'n, 'e>) : Graph<'n, 'f> =
     let mapOuter outerMap =
         outerMap
-        |> Map.map (fun src innerMap ->
-            innerMap |> Map.map (fun dst weight -> f src dst weight)
-        )
+        |> Map.map (fun src innerMap -> innerMap |> Map.map (fun dst weight -> f src dst weight))
+
     { Nodes = graph.Nodes
       OutEdges = mapOuter graph.OutEdges
       InEdges = mapOuter graph.InEdges
@@ -726,13 +747,13 @@ let mapEdgesIndexed (f: NodeId -> NodeId -> 'e -> 'f) (graph: Graph<'n, 'e>) : G
 let addSelfLoops (defaultWeight: 'e) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
     (graph, allNodes graph)
     ||> List.fold (fun gAcc node ->
-        if hasEdge node node gAcc then gAcc
-        else addEdge node node defaultWeight gAcc
-    )
+        if hasEdge node node gAcc then
+            gAcc
+        else
+            addEdge node node defaultWeight gAcc)
 
 /// Removes all self-loops (edges from a node to itself) from the graph.
-let removeSelfLoops (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
-    filterEdges (fun u v _ -> u <> v) graph
+let removeSelfLoops (graph: Graph<'n, 'e>) : Graph<'n, 'e> = filterEdges (fun u v _ -> u <> v) graph
 
 /// Relabels all node IDs in the graph using a mapping function.
 /// Updates all node identifiers and edge references (source and destination) to maintain consistency.
@@ -740,23 +761,22 @@ let relabelNodes (f: NodeId -> NodeId) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
     // 1. Add all nodes
     let graphWithNodes =
         (empty graph.Kind, graph.Nodes)
-        ||> Map.fold (fun acc id data ->
-            addNode (f id) data acc
-        )
+        ||> Map.fold (fun acc id data -> addNode (f id) data acc)
 
     // 2. Add all edges
     let isDirected = graph.Kind = Directed
+
     let edges =
         graph.OutEdges
-        |> Map.fold (fun accOuter u dests ->
-            (accOuter, dests)
-            ||> Map.fold (fun acc v weight ->
-                if isDirected || u <= v then
-                    addEdge (f u) (f v) weight acc
-                else
-                    acc
-            )
-        ) graphWithNodes
+        |> Map.fold
+            (fun accOuter u dests ->
+                (accOuter, dests)
+                ||> Map.fold (fun acc v weight ->
+                    if isDirected || u <= v then
+                        addEdge (f u) (f v) weight acc
+                    else
+                        acc))
+            graphWithNodes
 
     edges
 
@@ -764,10 +784,7 @@ let relabelNodes (f: NodeId -> NodeId) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
 /// The mapping is deterministic, based on the sorted order of existing node IDs.
 let normalizeNodeIds (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
     let sortedNodes = graph.Nodes.Keys |> Seq.sort |> Seq.toList
-    let mapping =
-        sortedNodes
-        |> List.mapi (fun idx id -> (id, idx))
-        |> Map.ofList
+    let mapping = sortedNodes |> List.mapi (fun idx id -> (id, idx)) |> Map.ofList
     relabelNodes (fun id -> Map.find id mapping) graph
 
 /// Mode specifying which edges to follow when constructing an ego graph.
@@ -791,21 +808,22 @@ let private egoBfs (graph: Graph<'n, 'e>) (startNode: NodeId) (radius: int) (mod
                         | Undirected, _ -> successorIds current graph
                         | Directed, Neighbors -> neighborIds current graph
                         | Directed, Successors -> successorIds current graph
-                    neighbors
-                )
+
+                    neighbors)
                 |> List.filter (fun n -> not (Set.contains n visited))
                 |> List.distinct
 
             let newVisited = (visited, nextQueue) ||> List.fold (fun acc n -> Set.add n acc)
             doEgoBfs nextQueue (dist + 1) newVisited
 
-    doEgoBfs [startNode] 0 (Set.singleton startNode)
+    doEgoBfs [ startNode ] 0 (Set.singleton startNode)
 
 /// Returns the ego graph of a node within a given radius.
 /// An ego graph is the subgraph induced by the node (the "ego") and its neighbors (the "alters") within distance `radius`.
 let egoGraph (node: NodeId) (radius: int) (mode: EgoMode) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
     if radius < 0 then
         invalidArg "radius" "Radius must be non-negative."
+
     let ids = egoBfs graph node radius mode |> Set.toList
     subgraph ids graph
 
@@ -819,36 +837,41 @@ let quotientGraph
     (combineData: 'n -> 'n -> 'n)
     (graph: Graph<'n, 'e>)
     : Graph<'n, 'e> =
-    
-    let blockFor node = Map.tryFind node partition |> Option.defaultValue node
+
+    let blockFor node =
+        Map.tryFind node partition |> Option.defaultValue node
 
     // 1. Group node data by supernode
     let blockNodes =
         (Map.empty, graph.Nodes)
         ||> Map.fold (fun acc node data ->
             let block = blockFor node
+
             match Map.tryFind block acc with
             | Some existing -> Map.add block (combineData existing data) acc
-            | None -> Map.add block data acc
-        )
+            | None -> Map.add block data acc)
 
     // 2. Aggregate edge weights between different supernodes
     let blockEdges =
         let edgesList =
             graph.OutEdges
-            |> Map.fold (fun accOuter u dests ->
-                dests |> Map.fold (fun accInner v weight ->
-                    if graph.Kind = Directed || u <= v then
-                        (u, v, weight) :: accInner
-                    else
-                        accInner
-                ) accOuter
-            ) []
+            |> Map.fold
+                (fun accOuter u dests ->
+                    dests
+                    |> Map.fold
+                        (fun accInner v weight ->
+                            if graph.Kind = Directed || u <= v then
+                                (u, v, weight) :: accInner
+                            else
+                                accInner)
+                        accOuter)
+                []
 
         (Map.empty, edgesList)
         ||> List.fold (fun acc (u, v, weight) ->
             let bu = blockFor u
             let bv = blockFor v
+
             if bu = bv then
                 acc
             else
@@ -859,8 +882,7 @@ let quotientGraph
 
                 match Map.tryFind edgeKey acc with
                 | Some existing -> Map.add edgeKey (combineWeight existing weight) acc
-                | None -> Map.add edgeKey weight acc
-        )
+                | None -> Map.add edgeKey weight acc)
 
     // 3. Build the quotient graph
     let mutable newGraph =
@@ -873,5 +895,3 @@ let quotientGraph
         newGraph <- addEdge fromBlock toBlock weight newGraph
 
     newGraph
-
-

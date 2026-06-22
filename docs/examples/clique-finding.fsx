@@ -18,16 +18,32 @@ open Yog.Properties.Clique
 // Friend network: 0=Alice, 1=Bob, 2=Carol, 3=Dave, 4=Eve, 5=Frank
 let friends =
     empty Undirected
-    |> addNode 0 "Alice" |> addNode 1 "Bob"   |> addNode 2 "Carol"
-    |> addNode 3 "Dave"  |> addNode 4 "Eve"    |> addNode 5 "Frank"
+    |> addNode 0 "Alice"
+    |> addNode 1 "Bob"
+    |> addNode 2 "Carol"
+    |> addNode 3 "Dave"
+    |> addNode 4 "Eve"
+    |> addNode 5 "Frank"
     // Triangle: Alice-Bob-Carol
-    |> addEdge 0 1 1 |> addEdge 1 2 1 |> addEdge 0 2 1
+    |> addEdge 0 1 1
+    |> addEdge 1 2 1
+    |> addEdge 0 2 1
     // Triangle: Bob-Dave-Eve
-    |> addEdge 1 3 1 |> addEdge 3 4 1 |> addEdge 1 4 1
+    |> addEdge 1 3 1
+    |> addEdge 3 4 1
+    |> addEdge 1 4 1
     // Frank knows only Dave
     |> addEdge 3 5 1
 
-let names = Map.ofList [(0,"Alice");(1,"Bob");(2,"Carol");(3,"Dave");(4,"Eve");(5,"Frank")]
+let names =
+    Map.ofList
+        [ (0, "Alice")
+          (1, "Bob")
+          (2, "Carol")
+          (3, "Dave")
+          (4, "Eve")
+          (5, "Frank") ]
+
 let showClique (c: Set<int>) =
     c |> Set.toList |> List.map (fun id -> names.[id]) |> String.concat ", "
 
@@ -44,12 +60,14 @@ printfn "\nLargest clique: {%s} (size %d)" (showClique maxC) maxC.Count
 // All Maximal Cliques
 let allC = allMaximalCliques friends
 printfn "\nAll maximal cliques:"
+
 for c in allC do
     printfn "  {%s}" (showClique c)
 
 // All triangles (3-cliques)
 let triangles = kCliques 3 friends
 printfn "\nTriangles (3-cliques): %d found" triangles.Length
+
 for t in triangles do
     printfn "  {%s}" (showClique t)
 

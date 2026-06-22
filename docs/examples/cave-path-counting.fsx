@@ -36,26 +36,26 @@ let isSmall (name: string) = name.ToLower() = name
 // Custom recursive DFS with backtracking
 let rec countPaths current (visitedSmall: Set<string>) canRevisitOne =
     let caveName = caveGraph.Nodes.[current]
-    
-    if caveName = "end" then 1
+
+    if caveName = "end" then
+        1
     else
         successorIds current caveGraph
-        |> List.fold (fun total neighborId ->
-            let neighborName = caveGraph.Nodes.[neighborId]
-            let isSmallCave = isSmall neighborName
-            let alreadyVisited = Set.contains neighborName visitedSmall
-            
-            match neighborName, isSmallCave, alreadyVisited with
-            | "start", _, _ -> total
-            | _, false, _ -> 
-                total + countPaths neighborId visitedSmall canRevisitOne
-            | _, true, false ->
-                let nextVisited = Set.add neighborName visitedSmall
-                total + countPaths neighborId nextVisited canRevisitOne
-            | _, true, true when canRevisitOne ->
-                total + countPaths neighborId visitedSmall false
-            | _ -> total
-        ) 0
+        |> List.fold
+            (fun total neighborId ->
+                let neighborName = caveGraph.Nodes.[neighborId]
+                let isSmallCave = isSmall neighborName
+                let alreadyVisited = Set.contains neighborName visitedSmall
+
+                match neighborName, isSmallCave, alreadyVisited with
+                | "start", _, _ -> total
+                | _, false, _ -> total + countPaths neighborId visitedSmall canRevisitOne
+                | _, true, false ->
+                    let nextVisited = Set.add neighborName visitedSmall
+                    total + countPaths neighborId nextVisited canRevisitOne
+                | _, true, true when canRevisitOne -> total + countPaths neighborId visitedSmall false
+                | _ -> total)
+            0
 
 printfn "--- Cave Path Counting ---"
 

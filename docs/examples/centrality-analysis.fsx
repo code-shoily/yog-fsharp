@@ -20,19 +20,26 @@ open Yog.Centrality
 // 0=Alice, 1=Bob, 2=Carol, 3=Dave, 4=Eve
 let network =
     empty Undirected
-    |> addNode 0 "Alice" |> addNode 1 "Bob" |> addNode 2 "Carol"
-    |> addNode 3 "Dave"  |> addNode 4 "Eve"
-    |> addEdge 0 1 1  // Alice - Bob
-    |> addEdge 0 2 1  // Alice - Carol
-    |> addEdge 1 2 1  // Bob - Carol
-    |> addEdge 1 3 1  // Bob - Dave
-    |> addEdge 3 4 1  // Dave - Eve
+    |> addNode 0 "Alice"
+    |> addNode 1 "Bob"
+    |> addNode 2 "Carol"
+    |> addNode 3 "Dave"
+    |> addNode 4 "Eve"
+    |> addEdge 0 1 1 // Alice - Bob
+    |> addEdge 0 2 1 // Alice - Carol
+    |> addEdge 1 2 1 // Bob - Carol
+    |> addEdge 1 3 1 // Bob - Dave
+    |> addEdge 3 4 1 // Dave - Eve
 
-let names = Map.ofList [(0,"Alice"); (1,"Bob"); (2,"Carol"); (3,"Dave"); (4,"Eve")]
+let names =
+    Map.ofList [ (0, "Alice"); (1, "Bob"); (2, "Carol"); (3, "Dave"); (4, "Eve") ]
 
 let printRanking title (scores: Map<int, float>) =
     printfn "\n=== %s ===" title
-    scores |> Map.toList |> List.sortByDescending snd
+
+    scores
+    |> Map.toList
+    |> List.sortByDescending snd
     |> List.iter (fun (id, score) -> printfn "  %s: %.4f" names.[id] score)
 
 (**

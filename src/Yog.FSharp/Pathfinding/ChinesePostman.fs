@@ -14,34 +14,37 @@ module ChinesePostman =
         | components ->
             let edgeComponents =
                 components
-                |> List.filter (fun comp ->
-                    comp |> List.exists (fun u -> (neighbors u graph).Length > 0)
-                )
+                |> List.filter (fun comp -> comp |> List.exists (fun u -> (neighbors u graph).Length > 0))
                 |> List.length
+
             edgeComponents <= 1
 
     let private totalEdgeWeight (graph: Graph<'n, 'e>) (zero: 'e) (add: 'e -> 'e -> 'e) : 'e =
         let mutable sum = zero
         let mutable seen = Set.empty
+
         for (u, v, w) in allEdges graph do
             let edgeKey = if u <= v then (u, v) else (v, u)
+
             if not (Set.contains edgeKey seen) then
                 seen <- Set.add edgeKey seen
                 sum <- add sum w
+
         sum
 
     let private popcount (x: int) =
         let rec count valAcc acc =
-            if valAcc = 0 then acc
-            else count (valAcc &&& (valAcc - 1)) (acc + 1)
+            if valAcc = 0 then
+                acc
+            else
+                count (valAcc &&& (valAcc - 1)) (acc + 1)
+
         count x 0
 
     let rec private firstSetBit (mask: int) =
-        if (mask &&& 1) = 1 then 0
-        else 1 + firstSetBit (mask >>> 1)
+        if (mask &&& 1) = 1 then 0 else 1 + firstSetBit (mask >>> 1)
 
-    let private bitSet (mask: int) (i: int) =
-        (mask &&& (1 <<< i)) <> 0
+    let private bitSet (mask: int) (i: int) = (mask &&& (1 <<< i)) <> 0
 
     let private minimumWeightPerfectMatching
         (distances: Map<int * int, 'e>)
@@ -50,13 +53,13 @@ module ChinesePostman =
         (add: 'e -> 'e -> 'e)
         (compare: 'e -> 'e -> int)
         : (int * int) list =
-        
+
         let fullMask = (1 <<< n) - 1
         let costs = Dictionary<int, 'e>()
         let pairs = Dictionary<int, int * int>()
         costs.[0] <- zero
 
-        for mask in 1 .. fullMask do
+        for mask in 1..fullMask do
             if popcount mask % 2 = 0 then
                 let i = firstSetBit mask
                 let mutable bestCost = None
@@ -65,8 +68,10 @@ module ChinesePostman =
                 for j in (i + 1) .. (n - 1) do
                     if bitSet mask j then
                         let prev = mask ^^^ (1 <<< i) ^^^ (1 <<< j)
+
                         if costs.ContainsKey prev then
                             let cost = add costs.[prev] (Map.find (i, j) distances)
+
                             match bestCost with
                             | None ->
                                 bestCost <- Some cost
@@ -83,7 +88,8 @@ module ChinesePostman =
                 | None -> ()
 
         let rec reconstruct mask acc =
-            if mask = 0 then acc
+            if mask = 0 then
+                acc
             else
                 let (i, j) = pairs.[mask]
                 let prev = mask ^^^ (1 <<< i) ^^^ (1 <<< j)
@@ -94,18 +100,14 @@ module ChinesePostman =
     let private edgeIdsToNodes (multi: MultiGraph<'n, 'e>) (edgeIds: EdgeId list) : NodeId list =
         match edgeIds with
         | [] -> []
-        | [first] ->
+        | [ first ] ->
             let (a, b, _) = Map.find first multi.Edges
-            [a; b]
+            [ a; b ]
         | first :: second :: rest ->
             let (a, b, _) = Map.find first multi.Edges
             let (x, y, _) = Map.find second multi.Edges
 
-            let prev, acc =
-                if b = x || b = y then
-                    b, [b; a]
-                else
-                    a, [a; b]
+            let prev, acc = if b = x || b = y then b, [ b; a ] else a, [ a; b ]
 
             let mutable currentPrev = prev
             let mutable currentAcc = acc
@@ -124,17 +126,20 @@ module ChinesePostman =
         (originalGraph: Graph<'n, 'e>)
         (zero: 'e)
         : MultiGraph<'n, 'e> =
-        
+
         let rec loop currentMulti nodes =
             match nodes with
-            | [] | [_] -> currentMulti
+            | []
+            | [ _ ] -> currentMulti
             | u :: v :: rest ->
                 let w =
                     match Map.tryFind u originalGraph.OutEdges |> Option.bind (Map.tryFind v) with
                     | Some weight -> weight
                     | None -> zero
+
                 let (m2, _) = Yog.Multi.Model.addEdge u v w currentMulti
                 loop m2 (v :: rest)
+
         loop multi pathNodes
 
     /// Solves the Chinese Postman Problem for an undirected graph.
@@ -145,7 +150,7 @@ module ChinesePostman =
         (compare: 'e -> 'e -> int)
         (graph: Graph<'n, 'e>)
         : (NodeId list * 'e) option =
-        
+
         if graph.Kind <> Undirected then
             None
         elif List.isEmpty (allNodes graph) then
@@ -154,14 +159,14 @@ module ChinesePostman =
             None
         else
             let originalWeight = totalEdgeWeight graph zero add
+
             let oddVertices =
-                allNodes graph
-                |> List.filter (fun u -> (neighbors u graph).Length % 2 = 1)
+                allNodes graph |> List.filter (fun u -> (neighbors u graph).Length % 2 = 1)
 
             if List.isEmpty oddVertices then
                 // Already Eulerian
                 match Yog.Properties.Eulerian.findEulerianCircuit graph with
-                | Some circuit -> Some (circuit, originalWeight)
+                | Some circuit -> Some(circuit, originalWeight)
                 | None -> None
             else
                 let n = List.length oddVertices
@@ -171,15 +176,17 @@ module ChinesePostman =
 
                 // Compute shortest distances between all pairs of odd vertices
                 let mutable oddDistances = Map.empty
+
                 for u in oddVertices do
                     let uDistances = singleSourceDistances zero add compare u graph
                     let uIdx = Map.find u indices
+
                     for v in oddVertices do
                         if u <> v then
                             let vIdx = Map.find v indices
+
                             match Map.tryFind v uDistances with
-                            | Some dist ->
-                                oddDistances <- Map.add (uIdx, vIdx) dist oddDistances
+                            | Some dist -> oddDistances <- Map.add (uIdx, vIdx) dist oddDistances
                             | None -> ()
 
                 // Find minimum weight perfect matching
@@ -187,6 +194,7 @@ module ChinesePostman =
 
                 // Build multigraph and duplicate matched paths
                 let mutable multi = Yog.Multi.Model.undirected<'n, 'e> ()
+
                 for u in allNodes graph do
                     let data = Map.find u graph.Nodes
                     multi <- Yog.Multi.Model.addNode u data multi
@@ -196,9 +204,11 @@ module ChinesePostman =
                     multi <- m2
 
                 let mutable duplicationWeight = zero
+
                 for (i, j) in matchingPairs do
                     let u = Map.find i oddIndices
                     let v = Map.find j oddIndices
+
                     match shortestPath zero add compare u v graph with
                     | Some path ->
                         multi <- duplicatePath multi path.Nodes graph zero
@@ -209,12 +219,11 @@ module ChinesePostman =
                 match Yog.Multi.Eulerian.findEulerianCircuit multi with
                 | Some edgeIds ->
                     let circuit = edgeIdsToNodes multi edgeIds
-                    Some (circuit, add originalWeight duplicationWeight)
+                    Some(circuit, add originalWeight duplicationWeight)
                 | None -> None
 
     // Convenience Wrappers
-    let chinesePostmanInt (graph: Graph<'n, int>) : (NodeId list * int) option =
-        chinesePostman 0 (+) compare graph
+    let chinesePostmanInt (graph: Graph<'n, int>) : (NodeId list * int) option = chinesePostman 0 (+) compare graph
 
     let chinesePostmanFloat (graph: Graph<'n, float>) : (NodeId list * float) option =
         chinesePostman 0.0 (+) compare graph

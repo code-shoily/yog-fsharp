@@ -62,8 +62,9 @@ module Connectivity =
                 if not (visited.Contains(node)) then
                     dfs node None
 
-            Ok { Bridges = List.rev bridges
-                 ArticulationPoints = points |> Seq.toList }
+            Ok
+                { Bridges = List.rev bridges
+                  ArticulationPoints = points |> Seq.toList }
 
     /// Finds Strongly Connected Components (SCC) using Tarjan's Algorithm.
     let stronglyConnectedComponents (graph: Graph<'n, 'e>) : NodeId list list =
@@ -119,6 +120,7 @@ module Connectivity =
             if visited.Add(v) then
                 for w in successorIds v graph do
                     dfs1 w
+
                 finishStack.Push(v)
 
         for node in allNodes graph do
@@ -152,39 +154,49 @@ module Connectivity =
     /// Finds Connected Components in an undirected graph.
     let connectedComponents (graph: Graph<'n, 'e>) : NodeId list list =
         let visited = HashSet<NodeId>()
+
         let rec dfsCollect node comp =
             if visited.Add(node) then
                 let mutable currentComp = node :: comp
+
                 for neighbor in successorIds node graph do
                     currentComp <- dfsCollect neighbor currentComp
+
                 currentComp
             else
                 comp
-        
+
         let mutable components = []
+
         for node in allNodes graph do
             if not (visited.Contains(node)) then
                 let comp = dfsCollect node []
                 components <- comp :: components
+
         List.rev components
 
     /// Finds Weakly Connected Components in a directed graph.
     let weaklyConnectedComponents (graph: Graph<'n, 'e>) : NodeId list list =
         let visited = HashSet<NodeId>()
+
         let rec dfsCollect node comp =
             if visited.Add(node) then
                 let mutable currentComp = node :: comp
+
                 for neighbor in neighborIds node graph do
                     currentComp <- dfsCollect neighbor currentComp
+
                 currentComp
             else
                 comp
-        
+
         let mutable components = []
+
         for node in allNodes graph do
             if not (visited.Contains(node)) then
                 let comp = dfsCollect node []
                 components <- comp :: components
+
         List.rev components
 
     /// Returns the core number of every node in an undirected graph.
@@ -193,43 +205,55 @@ module Connectivity =
         | Directed -> Error "coreNumbers requires an undirected graph"
         | Undirected ->
             let nodes = allNodes graph
-            let mutable degrees = nodes |> List.map (fun u -> u, (neighbors u graph).Length) |> Map.ofList
-            let maxDeg = if Map.isEmpty degrees then 0 else degrees |> Map.values |> Seq.max
-            
+
+            let mutable degrees =
+                nodes |> List.map (fun u -> u, (neighbors u graph).Length) |> Map.ofList
+
+            let maxDeg =
+                if Map.isEmpty degrees then
+                    0
+                else
+                    degrees |> Map.values |> Seq.max
+
             let mutable buckets = Map.empty
+
             for u in nodes do
                 let deg = Map.find u degrees
                 let existing = Map.tryFind deg buckets |> Option.defaultValue []
                 buckets <- Map.add deg (u :: existing) buckets
-                
+
             let mutable processed = Set.empty
             let mutable cores = Map.empty
-            
-            for i in 0 .. maxDeg do
+
+            for i in 0..maxDeg do
                 let mutable finished = false
+
                 while not finished do
                     match Map.tryFind i buckets with
-                    | None | Some [] -> finished <- true
-                    | Some (u :: rest) ->
+                    | None
+                    | Some [] -> finished <- true
+                    | Some(u :: rest) ->
                         buckets <- Map.add i rest buckets
+
                         if not (Set.contains u processed) then
                             cores <- Map.add u i cores
                             processed <- Set.add u processed
-                            
+
                             let neighborsList =
                                 match Map.tryFind u graph.OutEdges with
                                 | Some nbrs -> nbrs |> Map.keys |> Seq.toList
                                 | None -> []
-                                
+
                             for v in neighborsList do
                                 if not (Set.contains v processed) then
                                     let oldVDeg = Map.find v degrees
                                     let newVDeg = oldVDeg - 1
                                     degrees <- Map.add v newVDeg degrees
-                                    
+
                                     let targetBucket = max newVDeg i
                                     let existing = Map.tryFind targetBucket buckets |> Option.defaultValue []
                                     buckets <- Map.add targetBucket (v :: existing) buckets
+
             Ok cores
 
     /// Returns the maximal subgraph where every node has at least degree k.
@@ -238,42 +262,49 @@ module Connectivity =
         | Directed -> Error "kCore requires an undirected graph"
         | Undirected ->
             let nodes = allNodes graph
-            let mutable degrees = nodes |> List.map (fun u -> u, (neighbors u graph).Length) |> Map.ofList
+
+            let mutable degrees =
+                nodes |> List.map (fun u -> u, (neighbors u graph).Length) |> Map.ofList
+
             let mutable pruneQueue = nodes |> List.filter (fun u -> Map.find u degrees < k)
             let mutable queueSet = Set.ofList pruneQueue
             let mutable pruned = Set.empty
-            
+
             while not (List.isEmpty pruneQueue) do
                 let u = List.head pruneQueue
                 pruneQueue <- List.tail pruneQueue
                 queueSet <- Set.remove u queueSet
-                
+
                 if not (Set.contains u pruned) then
                     pruned <- Set.add u pruned
+
                     let neighborsList =
                         match Map.tryFind u graph.OutEdges with
                         | Some nbrs -> nbrs |> Map.keys |> Seq.toList
                         | None -> []
-                        
+
                     for v in neighborsList do
                         if not (Set.contains v pruned) then
                             let oldDeg = Map.find v degrees
                             let newDeg = oldDeg - 1
                             degrees <- Map.add v newDeg degrees
+
                             if newDeg < k && not (Set.contains v queueSet) then
                                 pruneQueue <- v :: pruneQueue
                                 queueSet <- Set.add v queueSet
-                                
+
             let remaining = nodes |> List.filter (fun u -> not (Set.contains u pruned))
-            Ok (Yog.Transform.subgraph remaining graph)
+            Ok(Yog.Transform.subgraph remaining graph)
 
     /// Returns the degeneracy of the graph.
     let degeneracy (graph: Graph<'n, 'e>) : Result<int, string> =
         match coreNumbers graph with
         | Error msg -> Error msg
         | Ok cores ->
-            if Map.isEmpty cores then Ok 0
-            else Ok (cores |> Map.values |> Seq.max)
+            if Map.isEmpty cores then
+                Ok 0
+            else
+                Ok(cores |> Map.values |> Seq.max)
 
     /// Groups nodes by their core number (k-shell decomposition).
     let shellDecomposition (graph: Graph<'n, 'e>) : Result<Map<int, NodeId list>, string> =
@@ -281,11 +312,13 @@ module Connectivity =
         | Error msg -> Error msg
         | Ok cores ->
             let mutable shells = Map.empty
+
             for kvp in cores do
                 let node = kvp.Key
                 let core = kvp.Value
                 let existing = Map.tryFind core shells |> Option.defaultValue []
                 shells <- Map.add core (node :: existing) shells
+
             Ok shells
 
     module Reachability =
@@ -326,6 +359,7 @@ module Connectivity =
             let zeros = countLeadingZeros remaining (32 - hllPrecision)
             let val' = byte (zeros + 1)
             let current = hll.[index]
+
             if val' > current then
                 let nextHll = Array.copy hll
                 nextHll.[index] <- val'
@@ -335,33 +369,44 @@ module Connectivity =
 
         let private hllUnion (hll1: Hll) (hll2: Hll) : Hll =
             let result = Array.zeroCreate hllNumRegisters
+
             for i in 0 .. hllNumRegisters - 1 do
                 result.[i] <- max hll1.[i] hll2.[i]
+
             result
 
         let private hllCount (hll: Hll) : int =
             let mutable sumInverse = 0.0
+
             for i in 0 .. hllNumRegisters - 1 do
                 let maxZeros = float hll.[i]
                 sumInverse <- sumInverse + (2.0 ** -maxZeros)
-            
-            let rawEstimate = hllAlpha * float hllNumRegisters * float hllNumRegisters / sumInverse
-            
+
+            let rawEstimate =
+                hllAlpha * float hllNumRegisters * float hllNumRegisters / sumInverse
+
             let estimate =
                 if rawEstimate <= 2.5 * float hllNumRegisters then
                     let mutable emptyRegisters = 0
+
                     for i in 0 .. hllNumRegisters - 1 do
                         if hll.[i] = 0uy then
                             emptyRegisters <- emptyRegisters + 1
+
                     if emptyRegisters <> 0 then
                         float hllNumRegisters * log (float hllNumRegisters / float emptyRegisters)
                     else
                         rawEstimate
                 else
                     rawEstimate
+
             max 0 (int (round estimate))
 
-        let private solveAcyclicReachabilitySets (graph: Graph<'n, 'e>) (sorted: NodeId list) (direction: ReachabilityDirection) =
+        let private solveAcyclicReachabilitySets
+            (graph: Graph<'n, 'e>)
+            (sorted: NodeId list)
+            (direction: ReachabilityDirection)
+            =
             let nodesToProcess =
                 match direction with
                 | Descendants -> List.rev sorted
@@ -380,8 +425,7 @@ module Connectivity =
 
                 for neighbor in related do
                     match Map.tryFind neighbor reachabilitySets with
-                    | Some neighborSet ->
-                        allReachable <- Set.union allReachable neighborSet
+                    | Some neighborSet -> allReachable <- Set.union allReachable neighborSet
                     | None -> ()
 
                 reachabilitySets <- Map.add node allReachable reachabilitySets
@@ -392,43 +436,57 @@ module Connectivity =
             let reachabilitySets = solveAcyclicReachabilitySets graph sorted direction
             reachabilitySets |> Map.map (fun _ set -> Set.count set)
 
-        let private buildCondensationGraph (graph: Graph<'n, 'e>) (sccs: NodeId list list) (nodeToScc: Map<NodeId, int>) =
+        let private buildCondensationGraph
+            (graph: Graph<'n, 'e>)
+            (sccs: NodeId list list)
+            (nodeToScc: Map<NodeId, int>)
+            =
             let init = Yog.Model.empty Directed
             let mutable condensation = init
+
             for i in 0 .. sccs.Length - 1 do
                 condensation <- Yog.Model.addNode i { Size = List.length sccs.[i] } condensation
 
             for src in graph.Nodes.Keys do
                 let srcScc = Map.find src nodeToScc
                 let successors = successorIds src graph
+
                 for dst in successors do
                     let dstScc = Map.find dst nodeToScc
+
                     if srcScc <> dstScc then
                         condensation <- Yog.Model.addEdge srcScc dstScc 1 condensation
+
             condensation
 
         let private solveCyclicCounts (graph: Graph<'n, 'e>) (direction: ReachabilityDirection) =
             let sccs = stronglyConnectedComponents graph
             let mutable nodeToScc = Map.empty
+
             for i in 0 .. sccs.Length - 1 do
                 for node in sccs.[i] do
                     nodeToScc <- Map.add node i nodeToScc
 
             let condensation = buildCondensationGraph graph sccs nodeToScc
-            
+
             let sortedSccs =
                 match Yog.Traversal.topologicalSort condensation with
                 | Ok s -> s
                 | Error _ -> failwith "condensation graph is not acyclic"
 
-            let sccReachabilitySets = solveAcyclicReachabilitySets condensation sortedSccs direction
+            let sccReachabilitySets =
+                solveAcyclicReachabilitySets condensation sortedSccs direction
 
             let mutable result = Map.empty
+
             for node in graph.Nodes.Keys do
                 let sccId = Map.find node nodeToScc
-                let reachableSccIds = Map.tryFind sccId sccReachabilitySets |> Option.defaultValue Set.empty
-                
+
+                let reachableSccIds =
+                    Map.tryFind sccId sccReachabilitySets |> Option.defaultValue Set.empty
+
                 let mutable nodeCount = 0
+
                 for id in reachableSccIds do
                     let sccData = Map.find id condensation.Nodes
                     nodeCount <- nodeCount + sccData.Size
@@ -436,6 +494,7 @@ module Connectivity =
                 let mySccData = Map.find sccId condensation.Nodes
                 let mySccSize = mySccData.Size
                 result <- Map.add node (nodeCount + (mySccSize - 1)) result
+
             result
 
         let private solveAcyclicHll (graph: Graph<'n, 'e>) (sorted: NodeId list) (direction: ReachabilityDirection) =
@@ -454,12 +513,16 @@ module Connectivity =
             for node in nodesToProcess do
                 let related = getRelated node
                 let mutable baseHll = initHll ()
+
                 for r in related do
                     baseHll <- hllAdd baseHll r
 
                 let mutable merged = baseHll
+
                 for neighbor in related do
-                    let neighborHll = Map.tryFind neighbor hllRegisters |> Option.defaultValue (initHll ())
+                    let neighborHll =
+                        Map.tryFind neighbor hllRegisters |> Option.defaultValue (initHll ())
+
                     merged <- hllUnion merged neighborHll
 
                 hllRegisters <- Map.add node merged hllRegisters
@@ -469,22 +532,26 @@ module Connectivity =
         let private solveCyclicHll (graph: Graph<'n, 'e>) (direction: ReachabilityDirection) =
             let sccs = stronglyConnectedComponents graph
             let mutable nodeToScc = Map.empty
+
             for i in 0 .. sccs.Length - 1 do
                 for node in sccs.[i] do
                     nodeToScc <- Map.add node i nodeToScc
 
             let condensation = buildCondensationGraph graph sccs nodeToScc
-            
+
             let sortedSccs =
                 match Yog.Traversal.topologicalSort condensation with
                 | Ok s -> s
                 | Error _ -> failwith "condensation graph is not acyclic"
 
             let mutable sccBaseHlls = Map.empty
+
             for i in 0 .. sccs.Length - 1 do
                 let mutable hll = initHll ()
+
                 for node in sccs.[i] do
                     hll <- hllAdd hll node
+
                 sccBaseHlls <- Map.add i hll sccBaseHlls
 
             let sccsToProcess =
@@ -498,11 +565,13 @@ module Connectivity =
                 | Ancestors -> fun node -> predecessorIds node condensation
 
             let mutable sccFinalHlls = Map.empty
+
             for sccId in sccsToProcess do
                 let myBase = Map.find sccId sccBaseHlls
                 let children = getSccRelated sccId
 
                 let mutable mergedChildren = myBase
+
                 for childId in children do
                     let childHll = Map.tryFind childId sccFinalHlls |> Option.defaultValue (initHll ())
                     mergedChildren <- hllUnion mergedChildren childHll
@@ -510,11 +579,13 @@ module Connectivity =
                 sccFinalHlls <- Map.add sccId mergedChildren sccFinalHlls
 
             let mutable result = Map.empty
+
             for nodeId in graph.Nodes.Keys do
                 let sccId = Map.find nodeId nodeToScc
                 let sccHll = Map.tryFind sccId sccFinalHlls |> Option.defaultValue (initHll ())
                 let totalCount = hllCount sccHll
                 result <- Map.add nodeId (max 0 (totalCount - 1)) result
+
             result
 
         /// Counts the number of ancestors or descendants for every node in the graph.

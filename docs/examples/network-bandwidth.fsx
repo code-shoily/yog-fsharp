@@ -15,7 +15,12 @@ open Yog.Flow.MaxFlow
 // Nodes: 0=Source, 1=RouterA, 2=RouterB, 3=RouterC, 4=RouterD, 5=Destination
 let network: Graph<unit, int> =
     empty Directed
-    |> addNode 0 () |> addNode 1 () |> addNode 2 () |> addNode 3 () |> addNode 4 () |> addNode 5 ()
+    |> addNode 0 ()
+    |> addNode 1 ()
+    |> addNode 2 ()
+    |> addNode 3 ()
+    |> addNode 4 ()
+    |> addNode 5 ()
     |> addEdge 0 1 20 // Source -> Router A (20 Mbps)
     |> addEdge 0 2 30 // Source -> Router B (30 Mbps)
     |> addEdge 1 2 10 // Router A -> Router B (10 Mbps)

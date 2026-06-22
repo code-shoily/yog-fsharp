@@ -70,7 +70,14 @@ let ``intersection of disjoint graphs is empty`` () =
 
 [<Fact>]
 let ``difference removes shared nodes and edges`` () =
-    let g1 = empty Undirected |> addNode 1 "" |> addNode 2 "" |> addNode 3 "" |> addEdge 1 2 1 |> addEdge 2 3 1
+    let g1 =
+        empty Undirected
+        |> addNode 1 ""
+        |> addNode 2 ""
+        |> addNode 3 ""
+        |> addEdge 1 2 1
+        |> addEdge 2 3 1
+
     let g2 = empty Undirected |> addNode 3 ""
     let diff = difference g1 g2
 
@@ -181,7 +188,12 @@ let ``tensorProduct edge weights are pairs`` () =
     let g2 = empty Undirected |> addNode 0 "" |> addNode 1 "" |> addEdge 0 1 20
     let product = tensorProduct g1 g2
 
-    Assert.True(product.OutEdges |> Map.values |> Seq.collect Map.values |> Seq.exists ((=) (10, 20)))
+    Assert.True(
+        product.OutEdges
+        |> Map.values
+        |> Seq.collect Map.values
+        |> Seq.exists ((=) (10, 20))
+    )
 
 // ============================================================================
 // STRONG PRODUCT
@@ -295,11 +307,7 @@ let ``power of path connects distant nodes`` () =
 
 [<Fact>]
 let ``power with k 1 returns original edges`` () =
-    let path =
-        empty Undirected
-        |> addNode 0 ""
-        |> addNode 1 ""
-        |> addEdge 0 1 1
+    let path = empty Undirected |> addNode 0 "" |> addNode 1 "" |> addEdge 0 1 1
 
     let p1 = power 1 1 path
 

@@ -743,6 +743,7 @@ let bestFirstFold
 
     while frontier.Count > 0 && not halted do
         let node = frontier.Dequeue()
+
         if visited.Add(node) then
             let (control, newAcc) = folder acc node
             acc <- newAcc
@@ -754,6 +755,7 @@ let bestFirstFold
                 for successor in successorIds node graph do
                     if not (visited.Contains(successor)) then
                         frontier.Enqueue(successor, scoreOf successor)
+
     acc
 
 /// Performs a Greedy Best-First Walk starting from the given node.
@@ -775,6 +777,7 @@ let randomWalk (startId: NodeId) (steps: int) (seed: int option) (graph: Graph<'
             acc
         else
             let successors = successorIds current graph
+
             match successors with
             | [] -> acc
             | neighbors ->
@@ -782,6 +785,4 @@ let randomWalk (startId: NodeId) (steps: int) (seed: int option) (graph: Graph<'
                 let nextNode = neighbors.[nextIdx]
                 walkStep nextNode (remaining - 1) (nextNode :: acc)
 
-    walkStep startId steps [startId]
-    |> List.rev
-
+    walkStep startId steps [ startId ] |> List.rev

@@ -35,13 +35,13 @@ let konigsberg =
     |> addNode 3 "Land C"
     |> addNode 4 "Land D"
     // Seven bridges (note: two between A-B, two between A-C)
-    |> addEdge 1 2 1  // Bridge 1: A ↔ B
-    |> addEdge 1 2 1  // Bridge 2: A ↔ B
-    |> addEdge 1 3 1  // Bridge 3: A ↔ C
-    |> addEdge 1 3 1  // Bridge 4: A ↔ C
-    |> addEdge 1 4 1  // Bridge 5: A ↔ D
-    |> addEdge 2 4 1  // Bridge 6: B ↔ D
-    |> addEdge 3 4 1  // Bridge 7: C ↔ D
+    |> addEdge 1 2 1 // Bridge 1: A ↔ B
+    |> addEdge 1 2 1 // Bridge 2: A ↔ B
+    |> addEdge 1 3 1 // Bridge 3: A ↔ C
+    |> addEdge 1 3 1 // Bridge 4: A ↔ C
+    |> addEdge 1 4 1 // Bridge 5: A ↔ D
+    |> addEdge 2 4 1 // Bridge 6: B ↔ D
+    |> addEdge 3 4 1 // Bridge 7: C ↔ D
 
 (**
 ## Analysis
@@ -58,11 +58,10 @@ else
 
 if hasEulerianPath konigsberg then
     printfn "✓ Eulerian path exists!"
+
     match findEulerianPath konigsberg with
-    | Some path ->
-        printfn "Path found: %A" path
-    | None ->
-        printfn "Error finding path"
+    | Some path -> printfn "Path found: %A" path
+    | None -> printfn "Error finding path"
 else
     printfn "✗ No Eulerian path (more than two odd-degree nodes)"
 
@@ -77,19 +76,14 @@ Here's a simple triangle where an Eulerian circuit **does** exist:
 
 printfn "\n=== A Solvable Example (Triangle) ==="
 
-let triangle =
-    empty Undirected
-    |> addEdge 1 2 1
-    |> addEdge 2 3 1
-    |> addEdge 3 1 1
+let triangle = empty Undirected |> addEdge 1 2 1 |> addEdge 2 3 1 |> addEdge 3 1 1
 
 match findEulerianCircuit triangle with
 | Some circuit ->
     printfn "Successfully found circuit for a triangle:"
     printfn "Path: %A" circuit
     printfn "All nodes have even degree (2), so a circuit exists!"
-| None ->
-    printfn "Error calculating path"
+| None -> printfn "Error calculating path"
 
 (**
 ## Output

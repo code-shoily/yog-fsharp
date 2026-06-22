@@ -31,11 +31,11 @@ let buildings =
     |> addNode 2 "Building B"
     |> addNode 3 "Building C"
     |> addNode 4 "Building D"
-    |> addEdge 1 2 100  // A ↔ B: $100
-    |> addEdge 1 3 150  // A ↔ C: $150
-    |> addEdge 2 3 50   // B ↔ C: $50
-    |> addEdge 2 4 200  // B ↔ D: $200
-    |> addEdge 3 4 100  // C ↔ D: $100
+    |> addEdge 1 2 100 // A ↔ B: $100
+    |> addEdge 1 3 150 // A ↔ C: $150
+    |> addEdge 2 3 50 // B ↔ C: $50
+    |> addEdge 2 4 200 // B ↔ D: $200
+    |> addEdge 3 4 100 // C ↔ D: $100
 
 (**
 ## Finding Minimum Cable Cost
@@ -72,9 +72,9 @@ let totalCost =
 
 printfn "=== Optimal Cable Layout ==="
 printfn "Cables to install:"
+
 cables
-|> List.iter (fun edge ->
-    printfn "  Building %d ↔ Building %d: $%d" edge.From edge.To edge.Weight)
+|> List.iter (fun edge -> printfn "  Building %d ↔ Building %d: $%d" edge.From edge.To edge.Weight)
 
 printfn ""
 printfn "Total cable cost: $%d" totalCost

@@ -155,7 +155,11 @@ let ``toMermaid uses TD for directed`` () =
 let ``toMermaid uses LR for undirected`` () =
     let graph = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 5
 
-    let mermaid = Mermaid.render { Mermaid.defaultOptions with Direction = "LR" } graph
+    let mermaid =
+        Mermaid.render
+            { Mermaid.defaultOptions with
+                Direction = "LR" }
+            graph
 
     Assert.Contains("graph LR", mermaid)
     Assert.Contains("---", mermaid)
@@ -340,16 +344,23 @@ let ``defaultMermaidOptions uses ID as label`` () =
 [<Fact>]
 let ``Tgf serialize and parse undirected`` () =
     let graph = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 "edge"
-    let options = { Tgf.defaultOptions with NodeLabel = id; EdgeLabel = Some }
+
+    let options =
+        { Tgf.defaultOptions with
+            NodeLabel = id
+            EdgeLabel = Some }
+
     let tgfStr = Tgf.serialize options graph
-    let parsedResult = Tgf.parse Undirected id (fun opt -> opt |> Option.defaultValue "") tgfStr
+
+    let parsedResult =
+        Tgf.parse Undirected id (fun opt -> opt |> Option.defaultValue "") tgfStr
+
     match parsedResult with
     | Ok parsedGraph ->
         Assert.Equal(2, order parsedGraph)
         Assert.True(hasEdge 1 2 parsedGraph)
         Assert.Equal("edge", edgeData 1 2 parsedGraph |> Option.get)
-    | Error msg ->
-        Assert.Fail(msg)
+    | Error msg -> Assert.Fail(msg)
 
 // ============================================================================
 // LIST SERIALIZATION
@@ -358,6 +369,7 @@ let ``Tgf serialize and parse undirected`` () =
 [<Fact>]
 let ``AdjacencyList parse and serialize`` () =
     let text = "1: 2,5.0 3,10.0\n2: 3,2.0\n3:\n"
+
     match List.parse Directed true ":" text with
     | Ok graph ->
         Assert.Equal(3, order graph)
@@ -366,8 +378,7 @@ let ``AdjacencyList parse and serialize`` () =
         Assert.Equal(2.0, edgeData 2 3 graph |> Option.get)
         let serialized = List.serialize true ":" graph
         Assert.Contains("1: 2,5.000000 3,10.000000", serialized)
-    | Error msg ->
-        Assert.Fail(msg)
+    | Error msg -> Assert.Fail(msg)
 
 // ============================================================================
 // MATRIX SERIALIZATION
@@ -375,11 +386,8 @@ let ``AdjacencyList parse and serialize`` () =
 
 [<Fact>]
 let ``Matrix parse and serialize`` () =
-    let matrix = [
-        [0.0; 5.0; 0.0]
-        [5.0; 0.0; 7.0]
-        [0.0; 7.0; 0.0]
-    ]
+    let matrix = [ [ 0.0; 5.0; 0.0 ]; [ 5.0; 0.0; 7.0 ]; [ 0.0; 7.0; 0.0 ] ]
+
     match Matrix.fromMatrix Undirected matrix with
     | Ok graph ->
         Assert.Equal(3, order graph)
@@ -387,8 +395,7 @@ let ``Matrix parse and serialize`` () =
         Assert.Equal(7.0, edgeData 1 2 graph |> Option.get)
         let serialized = Matrix.serialize " " graph
         Assert.Contains("0 5 0", serialized)
-    | Error msg ->
-        Assert.Fail(msg)
+    | Error msg -> Assert.Fail(msg)
 
 // ============================================================================
 // HIGHLIGHT RENDERING TESTS
@@ -396,9 +403,16 @@ let ``Matrix parse and serialize`` () =
 
 [<Fact>]
 let ``pathToOptions highlights nodes and edges correctly`` () =
-    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addNode 3 "C" |> addEdge 1 2 1 |> addEdge 2 3 1
+    let graph =
+        empty Directed
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addNode 3 "C"
+        |> addEdge 1 2 1
+        |> addEdge 2 3 1
+
     let path = { Nodes = [ 1; 2; 3 ]; TotalWeight = 2 }
-    
+
     // Mermaid
     let mermaidOpts = Mermaid.pathToOptions path Mermaid.defaultOptions
     let mermaidStr = Mermaid.render mermaidOpts graph
@@ -415,7 +429,11 @@ let ``pathToOptions highlights nodes and edges correctly`` () =
 
 [<Fact>]
 let ``pathToMultiOptions highlights nodes and edge endpoints correctly`` () =
-    let graph = Yog.Multi.Model.empty Directed |> Yog.Multi.Model.addNode 1 "A" |> Yog.Multi.Model.addNode 2 "B"
+    let graph =
+        Yog.Multi.Model.empty Directed
+        |> Yog.Multi.Model.addNode 1 "A"
+        |> Yog.Multi.Model.addNode 2 "B"
+
     let graph = Yog.Multi.Model.addEdge 1 2 5 graph |> fst
     let path = { Nodes = [ 1; 2 ]; TotalWeight = 5 }
 
@@ -435,14 +453,15 @@ let ``pathToMultiOptions highlights nodes and edge endpoints correctly`` () =
 [<Fact>]
 let ``mstToOptions highlights spanning tree correctly`` () =
     let graph = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 5
-    let mstResult : MstResult<int> =
+
+    let mstResult: MstResult<int> =
         { Edges = [ { From = 1; To = 2; Weight = 5 } ]
           TotalWeight = 5
           NodeCount = 2
           EdgeCount = 1
           Algorithm = Kruskal
           Root = None }
-                      
+
     // Mermaid
     let mermaidOpts = Mermaid.mstToOptions mstResult Mermaid.defaultOptions
     let mermaidStr = Mermaid.render mermaidOpts graph
@@ -458,8 +477,11 @@ let ``mstToOptions highlights spanning tree correctly`` () =
 [<Fact>]
 let ``cutToOptions highlights source and sink partition correctly`` () =
     let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 5
-    let minCutResult = { SourceSide = Set.ofList [ 1 ]; SinkSide = Set.ofList [ 2 ] }
-    
+
+    let minCutResult =
+        { SourceSide = Set.ofList [ 1 ]
+          SinkSide = Set.ofList [ 2 ] }
+
     // Mermaid
     let mermaidOpts = Mermaid.cutToOptions minCutResult Mermaid.defaultOptions
     let mermaidStr = Mermaid.render mermaidOpts graph
@@ -478,7 +500,7 @@ let ``cutToOptions highlights source and sink partition correctly`` () =
 let ``matchingToOptions highlights matching edges correctly`` () =
     let graph = empty Undirected |> addNode 1 "" |> addNode 2 "" |> addEdge 1 2 1
     let matching = Map.ofList [ (1, 2); (2, 1) ]
-    
+
     // Mermaid
     let mermaidOpts = Mermaid.matchingToOptions matching Mermaid.defaultOptions
     let mermaidStr = Mermaid.render mermaidOpts graph

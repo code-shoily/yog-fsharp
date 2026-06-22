@@ -530,4 +530,3 @@ module HitsTests =
         // Node 1 is authority pointed to by 0 and 2. 0 and 2 are hubs.
         Assert.True(Map.find 1 result.Authorities > Map.find 0 result.Authorities)
         Assert.True(Map.find 0 result.Hubs > Map.find 1 result.Hubs)
-

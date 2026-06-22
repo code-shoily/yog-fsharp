@@ -35,14 +35,14 @@ let socialGraph =
     |> addNode 5 "Eve"
     |> addNode 6 "Frank"
     // Community 1: Alice, Bob, Carol (mutually connected)
-    |> addEdge 1 2 ()  // Alice → Bob
-    |> addEdge 2 3 ()  // Bob → Carol
-    |> addEdge 3 1 ()  // Carol → Alice (closes the loop)
+    |> addEdge 1 2 () // Alice → Bob
+    |> addEdge 2 3 () // Bob → Carol
+    |> addEdge 3 1 () // Carol → Alice (closes the loop)
     // Community 2: Dave, Eve (mutually connected)
-    |> addEdge 4 5 ()  // Dave → Eve
-    |> addEdge 5 4 ()  // Eve → Dave
+    |> addEdge 4 5 () // Dave → Eve
+    |> addEdge 5 4 () // Eve → Dave
     // Frank is isolated (only outgoing edge to community 1)
-    |> addEdge 6 1 ()  // Frank → Alice
+    |> addEdge 6 1 () // Frank → Alice
 
 (**
 ## Finding Communities

@@ -402,6 +402,7 @@ let deserializeWith
     : Result<Graph<'n, 'e>, string> =
 
     let separator = ","
+
     let lines =
         gdf.Split([| '\n'; '\r' |], System.StringSplitOptions.RemoveEmptyEntries)
         |> Array.map (fun l -> l.Trim())
@@ -453,8 +454,7 @@ let deserializeWith
                 g <- addNode id (nodeFolder attrs) g
 
         // Detect directed/undirected from first edge line
-        let directedColIdx =
-            edgeColumns |> List.tryFindIndex (fun c -> c = "directed")
+        let directedColIdx = edgeColumns |> List.tryFindIndex (fun c -> c = "directed")
 
         for line in edgeDataLines do
             let values = parseCsvValues separator line
@@ -471,8 +471,7 @@ let deserializeWith
                             g <- { g with Kind = Undirected }
 
                         isDirectedKnown <- true
-                    | None ->
-                        isDirectedKnown <- true
+                    | None -> isDirectedKnown <- true
 
                 let attrs = List.zip edgeColumns values |> Map.ofList
                 let node1Str = Map.find "node1" attrs

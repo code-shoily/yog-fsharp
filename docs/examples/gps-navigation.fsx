@@ -19,14 +19,14 @@ open Yog.Pathfinding.AStar
 // A graph of locations with coordinates and travel times (minutes)
 let locations =
     empty Undirected
-    |> addNode 1 (0, 0)   // Home: (x, y)
-    |> addNode 2 (5, 2)   // Coffee shop
-    |> addNode 3 (2, 8)   // Park
+    |> addNode 1 (0, 0) // Home: (x, y)
+    |> addNode 2 (5, 2) // Coffee shop
+    |> addNode 3 (2, 8) // Park
     |> addNode 4 (10, 10) // Office
-    |> addEdge 1 2 10     // Home → Coffee: 10 min
-    |> addEdge 2 3 15     // Coffee → Park: 15 min
-    |> addEdge 3 4 20     // Park → Office: 20 min
-    |> addEdge 2 4 25     // Coffee → Office (direct): 25 min
+    |> addEdge 1 2 10 // Home → Coffee: 10 min
+    |> addEdge 2 3 15 // Coffee → Park: 15 min
+    |> addEdge 3 4 20 // Park → Office: 20 min
+    |> addEdge 2 4 25 // Coffee → Office (direct): 25 min
 
 (**
 ## Heuristic Function
@@ -41,10 +41,10 @@ let heuristic (fromId: int) (toId: int) : int =
     // Simplified heuristic - estimates distance to goal (Office = node 4)
     if toId = 4 then
         match fromId with
-        | 1 -> 14  // Estimate from Home
-        | 2 -> 8   // Estimate from Coffee Shop
-        | 3 -> 5   // Estimate from Park
-        | 4 -> 0   // Already at Office
+        | 1 -> 14 // Estimate from Home
+        | 2 -> 8 // Estimate from Coffee Shop
+        | 3 -> 5 // Estimate from Park
+        | 4 -> 0 // Already at Office
         | _ -> 0
     else
         0
@@ -66,8 +66,7 @@ match aStarInt heuristic 1 4 locations with
     printfn "2. Go to Coffee Shop (node 2) - 10 min"
     printfn "3. Continue to Office (node 4) - 25 min"
     printfn "Total: 35 minutes via Coffee Shop"
-| None ->
-    printfn "No route to office found!"
+| None -> printfn "No route to office found!"
 
 (**
 ## Output

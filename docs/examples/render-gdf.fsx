@@ -80,7 +80,7 @@ let weightedGraph =
     |> addNode 2 "Boston"
     |> addNode 3 "Philadelphia"
     |> addNode 4 "Washington DC"
-    |> addEdge 1 2 215  // miles
+    |> addEdge 1 2 215 // miles
     |> addEdge 1 3 95
     |> addEdge 2 3 310
     |> addEdge 3 4 140
@@ -115,9 +115,7 @@ Export graphs with custom node and edge attributes.
 *)
 
 type Person =
-    { Name: string
-      Age: int
-      City: string }
+    { Name: string; Age: int; City: string }
 
 type Relationship =
     { Type: string
@@ -126,22 +124,45 @@ type Relationship =
 
 let customGraph =
     empty Undirected
-    |> addNode 1 { Name = "Alice"; Age = 30; City = "NYC" }
-    |> addNode 2 { Name = "Bob"; Age = 25; City = "Boston" }
-    |> addNode 3 { Name = "Charlie"; Age = 35; City = "Philly" }
-    |> addEdge 1 2 { Type = "friend"; Duration = 5; Strength = 0.8 }
-    |> addEdge 2 3 { Type = "colleague"; Duration = 2; Strength = 0.6 }
-    |> addEdge 1 3 { Type = "family"; Duration = 30; Strength = 0.95 }
+    |> addNode
+        1
+        { Name = "Alice"
+          Age = 30
+          City = "NYC" }
+    |> addNode
+        2
+        { Name = "Bob"
+          Age = 25
+          City = "Boston" }
+    |> addNode
+        3
+        { Name = "Charlie"
+          Age = 35
+          City = "Philly" }
+    |> addEdge
+        1
+        2
+        { Type = "friend"
+          Duration = 5
+          Strength = 0.8 }
+    |> addEdge
+        2
+        3
+        { Type = "colleague"
+          Duration = 2
+          Strength = 0.6 }
+    |> addEdge
+        1
+        3
+        { Type = "family"
+          Duration = 30
+          Strength = 0.95 }
 
 let nodeAttrs (p: Person) =
-    [ "label", p.Name
-      "age", string p.Age
-      "city", p.City ]
+    [ "label", p.Name; "age", string p.Age; "city", p.City ]
 
 let edgeAttrs (r: Relationship) =
-    [ "type", r.Type
-      "duration", string r.Duration
-      "strength", string r.Strength ]
+    [ "type", r.Type; "duration", string r.Duration; "strength", string r.Strength ]
 
 let customGdf = serializeWith nodeAttrs edgeAttrs defaultOptions customGraph
 

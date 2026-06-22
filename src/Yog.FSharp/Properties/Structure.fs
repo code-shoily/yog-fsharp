@@ -125,7 +125,8 @@ let isArborescence (graph: Graph<'n, 'e>) : bool =
 /// arborescence.
 let arborescenceRoot (graph: Graph<'n, 'e>) : NodeId option =
     if isArborescence graph then
-        allNodes graph |> List.tryFind (fun node -> (predecessors node graph).Length = 0)
+        allNodes graph
+        |> List.tryFind (fun node -> (predecessors node graph).Length = 0)
     else
         None
 
@@ -158,7 +159,8 @@ let isBranching (graph: Graph<'n, 'e>) : bool =
     match graph.Kind with
     | Directed ->
         let validInDegrees =
-            allNodes graph |> List.forall (fun node -> (predecessors node graph).Length <= 1)
+            allNodes graph
+            |> List.forall (fun node -> (predecessors node graph).Length <= 1)
 
         validInDegrees && Yog.Properties.Cyclicity.isAcyclic graph
     | Undirected -> false
@@ -197,8 +199,7 @@ let isRegular (k: int) (graph: Graph<'n, 'e>) : bool =
         | Undirected -> nodes |> List.forall (fun u -> (neighbors u graph).Length = k)
         | Directed ->
             nodes
-            |> List.forall (fun u ->
-                (successors u graph).Length = k && (predecessors u graph).Length = k)
+            |> List.forall (fun u -> (successors u graph).Length = k && (predecessors u graph).Length = k)
 
 /// Returns the minimum degree of the graph.
 ///
@@ -291,8 +292,7 @@ let private isClique (graph: Graph<'n, 'e>) (nodes: NodeId list) : bool =
     let rec checkPairs remaining =
         match remaining with
         | [] -> true
-        | u :: rest ->
-            rest |> List.forall (fun v -> hasEdge u v graph) && checkPairs rest
+        | u :: rest -> rest |> List.forall (fun v -> hasEdge u v graph) && checkPairs rest
 
     checkPairs nodes
 
@@ -303,8 +303,7 @@ let private isPeo (graph: Graph<'n, 'e>) (order: NodeId list) : bool =
     order
     |> List.forall (fun v ->
         let earlierNeighbors =
-            neighborIds v graph
-            |> List.filter (fun u -> pos.[u] < pos.[v])
+            neighborIds v graph |> List.filter (fun u -> pos.[u] < pos.[v])
 
         isClique graph earlierNeighbors)
 

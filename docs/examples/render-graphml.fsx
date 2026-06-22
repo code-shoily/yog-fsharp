@@ -16,7 +16,9 @@ open Yog.IO.GraphML
 // Build a small directed graph
 let graph =
     empty Directed
-    |> addNode 1 "Alice" |> addNode 2 "Bob" |> addNode 3 "Carol"
+    |> addNode 1 "Alice"
+    |> addNode 2 "Bob"
+    |> addNode 3 "Carol"
     |> addEdge 1 2 "friend"
     |> addEdge 2 3 "colleague"
     |> addEdge 1 3 "neighbor"
@@ -37,6 +39,7 @@ let loaded = deserialize xml
 printfn "\n=== Round-Trip Verification ==="
 printfn "Nodes: %d" (nodeCount loaded)
 printfn "Edges:"
+
 for src in allNodes loaded do
     for (dst, data) in successors src loaded do
         let weight = Map.tryFind "weight" data |> Option.defaultValue "?"
@@ -57,10 +60,7 @@ let team =
     |> addEdge 1 2 5
 
 let customXml =
-    serializeWith
-        (fun p -> ["name", p.Name; "role", p.Role])
-        (fun w -> ["weight", string w])
-        team
+    serializeWith (fun p -> [ "name", p.Name; "role", p.Role ]) (fun w -> [ "weight", string w ]) team
 
 printfn "\n=== Custom Attributes ==="
 printfn "%s" customXml

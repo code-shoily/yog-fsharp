@@ -54,11 +54,17 @@ let private hasEdge (src: NodeId) (dst: NodeId) (graph: Graph<'n, 'e>) : bool =
 
 /// Out-degree of a node (number of outgoing edges).
 let private outDegree (id: NodeId) (graph: Graph<'n, 'e>) : int =
-    graph.OutEdges |> Map.tryFind id |> Option.map (fun m -> m.Count) |> Option.defaultValue 0
+    graph.OutEdges
+    |> Map.tryFind id
+    |> Option.map (fun m -> m.Count)
+    |> Option.defaultValue 0
 
 /// In-degree of a node (number of incoming edges).
 let private inDegree (id: NodeId) (graph: Graph<'n, 'e>) : int =
-    graph.InEdges |> Map.tryFind id |> Option.map (fun m -> m.Count) |> Option.defaultValue 0
+    graph.InEdges
+    |> Map.tryFind id
+    |> Option.map (fun m -> m.Count)
+    |> Option.defaultValue 0
 
 /// Total degree of a node. For undirected graphs this equals the out-degree.
 let private totalDegree (id: NodeId) (graph: Graph<'n, 'e>) : int =
@@ -104,10 +110,14 @@ let private ensureNode (id: NodeId) (data: 'n) (graph: Graph<'n, 'e>) : Graph<'n
     if graph.Nodes |> Map.containsKey id then
         graph
     else
-        { graph with Nodes = graph.Nodes |> Map.add id data }
+        { graph with
+            Nodes = graph.Nodes |> Map.add id data }
 
 /// Merges two outer edge maps. Values from `other` overwrite `base` on conflict.
-let private mergeOuter (baseOuter: Map<NodeId, Map<NodeId, 'e>>) (otherOuter: Map<NodeId, Map<NodeId, 'e>>) : Map<NodeId, Map<NodeId, 'e>> =
+let private mergeOuter
+    (baseOuter: Map<NodeId, Map<NodeId, 'e>>)
+    (otherOuter: Map<NodeId, Map<NodeId, 'e>>)
+    : Map<NodeId, Map<NodeId, 'e>> =
     (baseOuter, otherOuter)
     ||> Map.fold (fun acc src inner2 ->
         match Map.tryFind src acc with
@@ -136,8 +146,7 @@ let private mergeOuter (baseOuter: Map<NodeId, Map<NodeId, 'e>>) (otherOuter: Ma
 /// - `other`: The graph to merge into the base graph.
 /// ## Returns
 /// A new graph containing the union of both graphs.
-let union (baseGraph: Graph<'n, 'e>) (other: Graph<'n, 'e>) : Graph<'n, 'e> =
-    Yog.Transform.merge baseGraph other
+let union (baseGraph: Graph<'n, 'e>) (other: Graph<'n, 'e>) : Graph<'n, 'e> = Yog.Transform.merge baseGraph other
 
 /// Returns a graph containing only nodes and edges that exist in both input graphs.
 ///
@@ -155,9 +164,7 @@ let union (baseGraph: Graph<'n, 'e>) (other: Graph<'n, 'e>) : Graph<'n, 'e> =
 let intersection (first: Graph<'n, 'e>) (second: Graph<'n, 'e>) : Graph<'n, 'e> =
     let commonIds = Set.intersect (nodeSet first) (nodeSet second)
 
-    let keptNodes =
-        first.Nodes
-        |> Map.filter (fun id _ -> Set.contains id commonIds)
+    let keptNodes = first.Nodes |> Map.filter (fun id _ -> Set.contains id commonIds)
 
     let keepEdge src dst _ = hasEdge src dst second
 
@@ -190,9 +197,7 @@ let difference (first: Graph<'n, 'e>) (second: Graph<'n, 'e>) : Graph<'n, 'e> =
     let secondIds = nodeSet second
     let keptIds = Set.difference (nodeSet first) secondIds
 
-    let keptNodes =
-        first.Nodes
-        |> Map.filter (fun id _ -> Set.contains id keptIds)
+    let keptNodes = first.Nodes |> Map.filter (fun id _ -> Set.contains id keptIds)
 
     let keepEdge src dst _ = not (hasEdge src dst second)
 
@@ -626,11 +631,13 @@ let lineGraph (defaultWeight: 'lw) (graph: Graph<'n, 'e>) : Graph<'e, 'lw> =
                 | e1 :: rest ->
                     let newAcc =
                         rest
-                        |> List.fold (fun a e2 ->
-                            if e1 <> e2 then
-                                addEdgeUnchecked e1 e2 defaultWeight a
-                            else
-                                a) acc
+                        |> List.fold
+                            (fun a e2 ->
+                                if e1 <> e2 then
+                                    addEdgeUnchecked e1 e2 defaultWeight a
+                                else
+                                    a)
+                            acc
 
                     connectPairs rest newAcc
 
@@ -656,7 +663,8 @@ let lineGraph (defaultWeight: 'lw) (graph: Graph<'n, 'e>) : Graph<'e, 'lw> =
 /// The k-th power of the input graph.
 let power (k: int) (defaultWeight: 'w) (graph: Graph<'n, 'e>) : Graph<'n, 'w> =
     if k <= 1 then
-        mapNodes (fun _ -> Unchecked.defaultof<'n>) graph |> mapEdges (fun _ -> defaultWeight)
+        mapNodes (fun _ -> Unchecked.defaultof<'n>) graph
+        |> mapEdges (fun _ -> defaultWeight)
     else
         let mutable result = mapEdges (fun _ -> defaultWeight) graph
 
@@ -699,16 +707,13 @@ let isSubgraph (potential: Graph<'n, 'e>) (container: Graph<'n, 'e>) : bool =
     let containerNodes = nodeSet container
 
     let allNodesPresent =
-        potential.Nodes
-        |> Map.forall (fun id _ -> Set.contains id containerNodes)
+        potential.Nodes |> Map.forall (fun id _ -> Set.contains id containerNodes)
 
     if not allNodesPresent then
         false
     else
         potential.OutEdges
-        |> Map.forall (fun src innerMap ->
-            innerMap
-            |> Map.forall (fun dst _ -> hasEdge src dst container))
+        |> Map.forall (fun src innerMap -> innerMap |> Map.forall (fun dst _ -> hasEdge src dst container))
 
 /// Checks if two graphs are isomorphic (structurally identical).
 ///
@@ -763,20 +768,22 @@ let isomorphic (first: Graph<'n, 'e>) (second: Graph<'n, 'e>) : bool =
 
             let rec mappingValid mapping src candidate =
                 let srcSuccs = first.OutEdges |> Map.tryFind src |> Option.defaultValue Map.empty
-                let candSuccs = second.OutEdges |> Map.tryFind candidate |> Option.defaultValue Map.empty
+
+                let candSuccs =
+                    second.OutEdges |> Map.tryFind candidate |> Option.defaultValue Map.empty
 
                 let consistentOut =
                     mapping
-                    |> Map.forall (fun s c ->
-                        Map.containsKey s srcSuccs = Map.containsKey c candSuccs)
+                    |> Map.forall (fun s c -> Map.containsKey s srcSuccs = Map.containsKey c candSuccs)
 
                 let srcPreds = first.InEdges |> Map.tryFind src |> Option.defaultValue Map.empty
-                let candPreds = second.InEdges |> Map.tryFind candidate |> Option.defaultValue Map.empty
+
+                let candPreds =
+                    second.InEdges |> Map.tryFind candidate |> Option.defaultValue Map.empty
 
                 let consistentIn =
                     mapping
-                    |> Map.forall (fun s c ->
-                        Map.containsKey s srcPreds = Map.containsKey c candPreds)
+                    |> Map.forall (fun s c -> Map.containsKey s srcPreds = Map.containsKey c candPreds)
 
                 consistentOut && consistentIn
 
@@ -787,8 +794,7 @@ let isomorphic (first: Graph<'n, 'e>) (second: Graph<'n, 'e>) : bool =
                     let srcDeg = degreeOf first src
 
                     let candidates =
-                        available
-                        |> List.filter (fun cand -> degreeOf second cand = srcDeg)
+                        available |> List.filter (fun cand -> degreeOf second cand = srcDeg)
 
                     candidates
                     |> List.exists (fun candidate ->

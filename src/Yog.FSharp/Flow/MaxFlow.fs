@@ -129,49 +129,79 @@ type FlowAlgorithm =
     | Dinic
     | PushRelabel
 
-let private bfsLevel (adjList: Dictionary<NodeId, HashSet<NodeId>>) (residuals: Dictionary<NodeId * NodeId, 'e>) (source: NodeId) (sink: NodeId) (zero: 'e) (compare: 'e -> 'e -> int) : Dictionary<NodeId, int> option =
+let private bfsLevel
+    (adjList: Dictionary<NodeId, HashSet<NodeId>>)
+    (residuals: Dictionary<NodeId * NodeId, 'e>)
+    (source: NodeId)
+    (sink: NodeId)
+    (zero: 'e)
+    (compare: 'e -> 'e -> int)
+    : Dictionary<NodeId, int> option =
     let levels = Dictionary<NodeId, int>()
     let q = Queue<NodeId>()
     q.Enqueue(source)
     levels.[source] <- 0
     let mutable reachedSink = false
+
     while q.Count > 0 && not reachedSink do
         let u = q.Dequeue()
         let uLevel = levels.[u]
         let mutable neighbors = null
+
         if adjList.TryGetValue(u, &neighbors) then
             for v in neighbors do
                 if not (levels.ContainsKey v) then
                     let cap = residuals.[(u, v)]
+
                     if compare cap zero > 0 then
                         levels.[v] <- uLevel + 1
                         q.Enqueue(v)
-                        if v = sink then reachedSink <- true
+
+                        if v = sink then
+                            reachedSink <- true
+
     if levels.ContainsKey sink then Some levels else None
 
-let rec private dfsSend (u: NodeId) (sink: NodeId) (budget: 'e) (levels: Dictionary<NodeId, int>) (ptr: Dictionary<NodeId, int>) (adjList: Dictionary<NodeId, HashSet<NodeId>>) (residuals: Dictionary<NodeId * NodeId, 'e>) (zero: 'e) (add: 'e -> 'e -> 'e) (subtract: 'e -> 'e -> 'e) (compare: 'e -> 'e -> int) (minVal: 'e -> 'e -> 'e) : 'e =
+let rec private dfsSend
+    (u: NodeId)
+    (sink: NodeId)
+    (budget: 'e)
+    (levels: Dictionary<NodeId, int>)
+    (ptr: Dictionary<NodeId, int>)
+    (adjList: Dictionary<NodeId, HashSet<NodeId>>)
+    (residuals: Dictionary<NodeId * NodeId, 'e>)
+    (zero: 'e)
+    (add: 'e -> 'e -> 'e)
+    (subtract: 'e -> 'e -> 'e)
+    (compare: 'e -> 'e -> int)
+    (minVal: 'e -> 'e -> 'e)
+    : 'e =
     if u = sink || compare budget zero = 0 then
         budget
     else
-        let neighbors = 
+        let neighbors =
             match adjList.TryGetValue(u) with
             | true, ns -> ns |> Seq.toArray
             | false, _ -> [||]
-        
+
         let mutable pushed = zero
         let mutable i = if ptr.ContainsKey u then ptr.[u] else 0
 
         while i < neighbors.Length && compare pushed zero = 0 do
             let v = neighbors.[i]
             let cap = residuals.[(u, v)]
+
             if levels.ContainsKey v && levels.[v] = levels.[u] + 1 && compare cap zero > 0 then
                 let nextBudget = minVal budget cap
-                let tr = dfsSend v sink nextBudget levels ptr adjList residuals zero add subtract compare minVal
+
+                let tr =
+                    dfsSend v sink nextBudget levels ptr adjList residuals zero add subtract compare minVal
+
                 if compare tr zero > 0 then
                     residuals.[(u, v)] <- subtract residuals.[(u, v)] tr
                     residuals.[(v, u)] <- add residuals.[(v, u)] tr
                     pushed <- tr
-            
+
             if compare pushed zero = 0 then
                 i <- i + 1
                 ptr.[u] <- i
@@ -203,15 +233,19 @@ let dinic
         let addEdge u v cap =
             residuals.[(u, v)] <- cap
             let mutable uNeighbors = null
+
             if not (adjList.TryGetValue(u, &uNeighbors)) then
                 uNeighbors <- HashSet<NodeId>()
                 adjList.[u] <- uNeighbors
+
             uNeighbors.Add(v) |> ignore
 
             let mutable vNeighbors = null
+
             if not (adjList.TryGetValue(v, &vNeighbors)) then
                 vNeighbors <- HashSet<NodeId>()
                 adjList.[v] <- vNeighbors
+
             vNeighbors.Add(u) |> ignore
 
             if not (residuals.ContainsKey((v, u))) then
@@ -230,18 +264,23 @@ let dinic
             | Some levels ->
                 let ptr = Dictionary<NodeId, int>()
                 let mutable finished = false
+
                 while not finished do
                     let mutable sourceCapSum = zero
+
                     for (_, cap) in successors source graph do
                         sourceCapSum <- add sourceCapSum cap
-                    
-                    let tr = dfsSend source sink sourceCapSum levels ptr adjList residuals zero add subtract compare minVal
+
+                    let tr =
+                        dfsSend source sink sourceCapSum levels ptr adjList residuals zero add subtract compare minVal
+
                     if compare tr zero > 0 then
                         totalFlow <- add totalFlow tr
                     else
                         finished <- true
 
         let mutGraph = Yog.Model.empty Directed
+
         let graphWithNodes =
             allNodes graph |> List.fold (fun acc n -> addNode n () acc) mutGraph
 
@@ -285,15 +324,19 @@ let pushRelabel
         let addEdge u v cap =
             residuals.[(u, v)] <- cap
             let mutable uNeighbors = null
+
             if not (adjList.TryGetValue(u, &uNeighbors)) then
                 uNeighbors <- HashSet<NodeId>()
                 adjList.[u] <- uNeighbors
+
             uNeighbors.Add(v) |> ignore
 
             let mutable vNeighbors = null
+
             if not (adjList.TryGetValue(v, &vNeighbors)) then
                 vNeighbors <- HashSet<NodeId>()
                 adjList.[v] <- vNeighbors
+
             vNeighbors.Add(u) |> ignore
 
             if not (residuals.ContainsKey((v, u))) then
@@ -305,6 +348,7 @@ let pushRelabel
 
         let height = Dictionary<NodeId, int>()
         let excess = Dictionary<NodeId, 'e>()
+
         for u in nodesList do
             height.[u] <- 0
             excess.[u] <- zero
@@ -315,14 +359,17 @@ let pushRelabel
         let inQueue = HashSet<NodeId>()
 
         let mutable sourceNeighbors = null
+
         if adjList.TryGetValue(source, &sourceNeighbors) then
             for v in sourceNeighbors do
                 let cap = residuals.[(source, v)]
+
                 if compare cap zero > 0 then
                     residuals.[(source, v)] <- zero
                     residuals.[(v, source)] <- add residuals.[(v, source)] cap
                     excess.[v] <- add excess.[v] cap
                     excess.[source] <- subtract excess.[source] cap
+
                     if v <> source && v <> sink && inQueue.Add(v) then
                         activeQueue.Enqueue(v)
 
@@ -331,37 +378,44 @@ let pushRelabel
             inQueue.Remove(u) |> ignore
 
             let mutable neighbors = null
+
             if adjList.TryGetValue(u, &neighbors) then
                 let neighborArray = neighbors |> Seq.toArray
                 let mutable neighborIdx = 0
-                
+
                 while compare excess.[u] zero > 0 && neighborIdx < neighborArray.Length do
                     let v = neighborArray.[neighborIdx]
                     let cap = residuals.[(u, v)]
+
                     if compare cap zero > 0 && height.[u] = height.[v] + 1 then
                         let flow = minVal excess.[u] cap
                         residuals.[(u, v)] <- subtract residuals.[(u, v)] flow
                         residuals.[(v, u)] <- add residuals.[(v, u)] flow
                         excess.[u] <- subtract excess.[u] flow
                         excess.[v] <- add excess.[v] flow
+
                         if v <> source && v <> sink && inQueue.Add(v) then
                             activeQueue.Enqueue(v)
+
                     neighborIdx <- neighborIdx + 1
 
                 if compare excess.[u] zero > 0 then
                     let mutable minHeight = System.Int32.MaxValue
+
                     for v in neighbors do
                         let cap = residuals.[(u, v)]
+
                         if compare cap zero > 0 then
                             minHeight <- min minHeight height.[v]
-                    
+
                     if minHeight <> System.Int32.MaxValue then
                         height.[u] <- minHeight + 1
-                    
+
                     if inQueue.Add(u) then
                         activeQueue.Enqueue(u)
 
         let mutGraph = Yog.Model.empty Directed
+
         let graphWithNodes =
             allNodes graph |> List.fold (fun acc n -> addNode n () acc) mutGraph
 
@@ -638,5 +692,10 @@ let pushRelabelFloat (source: NodeId) (sink: NodeId) (graph: Graph<'n, float>) :
     pushRelabel 0.0 (+) (-) compare min source sink graph
 
 /// Finds maximum flow with float capacities using the specified algorithm.
-let maxFlowFloat (source: NodeId) (sink: NodeId) (algorithm: FlowAlgorithm) (graph: Graph<'n, float>) : MaxFlowResult<float> =
+let maxFlowFloat
+    (source: NodeId)
+    (sink: NodeId)
+    (algorithm: FlowAlgorithm)
+    (graph: Graph<'n, float>)
+    : MaxFlowResult<float> =
     maxFlow 0.0 (+) (-) compare min source sink algorithm graph

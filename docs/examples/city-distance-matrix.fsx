@@ -31,10 +31,10 @@ let cities =
     |> addNode 2 "Paris"
     |> addNode 3 "Berlin"
     |> addNode 4 "Rome"
-    |> addEdge 1 2 344    // London ↔ Paris: 344 km
-    |> addEdge 2 3 878    // Paris ↔ Berlin: 878 km
-    |> addEdge 3 4 1184   // Berlin ↔ Rome: 1184 km
-    |> addEdge 2 4 1105   // Paris ↔ Rome: 1105 km
+    |> addEdge 1 2 344 // London ↔ Paris: 344 km
+    |> addEdge 2 3 878 // Paris ↔ Berlin: 878 km
+    |> addEdge 3 4 1184 // Berlin ↔ Rome: 1184 km
+    |> addEdge 2 4 1105 // Paris ↔ Rome: 1105 km
 
 (**
 ## Computing All-Pairs Shortest Paths
@@ -57,18 +57,14 @@ match floydWarshallInt cities with
     printfn ""
 
     // Create a list of all city pairs to display
-    let cityPairs = [
-        (1, "London"); (2, "Paris"); (3, "Berlin"); (4, "Rome")
-    ]
+    let cityPairs = [ (1, "London"); (2, "Paris"); (3, "Berlin"); (4, "Rome") ]
 
     for (fromId, fromName) in cityPairs do
         for (toId, toName) in cityPairs do
             if fromId < toId then
                 match distances |> Map.tryFind (fromId, toId) with
-                | Some dist ->
-                    printfn "%s to %s: %d km" fromName toName dist
-                | None ->
-                    printfn "%s to %s: No path" fromName toName
+                | Some dist -> printfn "%s to %s: %d km" fromName toName dist
+                | None -> printfn "%s to %s: No path" fromName toName
 
     printfn ""
     printfn "=== Interesting Insights ==="
@@ -80,8 +76,7 @@ match floydWarshallInt cities with
         printfn "London to Rome shortest distance: %d km" dist
         printfn "  Direct path not available, but can go through Paris!"
         printfn "  Route: London → Paris → Rome"
-    | None ->
-        printfn "No path from London to Rome"
+    | None -> printfn "No path from London to Rome"
 
     // London to Berlin
     match distances |> Map.tryFind (1, 3) with
@@ -93,8 +88,7 @@ match floydWarshallInt cities with
         printfn ""
         printfn "No path from London to Berlin"
 
-| Error () ->
-    printfn "Error: Negative cycle detected in the graph!"
+| Error() -> printfn "Error: Negative cycle detected in the graph!"
 
 (**
 ## Why Floyd-Warshall?

@@ -551,11 +551,7 @@ let ``updateNode updates data correctly`` () =
 
 [<Fact>]
 let ``updateEdge updates weight correctly`` () =
-    let graph =
-        empty Directed
-        |> addNode 1 "A"
-        |> addNode 2 "B"
-        |> addEdge 1 2 10
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
 
     let updated = updateEdge 1 2 0 (fun w -> w + 5) graph
     Assert.Equal(Some 15, edgeData 1 2 updated)
@@ -658,8 +654,14 @@ let ``normalizeNodeIds maps to sequential range`` () =
 let ``egoGraph extracts subgraph within radius`` () =
     let graph =
         empty Directed
-        |> addNode 1 "A" |> addNode 2 "B" |> addNode 3 "C" |> addNode 4 "D"
-        |> addEdge 1 2 1 |> addEdge 2 3 1 |> addEdge 3 4 1
+        |> addNode 1 "A"
+        |> addNode 2 "B"
+        |> addNode 3 "C"
+        |> addNode 4 "D"
+        |> addEdge 1 2 1
+        |> addEdge 2 3 1
+        |> addEdge 3 4 1
+
     let ego = egoGraph 1 2 Successors graph
     Assert.Equal(3, order ego)
     Assert.True(hasNode 1 ego)
@@ -671,13 +673,17 @@ let ``egoGraph extracts subgraph within radius`` () =
 let ``quotientGraph contracts partition blocks`` () =
     let graph =
         empty Directed
-        |> addNode 1 10 |> addNode 2 20 |> addNode 3 30 |> addNode 4 40
-        |> addEdge 1 3 1 |> addEdge 2 3 1 |> addEdge 3 4 1
+        |> addNode 1 10
+        |> addNode 2 20
+        |> addNode 3 30
+        |> addNode 4 40
+        |> addEdge 1 3 1
+        |> addEdge 2 3 1
+        |> addEdge 3 4 1
+
     let partition = Map.ofList [ (1, 100); (2, 100); (3, 200); (4, 200) ]
     let q = quotientGraph partition (+) (+) graph
     Assert.Equal(2, order q)
     Assert.Equal(Some 30, node 100 q)
     Assert.Equal(Some 70, node 200 q)
     Assert.Equal(Some 2, edgeData 100 200 q)
-
-

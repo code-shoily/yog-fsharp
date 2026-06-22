@@ -47,24 +47,24 @@ printfn "  Dave (4): Qualified for Project Manager (7), Designer (8)\n"
 let network =
     empty Directed
     // Source to candidates (capacity 1 - each candidate can take one job)
-    |> addEdge 0 1 1  // Source → Alice
-    |> addEdge 0 2 1  // Source → Bob
-    |> addEdge 0 3 1  // Source → Carol
-    |> addEdge 0 4 1  // Source → Dave
+    |> addEdge 0 1 1 // Source → Alice
+    |> addEdge 0 2 1 // Source → Bob
+    |> addEdge 0 3 1 // Source → Carol
+    |> addEdge 0 4 1 // Source → Dave
     // Candidate qualifications (who can do which job)
-    |> addEdge 1 5 1  // Alice → Software Engineer
-    |> addEdge 1 6 1  // Alice → Data Analyst
-    |> addEdge 2 5 1  // Bob → Software Engineer
-    |> addEdge 2 7 1  // Bob → Project Manager
-    |> addEdge 3 6 1  // Carol → Data Analyst
-    |> addEdge 3 8 1  // Carol → Designer
-    |> addEdge 4 7 1  // Dave → Project Manager
-    |> addEdge 4 8 1  // Dave → Designer
+    |> addEdge 1 5 1 // Alice → Software Engineer
+    |> addEdge 1 6 1 // Alice → Data Analyst
+    |> addEdge 2 5 1 // Bob → Software Engineer
+    |> addEdge 2 7 1 // Bob → Project Manager
+    |> addEdge 3 6 1 // Carol → Data Analyst
+    |> addEdge 3 8 1 // Carol → Designer
+    |> addEdge 4 7 1 // Dave → Project Manager
+    |> addEdge 4 8 1 // Dave → Designer
     // Jobs to sink (capacity 1 - each job needs one person)
-    |> addEdge 5 9 1  // Software Engineer → Sink
-    |> addEdge 6 9 1  // Data Analyst → Sink
-    |> addEdge 7 9 1  // Project Manager → Sink
-    |> addEdge 8 9 1  // Designer → Sink
+    |> addEdge 5 9 1 // Software Engineer → Sink
+    |> addEdge 6 9 1 // Data Analyst → Sink
+    |> addEdge 7 9 1 // Project Manager → Sink
+    |> addEdge 8 9 1 // Designer → Sink
 
 (**
 ## Finding Maximum Matching

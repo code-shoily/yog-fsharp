@@ -20,15 +20,19 @@ open Yog.Connectivity
 // Network: 0=HQ, 1=DataCenter, 2=Lab, 3=Office, 4=Remote, 5=Backup
 let network =
     empty Undirected
-    |> addNode 0 "HQ"     |> addNode 1 "DataCenter" |> addNode 2 "Lab"
-    |> addNode 3 "Office"  |> addNode 4 "Remote"     |> addNode 5 "Backup"
-    |> addEdge 0 1 1  // HQ - DataCenter
-    |> addEdge 1 2 1  // DataCenter - Lab
-    |> addEdge 0 2 1  // HQ - Lab (redundant link)
-    |> addEdge 1 3 1  // DataCenter - Office (bridge!)
-    |> addEdge 3 4 1  // Office - Remote
-    |> addEdge 3 5 1  // Office - Backup
-    |> addEdge 4 5 1  // Remote - Backup (redundant)
+    |> addNode 0 "HQ"
+    |> addNode 1 "DataCenter"
+    |> addNode 2 "Lab"
+    |> addNode 3 "Office"
+    |> addNode 4 "Remote"
+    |> addNode 5 "Backup"
+    |> addEdge 0 1 1 // HQ - DataCenter
+    |> addEdge 1 2 1 // DataCenter - Lab
+    |> addEdge 0 2 1 // HQ - Lab (redundant link)
+    |> addEdge 1 3 1 // DataCenter - Office (bridge!)
+    |> addEdge 3 4 1 // Office - Remote
+    |> addEdge 3 5 1 // Office - Backup
+    |> addEdge 4 5 1 // Remote - Backup (redundant)
 
 (**
 ## Running the Analysis
@@ -38,10 +42,12 @@ let results = analyze network
 
 printfn "=== Network Vulnerability Analysis ==="
 printfn "\nBridges (critical links):"
+
 for (a, b) in results.Bridges do
     printfn "  Link %d <-> %d" a b
 
 printfn "\nArticulation Points (critical routers):"
+
 for node in results.ArticulationPoints do
     let name = network.Nodes.TryFind node |> Option.defaultValue "?"
     printfn "  %s (node %d)" name node
