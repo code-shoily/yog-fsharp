@@ -1137,6 +1137,53 @@ module IoPropertyTests =
         }
         |> Property.checkBool
 
+    [<Fact>]
+    let ``List toList - fromList roundtrip preserves structure`` () =
+        property {
+            let! g = smallGraphGen
+            let listRep = Yog.IO.List.toList g
+
+            let parsed =
+                Yog.IO.List.fromList g.Kind (listRep |> Seq.map (fun (id, nbrs) -> (id, nbrs |> Seq.ofList)))
+
+            let expected = Yog.Transform.mapNodes (fun _ -> ()) g
+
+            return
+                parsed.Kind = expected.Kind
+                && parsed.Nodes = expected.Nodes
+                && parsed.OutEdges = expected.OutEdges
+        }
+        |> Property.checkBool
+
+    [<Fact>]
+    let ``Edgelist serialize-parse roundtrip preserves counts`` () =
+        property {
+            let! g = smallGraphGen
+            let gFloat = Yog.Transform.mapEdges float g
+            let serialized = Yog.IO.Edgelist.serialize false gFloat
+
+            match Yog.IO.Edgelist.parse gFloat.Kind false serialized with
+            | Ok parsed -> return order parsed = order g && edgeCount parsed = edgeCount g
+            | Error _ -> return false
+        }
+        |> Property.checkBool
+
+    [<Fact>]
+    let ``Edgelist toEdges - fromEdges roundtrip preserves structure`` () =
+        property {
+            let! g = smallGraphGen
+            let edges = Yog.IO.Edgelist.toEdges g
+            let parsed = Yog.IO.Edgelist.fromEdges g.Kind edges
+            let expected = Yog.Transform.mapNodes (fun _ -> ()) g
+
+            return
+                parsed.Kind = expected.Kind
+                && parsed.Nodes = expected.Nodes
+                && parsed.OutEdges = expected.OutEdges
+        }
+        |> Property.checkBool
+
+
 
 // =============================================================================
 // CUSTOM GRAPH SHRINKER
