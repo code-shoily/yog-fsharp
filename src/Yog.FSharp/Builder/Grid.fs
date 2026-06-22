@@ -126,11 +126,11 @@ module Grid =
     /// Named after the knight in chess, which jumps in an L-shape
     /// (2 squares in one direction, 1 square perpendicular).
     ///
-    ///     . ♞ . ♞ .
-    ///     ♞ . . . ♞
-    ///     . . · . .
-    ///     ♞ . . . ♞
-    ///     . ♞ . ♞ .
+    ///     // . ♞ . ♞ .
+    ///     // ♞ . . . ♞
+    ///     // . . · . .
+    ///     // ♞ . . . ♞
+    ///     // . ♞ . ♞ .
     ///
     let knight =
         [ (-2, -1); (-2, 1); (-1, -2); (-1, 2); (1, -2); (1, 2); (2, -1); (2, 1) ]
