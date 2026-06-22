@@ -36,29 +36,29 @@ type Grid<'CellData, 'EdgeData> =
 ///
 /// **Rook (4-way cardinal):**
 ///
-///     . ↑ .
-///     ← · →
-///     . ↓ .
+///     // . ↑ .
+///     // ← · →
+///     // . ↓ .
 ///
 /// **Bishop (4-way diagonal):**
 ///
-///     ↖ . ↗
-///     . · .
-///     ↙ . ↘
+///     // ↖ . ↗
+///     // . · .
+///     // ↙ . ↘
 ///
 /// **Queen (8-way):**
 ///
-///     ↖ ↑ ↗
-///     ← · →
-///     ↙ ↓ ↘
+///     // ↖ ↑ ↗
+///     // ← · →
+///     // ↙ ↓ ↘
 ///
 /// **Knight (L-shaped):**
 ///
-///     . ♞ . ♞ .
-///     ♞ . . . ♞
-///     . . · . .
-///     ♞ . . . ♞
-///     . ♞ . ♞ .
+///     // . ♞ . ♞ .
+///     // ♞ . . . ♞
+///     // . . · . .
+///     // ♞ . . . ♞
+///     // . ♞ . ♞ .
 ///
 /// ## Example Usage
 ///
@@ -95,9 +95,9 @@ module Grid =
     ///
     /// Named after the rook in chess, which moves along ranks and files.
     ///
-    ///     . ↑ .
-    ///     ← · →
-    ///     . ↓ .
+    ///     // . ↑ .
+    ///     // ← · →
+    ///     // . ↓ .
     ///
     let rook = [ (-1, 0); (1, 0); (0, -1); (0, 1) ]
 
@@ -105,9 +105,9 @@ module Grid =
     ///
     /// Named after the bishop in chess, which moves along diagonals.
     ///
-    ///     ↖ . ↗
-    ///     . · .
-    ///     ↙ . ↘
+    ///     // ↖ . ↗
+    ///     // . · .
+    ///     // ↙ . ↘
     ///
     let bishop = [ (-1, -1); (-1, 1); (1, -1); (1, 1) ]
 
@@ -115,9 +115,9 @@ module Grid =
     ///
     /// Named after the queen in chess, which combines rook and bishop movement.
     ///
-    ///     ↖ ↑ ↗
-    ///     ← · →
-    ///     ↙ ↓ ↘
+    ///     // ↖ ↑ ↗
+    ///     // ← · →
+    ///     // ↙ ↓ ↘
     ///
     let queen = [ (-1, -1); (-1, 0); (-1, 1); (0, -1); (0, 1); (1, -1); (1, 0); (1, 1) ]
 
@@ -188,13 +188,11 @@ module Grid =
         let cols = Array2D.length2 gridData
         let mutable g = empty kind
 
-        // 1. Add all nodes
         for r in 0 .. rows - 1 do
             for c in 0 .. cols - 1 do
                 let id = coordToId r c cols
                 g <- addNode id gridData.[r, c] g
 
-        // 2. Add edges based on topology
         for r in 0 .. rows - 1 do
             for c in 0 .. cols - 1 do
                 let fromId = coordToId r c cols
