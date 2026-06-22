@@ -1115,6 +1115,9 @@ module PathfindingPropertyTests =
     open Hedgehog.FSharp
     open Yog.Pathfinding.Utils
 
+    let checkBool300 =
+        Property.checkBoolWith (PropertyConfig.withTests 300<tests> PropertyConfig.defaults)
+
     [<Fact>]
     let ``Dijkstra distance is non-negative for non-negative weights`` () =
         property {
@@ -1149,7 +1152,7 @@ module PathfindingPropertyTests =
             | None, None -> return true
             | _ -> return false
         }
-        |> Property.checkBool
+        |> checkBool300
 
     [<Fact>]
     let ``BellmanFord agrees with Dijkstra on non-negative weights`` () =
@@ -1167,7 +1170,7 @@ module PathfindingPropertyTests =
             | NoPath, None -> return true
             | _ -> return false
         }
-        |> Property.checkBool
+        |> checkBool300
 
     [<Fact>]
     let ``FloydWarshall satisfies triangle inequality`` () =

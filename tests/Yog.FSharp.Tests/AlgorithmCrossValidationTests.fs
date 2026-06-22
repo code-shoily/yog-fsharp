@@ -1,4 +1,4 @@
-module Yog.FSharp.Tests.AlgorithmPropertyTests
+module Yog.FSharp.Tests.AlgorithmCrossValidationTests
 
 
 open Xunit

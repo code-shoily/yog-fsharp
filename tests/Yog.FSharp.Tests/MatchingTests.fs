@@ -188,3 +188,82 @@ module BlossomTests =
         Assert.Equal(10, matching.Count)
         for n in 0 .. 9 do
             Assert.True(matching.ContainsKey(n))
+
+
+// =============================================================================
+// MATCHING PROPERTY TESTS
+// =============================================================================
+
+module MatchingPropertyTests =
+    open Hedgehog
+    open Hedgehog.FSharp
+    open Yog.Properties.Bipartite
+
+    /// Generates a random bipartite graph with disjoint left/right partitions.
+    let bipartiteGraphGen : Gen<Graph<unit, float>> =
+        gen {
+            let! leftSize = Gen.int32 (Range.linear 0 8)
+            let! rightSize = Gen.int32 (Range.linear 0 8)
+            let left = [ 0 .. leftSize - 1 ]
+            let right = [ leftSize .. leftSize + rightSize - 1 ]
+
+            let g =
+                (empty Undirected)
+                |> fun g -> left |> List.fold (fun acc n -> addNode n () acc) g
+                |> fun g -> right |> List.fold (fun acc n -> addNode n () acc) g
+
+            let possibleEdges = [ for u in left do for v in right -> (u, v) ]
+
+            let! includeEdge =
+                Gen.array (Range.constant possibleEdges.Length possibleEdges.Length) Gen.bool
+
+            let chosen =
+                possibleEdges
+                |> List.zip (includeEdge |> Array.toList)
+                |> List.filter fst
+                |> List.map snd
+
+            return chosen |> List.fold (fun acc (u, v) -> addEdge u v 1.0 acc) g
+        }
+
+    let private toUnorderedEdges (m: Map<NodeId, NodeId>) =
+        m
+        |> Map.toSeq
+        |> Seq.map (fun (u, v) -> if u < v then (u, v) else (v, u))
+        |> Set.ofSeq
+
+    let private isVertexDisjoint (m: Map<NodeId, NodeId>) =
+        let edges = toUnorderedEdges m |> Set.toList
+        let endpoints = edges |> List.collect (fun (u, v) -> [ u; v ])
+        List.length endpoints = (List.length edges * 2)
+
+    let private allMatchedEdgesExist (graph: Graph<unit, float>) (m: Map<NodeId, NodeId>) =
+        toUnorderedEdges m |> Set.forall (fun (u, v) -> hasEdge u v graph)
+
+    [<Fact>]
+    let ``blossom matching is vertex-disjoint and edges exist`` () =
+        property {
+            let! g = bipartiteGraphGen
+            let m = blossomMaximumMatching g
+            return isVertexDisjoint m && allMatchedEdgesExist g m
+        }
+        |> Property.checkBool
+
+    [<Fact>]
+    let ``hopcroft-karp matching is vertex-disjoint and edges exist`` () =
+        property {
+            let! g = bipartiteGraphGen
+            let m = hopcroftKarp g
+            return isVertexDisjoint m && allMatchedEdgesExist g m
+        }
+        |> Property.checkBool
+
+    [<Fact>]
+    let ``blossom and hopcroft-karp agree on matching size for bipartite graphs`` () =
+        property {
+            let! g = bipartiteGraphGen
+            let blossom = blossomMaximumMatching g
+            let hk = hopcroftKarp g
+            return blossom.Count = hk.Count
+        }
+        |> Property.checkBool

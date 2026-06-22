@@ -6,9 +6,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="PropertyTests.fs" />
-        <Compile Include="AggressivePropertyTests.fs" />
-        <Compile Include="AlgorithmPropertyTests.fs" />
+        <Compile Include="GraphInvariantTests.fs" />
+        <Compile Include="GraphEdgeCaseTests.fs" />
+        <Compile Include="AlgorithmCrossValidationTests.fs" />
         <Compile Include="PbtParityTests.fs" />
         <Compile Include="ModelTests.fs" />
         <Compile Include="TransformTests.fs" />

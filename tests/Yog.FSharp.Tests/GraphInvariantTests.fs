@@ -1,4 +1,4 @@
-module Yog.FSharp.Tests.PropertyTests
+module Yog.FSharp.Tests.GraphInvariantTests
 
 
 open Xunit

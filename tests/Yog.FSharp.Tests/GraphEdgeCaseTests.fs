@@ -1,4 +1,4 @@
-module Yog.FSharp.Tests.AggressivePropertyTests
+module Yog.FSharp.Tests.GraphEdgeCaseTests
 
 
 open Xunit

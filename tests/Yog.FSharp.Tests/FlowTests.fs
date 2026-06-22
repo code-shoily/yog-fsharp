@@ -354,6 +354,74 @@ module MaxFlowPropertyTests =
         }
         |> Property.checkBool
 
+    /// Generates a directed flow network with positive capacities together with a
+    /// source and sink node.
+    let flowNetworkGen : Gen<Graph<unit, int> * NodeId * NodeId> =
+        gen {
+            let! n = Gen.int32 (Range.linear 2 12)
+            let maxEdges = n * (n - 1)
+            let! edgeCount = Gen.int32 (Range.constant 0 (min maxEdges 30))
+
+            let g =
+                [ 0 .. n - 1 ]
+                |> List.fold (fun acc node -> addNode node () acc) (empty Directed)
+
+            let! edges =
+                Gen.array (Range.constant edgeCount edgeCount) (
+                    gen {
+                        let! u = Gen.int32 (Range.constant 0 (n - 1))
+                        let! v = Gen.int32 (Range.constant 0 (n - 1))
+                        let! c = Gen.int32 (Range.linear 1 100)
+                        return (u, v, c)
+                    }
+                )
+
+            let g =
+                edges
+                |> Array.toList
+                |> List.filter (fun (u, v, _) -> u <> v)
+                |> List.fold (fun acc (u, v, c) -> addEdge u v c acc) g
+
+            let! s = Gen.int32 (Range.constant 0 (n - 1))
+            let! t = Gen.int32 (Range.constant 0 (n - 1))
+            return (g, s, t)
+        }
+
+    let private originalCap u v (g: Graph<unit, int>) = edgeData u v g |> Option.defaultValue 0
+    let private residualCap u v (r: MaxFlowResult<int>) = edgeData u v r.ResidualGraph |> Option.defaultValue 0
+    let private flowOn u v g r = originalCap u v g - residualCap u v r
+
+    let private netOutflow g r n =
+        allNodes g
+        |> List.sumBy (fun v -> flowOn n v g r - flowOn v n g r)
+
+    [<Fact>]
+    let ``flow conservation holds at intermediate nodes`` () =
+        property {
+            let! g, s, t = flowNetworkGen
+            if s = t then
+                return true
+            else
+                let result = edmondsKarpInt s t g
+                let nodes = allNodes g
+
+                return
+                    nodes
+                    |> List.forall (fun n -> n = s || n = t || netOutflow g result n = 0)
+        }
+        |> Property.checkBool
+
+    [<Fact>]
+    let ``Edmonds-Karp Dinic and Push-Relabel agree on max flow value`` () =
+        property {
+            let! g, s, t = flowNetworkGen
+            let ek = edmondsKarpInt s t g
+            let dn = dinicInt s t g
+            let pr = pushRelabelInt s t g
+            return ek.MaxFlow = dn.MaxFlow && dn.MaxFlow = pr.MaxFlow
+        }
+        |> Property.checkBool
+
 module MaxFlowAlgorithmAgreementTests =
     open MaxFlowTests
 
