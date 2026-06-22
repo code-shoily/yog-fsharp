@@ -301,6 +301,6 @@ module Grid =
     /// Gets the cell data at the specified grid coordinate.
     let getCell row col grid =
         if row >= 0 && row < grid.Rows && col >= 0 && col < grid.Cols then
-            Some(Map.find (coordToId row col grid.Cols) grid.Graph.Nodes)
+            Map.tryFind (coordToId row col grid.Cols) grid.Graph.Nodes
         else
             None

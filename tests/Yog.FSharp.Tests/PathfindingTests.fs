@@ -99,6 +99,19 @@ module DijkstraTests =
         Assert.Equal(6, result.[2]) // Via 1: 5+1=6
 
     [<Fact>]
+    let ``Dijkstra widestPath - finds path with maximum bottleneck capacity`` () =
+        // 0 --100--> 1 --80--> 3
+        // 0 --50--> 2 --200--> 3
+        // widest path is 0->1->3 with capacity 80 (since min(100, 80) = 80 > min(50, 200) = 50)
+        let graph = makeWeightedGraph [ (0, 1, 100); (0, 2, 50); (1, 3, 80); (2, 3, 200) ]
+
+        let result = widestPathInt 0 3 graph
+
+        Assert.True(result.IsSome)
+        Assert.Equal<int list>([ 0; 1; 3 ], result.Value.Nodes)
+        Assert.Equal(80, result.Value.TotalWeight)
+
+    [<Fact>]
     let ``Dijkstra singleSourceDistances - unreachable nodes not in result`` () =
         let graph = makeWeightedGraph [ (0, 1, 5) ] |> addNode 2 ()
         let result = singleSourceDistancesInt 0 graph

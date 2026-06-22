@@ -85,6 +85,72 @@ let shortestPath
 
     result
 
+/// Finds the widest path (maximum capacity path) between two nodes.
+/// The widest path maximizes the minimum edge weight along the path (the bottleneck).
+/// Standard Dijkstra: distance[v] = min(distance[u] + weight(u,v))
+/// Widest Path: capacity[v] = max(capacity[v], min(capacity[u], weight(u,v)))
+let widestPath
+    (zero: 'e)
+    (infinity: 'e)
+    (compare: 'e -> 'e -> int)
+    (minCapacity: 'e -> 'e -> 'e)
+    (start: NodeId)
+    (goal: NodeId)
+    (graph: Graph<'n, 'e>)
+    : Path<'e> option =
+    if start = goal then
+        Some
+            { Nodes = [ start ]
+              TotalWeight = infinity }
+    else
+        // We want a max-priority queue (highest bottleneck first)
+        // Hence, compare b a to reverse the min-heap to a max-heap
+        let comparer =
+            { new IComparer<'e> with
+                member _.Compare(a, b) = compare b a }
+
+        let pq = PriorityQueue<'e * NodeId list, 'e>(comparer)
+        let capacities = Dictionary<NodeId, 'e>()
+
+        pq.Enqueue((infinity, [ start ]), infinity)
+        capacities.[start] <- infinity
+
+        let mutable result = None
+        let mutable found = false
+
+        while pq.Count > 0 && not found do
+            let (cap, path) = pq.Dequeue()
+            let current = List.head path
+
+            let mutable bestKnown = zero
+
+            if capacities.TryGetValue(current, &bestKnown) && compare cap bestKnown < 0 then
+                ()
+            elif current = goal then
+                result <-
+                    Some
+                        { Nodes = List.rev path
+                          TotalWeight = cap }
+
+                found <- true
+            else
+                for (nextId, weight) in successors current graph do
+                    let nextCap = minCapacity cap weight
+                    let mutable nextBestKnown = zero
+
+                    if
+                        not (capacities.TryGetValue(nextId, &nextBestKnown))
+                        || compare nextCap nextBestKnown > 0
+                    then
+                        capacities.[nextId] <- nextCap
+                        pq.Enqueue((nextCap, nextId :: path), nextCap)
+
+        result
+
+/// Finds the widest path using integer capacities.
+let widestPathInt (start: NodeId) (goal: NodeId) (graph: Graph<'n, int>) : Path<int> option =
+    widestPath System.Int32.MinValue System.Int32.MaxValue compare min start goal graph
+
 /// Computes shortest distances from a source node to all reachable nodes.
 /// Returns a Map of each reachable node to its shortest distance.
 let singleSourceDistances

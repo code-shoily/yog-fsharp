@@ -66,6 +66,8 @@ let transpose (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
         OutEdges = graph.InEdges
         InEdges = graph.OutEdges }
 
+
+
 /// Transforms node data using a function, preserving graph structure.
 ///
 /// This is a functor operation - it applies a function to every node's data

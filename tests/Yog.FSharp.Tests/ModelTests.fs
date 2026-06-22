@@ -575,3 +575,32 @@ let ``tryAddEdges bulk safe monadic functions work`` () =
     match tryAddEdges [ (1, 2, 10); (2, 4, 20) ] graph with
     | Ok _ -> Assert.True(false, "Should fail because 4 does not exist")
     | Error err -> Assert.Contains("4", err)
+
+[<Fact>]
+let ``addNodesFrom and addNodesFromKeys adds multiple nodes correctly`` () =
+    let graph = empty Directed |> addNodesFrom [ (1, "A"); (2, "B") ]
+    Assert.Equal(2, order graph)
+    Assert.Equal(Some "A", node 1 graph)
+
+    let graph2 = empty Directed |> addNodesFromKeys [ 1; 2 ] "Default"
+    Assert.Equal(2, order graph2)
+    Assert.Equal(Some "Default", node 1 graph2)
+
+[<Fact>]
+let ``inDegree, outDegree, and degree work correctly for directed and undirected`` () =
+    let graph = empty Directed |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
+    Assert.Equal(1, outDegree 1 graph)
+    Assert.Equal(0, inDegree 1 graph)
+    Assert.Equal(1, degree 1 graph)
+    Assert.Equal(0, outDegree 2 graph)
+    Assert.Equal(1, inDegree 2 graph)
+    Assert.Equal(1, degree 2 graph)
+
+    let undir = empty Undirected |> addNode 1 "A" |> addNode 2 "B" |> addEdge 1 2 10
+    Assert.Equal(1, outDegree 1 undir)
+    Assert.Equal(1, inDegree 1 undir)
+    Assert.Equal(1, degree 1 undir)
+
+    // With self-loop in undirected
+    let undirSelf = empty Undirected |> addNode 1 "A" |> addEdgeEnsured 1 1 10 "A" "A"
+    Assert.Equal(2, degree 1 undirSelf)

@@ -118,6 +118,16 @@ module GridBuilderTests =
         Assert.True((Grid.getCell -1 0 grid).IsNone)
 
     [<Fact>]
+    let ``Grid getCell with missing nodes in graph`` () =
+        // Create a grid result where some nodes are missing from the graph
+        let graph = empty Directed |> addNode 0 "A"
+        let grid = { Graph = graph; Rows = 2; Cols = 2 }
+
+        Assert.Equal(Some "A", Grid.getCell 0 0 grid)
+        // (0, 1) -> ID 1 is not in graph
+        Assert.Equal(None, Grid.getCell 0 1 grid)
+
+    [<Fact>]
     let ``Grid.toGraph - extracts graph`` () =
         let data = array2D [ [ 1; 2 ]; [ 3; 4 ] ]
         let grid = Grid.fromArray2D data Directed Grid.rook Grid.always
@@ -269,6 +279,25 @@ module ToroidalBuilderTests =
         let succs = successors 0 (Toroidal.toGraph grid) |> List.map fst |> Set.ofList
         let expected = Set.ofList [ 1; 2; 3; 6 ]
         Assert.Equal<int Set>(expected, succs)
+
+    [<Fact>]
+    let ``Toroidal Grid conversions and getters`` () =
+        let data = [ [ 1; 2; 3 ]; [ 4; 5; 6 ]; [ 7; 8; 9 ] ]
+        let grid = Toroidal.from2DList data Directed Toroidal.always
+
+        let gridGraph = Toroidal.toGrid grid
+        Assert.Equal(3, gridGraph.Rows)
+        Assert.Equal(3, gridGraph.Cols)
+
+        let rawGraph = Toroidal.toGraph grid
+        Assert.Equal(9, nodeCount rawGraph)
+
+        Assert.Equal(3, Toroidal.rows grid)
+        Assert.Equal(3, Toroidal.cols grid)
+
+        // coordinate conversions
+        Assert.Equal(6, Toroidal.coordToId 1 2 4)
+        Assert.Equal((1, 2), Toroidal.idToCoord 6 4)
 
     [<Fact>]
     let ``Toroidal distance calculations`` () =

@@ -60,6 +60,14 @@ let addNode (id: NodeId) (data: 'n) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
     { graph with
         Nodes = graph.Nodes |> Map.add id data }
 
+/// Adds multiple nodes to the graph from a sequence of IDs or ID-data pairs.
+let addNodesFrom (nodesSeq: seq<NodeId * 'n>) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
+    nodesSeq |> Seq.fold (fun g (id, data) -> addNode id data g) graph
+
+/// Adds multiple nodes from a sequence of raw IDs without data (defaulting to a provided value).
+let addNodesFromKeys (nodesSeq: seq<NodeId>) (defaultData: 'n) (graph: Graph<'n, 'e>) : Graph<'n, 'e> =
+    nodesSeq |> Seq.fold (fun g id -> addNode id defaultData g) graph
+
 /// Helper function to add a directed edge using Map.change
 let private doAddDirectedEdge src dst weight (graph: Graph<'n, 'e>) =
     let addOrUpdate key mapOpt =
@@ -204,6 +212,39 @@ let predecessors (id: NodeId) (graph: Graph<'n, 'e>) : list<NodeId * 'e> =
 /// ## Returns
 /// A list of predecessor node IDs.
 let predecessorIds (node: NodeId) (graph: Graph<'n, 'e>) : NodeId list = predecessors node graph |> List.map fst
+
+/// Returns the out-degree of a node (number of outgoing edges).
+/// For undirected graphs, this returns the total degree (same as `inDegree`).
+/// **Time Complexity:** O(1)
+let outDegree (id: NodeId) (graph: Graph<'n, 'e>) : int =
+    graph.OutEdges
+    |> Map.tryFind id
+    |> Option.map (fun m -> m.Count)
+    |> Option.defaultValue 0
+
+/// Returns the in-degree of a node (number of incoming edges).
+/// For undirected graphs, this returns the total degree (same as `outDegree`).
+/// **Time Complexity:** O(1)
+let inDegree (id: NodeId) (graph: Graph<'n, 'e>) : int =
+    graph.InEdges
+    |> Map.tryFind id
+    |> Option.map (fun m -> m.Count)
+    |> Option.defaultValue 0
+
+/// Returns the total degree of a node.
+/// For directed graphs, this is the sum of in-degree and out-degree.
+/// For undirected graphs, this counts each edge once (self-loops count as 2).
+/// **Time Complexity:** O(1)
+let degree (id: NodeId) (graph: Graph<'n, 'e>) : int =
+    match graph.Kind with
+    | Directed -> inDegree id graph + outDegree id graph
+    | Undirected ->
+        graph.OutEdges
+        |> Map.tryFind id
+        |> Option.map (fun m ->
+            let baseCount = m.Count
+            if Map.containsKey id m then baseCount + 1 else baseCount)
+        |> Option.defaultValue 0
 
 /// Gets everyone connected to the node, regardless of direction.
 ///
